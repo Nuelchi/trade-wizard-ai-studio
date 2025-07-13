@@ -57,10 +57,10 @@ const Home = () => {
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-            Transform Trading Ideas<br />
             <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              Into Profitable Code
-            </span>
+              Automate Trading Ideas
+            </span><br />
+            in Seconds
           </h1>
           
           <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto">
