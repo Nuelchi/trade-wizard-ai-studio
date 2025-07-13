@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Brain, TrendingUp, BarChart3, Download, Zap } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const Navigation = () => {
   const navItems = [
@@ -21,25 +22,30 @@ const Navigation = () => {
             <span className="text-xl font-bold text-foreground">Trainflow</span>
           </div>
 
-          {/* Navigation Links */}
-          <div className="flex items-center space-x-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `nav-link flex items-center space-x-2 ${
-                      isActive ? "nav-link-active" : ""
-                    }`
-                  }
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </NavLink>
-              );
-            })}
+          {/* Navigation Links & Theme Toggle */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `nav-link flex items-center space-x-2 ${
+                        isActive ? "nav-link-active" : ""
+                      }`
+                    }
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+            
+            {/* Theme Toggle */}
+            <ThemeToggle />
           </div>
         </div>
       </div>
