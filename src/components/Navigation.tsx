@@ -8,6 +8,7 @@ const Navigation = () => {
     { to: "/build", label: "Build", icon: TrendingUp },
     { to: "/test", label: "Test", icon: BarChart3 },
     { to: "/export", label: "Export", icon: Download },
+    { to: "/mystrategies", label: "My Strategies", icon: BarChart3 },
   ];
 
   return (

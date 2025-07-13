@@ -9,6 +9,7 @@ import Build from "./pages/Build";
 import Test from "./pages/Test";
 import Export from "./pages/Export";
 import NotFound from "./pages/NotFound";
+import MyStrategies from "./pages/MyStrategies";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/build" element={<Build />} />
             <Route path="/test" element={<Test />} />
             <Route path="/export" element={<Export />} />
+            <Route path="/mystrategies" element={<MyStrategies />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

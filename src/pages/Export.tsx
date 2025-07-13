@@ -3,8 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Export = () => {
+  const [strategy, setStrategy] = useState('');
+  const [pineScript, setPineScript] = useState('');
+  const [mql4, setMQL4] = useState('');
+  const [mql5, setMQL5] = useState('');
+  const [summary, setSummary] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setStrategy(localStorage.getItem('exportStrategy') || '');
+    setPineScript(localStorage.getItem('exportPineScript') || '');
+    setMQL4(localStorage.getItem('exportMQL4') || '');
+    setMQL5(localStorage.getItem('exportMQL5') || '');
+    try {
+      setSummary(JSON.parse(localStorage.getItem('exportSummary') || 'null'));
+    } catch {
+      setSummary(null);
+    }
+  }, []);
+
   const handleExport = (type: string) => {
     toast(`${type} export started! Download will begin shortly.`);
   };
@@ -14,6 +35,22 @@ const Export = () => {
     toast(`${platform} link copied to clipboard!`);
   };
 
+  const handleDownload = (code: string, filename: string) => {
+    const blob = new Blob([code], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast('Download started!');
+  };
+
+  const handleCopy = (code: string, type: string) => {
+    navigator.clipboard.writeText(code);
+    toast(`${type} copied to clipboard!`);
+  };
+
   const exportOptions = [
     {
       title: "TradingView Pine Script",
@@ -21,8 +58,8 @@ const Export = () => {
       icon: Code,
       type: "pinescript",
       actions: [
-        { label: "Download .pine", action: () => handleExport("Pine Script") },
-        { label: "Open in TradingView", action: () => handleCopyLink("TradingView") },
+        { label: "Download .pine", action: () => handleDownload(pineScript, "strategy.pine") },
+        { label: "Copy to Clipboard", action: () => handleCopy(pineScript, "Pine Script") },
       ]
     },
     {
@@ -31,8 +68,8 @@ const Export = () => {
       icon: FileText,
       type: "mql4",
       actions: [
-        { label: "Download .mq4", action: () => handleExport("MQL4 EA") },
-        { label: "Installation Guide", action: () => handleExport("MT4 Guide") },
+        { label: "Download .mq4", action: () => handleDownload(mql4, "strategy.mq4") },
+        { label: "Copy to Clipboard", action: () => handleCopy(mql4, "MQL4") },
       ]
     },
     {
@@ -41,8 +78,8 @@ const Export = () => {
       icon: FileText,
       type: "mql5",
       actions: [
-        { label: "Download .mq5", action: () => handleExport("MQL5 EA") },
-        { label: "Installation Guide", action: () => handleExport("MT5 Guide") },
+        { label: "Download .mq5", action: () => handleDownload(mql5, "strategy.mq5") },
+        { label: "Copy to Clipboard", action: () => handleCopy(mql5, "MQL5") },
       ]
     }
   ];
@@ -91,6 +128,11 @@ const Export = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="mb-4">
+        <Button variant="outline" onClick={() => navigate('/build')}>
+          ← Back to Build
+        </Button>
+      </div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Export & Deploy</h1>
         <p className="text-muted-foreground">
@@ -130,7 +172,7 @@ const Export = () => {
                         {actionIndex === 0 ? (
                           <Download className="w-4 h-4 mr-2" />
                         ) : (
-                          <ExternalLink className="w-4 h-4 mr-2" />
+                          <Copy className="w-4 h-4 mr-2" />
                         )}
                         {action.label}
                       </Button>
@@ -235,41 +277,55 @@ const Export = () => {
               <CardDescription>Ready for deployment</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-muted/20 rounded-lg">
-                    <div className="text-lg font-bold text-success">68.5%</div>
-                    <div className="text-sm text-muted-foreground">Win Rate</div>
+              {summary ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-muted/20 rounded-lg">
+                      <div className="text-lg font-bold text-success">{summary.winRate || summary.win_rate || '--'}%</div>
+                      <div className="text-sm text-muted-foreground">Win Rate</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted/20 rounded-lg">
+                      <div className="text-lg font-bold text-foreground">{summary.profitFactor || summary.profit_factor || '--'}</div>
+                      <div className="text-sm text-muted-foreground">Profit Factor</div>
+                    </div>
                   </div>
-                  <div className="text-center p-3 bg-muted/20 rounded-lg">
-                    <div className="text-lg font-bold text-foreground">1.85</div>
-                    <div className="text-sm text-muted-foreground">Profit Factor</div>
+                  <div className="text-sm text-muted-foreground">
+                    <b>Description:</b> {summary.description || summary.desc || '--'}
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Strategy Name:</span>
-                  <span className="font-medium text-foreground">MA Crossover + RSI</span>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Last Updated:</span>
-                  <span className="font-medium text-foreground">5 minutes ago</span>
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleCopyLink("Share")}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy Strategy Link
-                </Button>
-              </div>
+              ) : (
+                <div className="text-muted-foreground">No summary available.</div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Code Preview */}
+      <Card className="trading-card mt-8">
+        <CardHeader>
+          <CardTitle>Code Preview</CardTitle>
+          <CardDescription>Review your generated code before exporting</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="pinescript">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="pinescript">Pine Script</TabsTrigger>
+              <TabsTrigger value="mql4">MQL4</TabsTrigger>
+              <TabsTrigger value="mql5">MQL5</TabsTrigger>
+            </TabsList>
+            <TabsContent value="pinescript">
+              <pre className="bg-muted/30 rounded p-2 text-xs overflow-x-auto">{pineScript}</pre>
+            </TabsContent>
+            <TabsContent value="mql4">
+              <pre className="bg-muted/30 rounded p-2 text-xs overflow-x-auto">{mql4}</pre>
+            </TabsContent>
+            <TabsContent value="mql5">
+              <pre className="bg-muted/30 rounded p-2 text-xs overflow-x-auto">{mql5}</pre>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
