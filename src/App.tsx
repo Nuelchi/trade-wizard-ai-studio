@@ -10,6 +10,7 @@ import Test from "./pages/Test";
 import Export from "./pages/Export";
 import NotFound from "./pages/NotFound";
 import MyStrategies from "./pages/MyStrategies";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/test" element={<Test />} />
             <Route path="/export" element={<Export />} />
             <Route path="/mystrategies" element={<MyStrategies />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

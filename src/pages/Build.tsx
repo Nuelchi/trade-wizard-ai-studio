@@ -277,7 +277,7 @@ void OnTick()
             <div className="flex items-center space-x-2 mb-4">
               <Code className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">Generated Code</h2>
-              <Tooltip content="This is the code you can use in TradingView, MetaTrader 4, or MetaTrader 5.">
+              <Tooltip>
                 <span className="ml-2 text-primary cursor-help">[?]</span>
               </Tooltip>
             </div>

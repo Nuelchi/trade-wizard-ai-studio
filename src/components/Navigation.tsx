@@ -5,6 +5,7 @@ import ThemeToggle from "./ThemeToggle";
 const Navigation = () => {
   const navItems = [
     { to: "/", label: "Home", icon: Brain },
+    { to: "/dashboard", label: "Dashboard", icon: Zap },
     { to: "/build", label: "Build", icon: TrendingUp },
     { to: "/test", label: "Test", icon: BarChart3 },
     { to: "/export", label: "Export", icon: Download },
