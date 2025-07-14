@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MessageSquare, 
   Code, 
@@ -36,6 +37,8 @@ const Dashboard = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [previewMode, setPreviewMode] = useState<'code' | 'chart'>('code');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedPair, setSelectedPair] = useState('EUR/USD');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
   const { user, signOut } = useAuth();
 
   const handleStrategyGenerated = (strategy: any) => {
@@ -66,6 +69,24 @@ const Dashboard = () => {
     // Save strategy logic
     console.log('Saving strategy...');
   };
+
+  // Trading pairs and timeframes data
+  const tradingPairs = [
+    'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD',
+    'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'BTC/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD'
+  ];
+
+  const timeframes = [
+    { value: '1M', label: '1 Minute' },
+    { value: '5M', label: '5 Minutes' },
+    { value: '15M', label: '15 Minutes' },
+    { value: '30M', label: '30 Minutes' },
+    { value: '1H', label: '1 Hour' },
+    { value: '4H', label: '4 Hours' },
+    { value: '1D', label: '1 Day' },
+    { value: '1W', label: '1 Week' },
+    { value: '1MO', label: '1 Month' }
+  ];
 
   const handleShare = () => {
     // Share strategy logic
@@ -268,28 +289,69 @@ const Dashboard = () => {
                     />
                   ) : (
                     <div className="h-full flex flex-col">
+                      {/* Chart Controls */}
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/10">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-foreground">Pair:</span>
+                            <Select value={selectedPair} onValueChange={setSelectedPair}>
+                              <SelectTrigger className="w-32 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {tradingPairs.map((pair) => (
+                                  <SelectItem key={pair} value={pair}>
+                                    {pair}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-foreground">Timeframe:</span>
+                            <Select value={selectedTimeframe} onValueChange={setSelectedTimeframe}>
+                              <SelectTrigger className="w-32 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timeframes.map((tf) => (
+                                  <SelectItem key={tf.value} value={tf.value}>
+                                    {tf.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-muted-foreground">
+                          {selectedPair} • {timeframes.find(tf => tf.value === selectedTimeframe)?.label}
+                        </div>
+                      </div>
+
                       {/* Performance Chart View */}
                       <div className="flex-1 p-4">
                         <div className="h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center">
                           <div className="text-center">
                             <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-foreground mb-2">
-                              Performance Chart
+                              {selectedPair} Performance Chart
                             </h3>
-                            <p className="text-sm text-muted-foreground max-w-md">
-                              Real-time backtested performance data will appear here once your strategy is ready.
+                            <p className="text-sm text-muted-foreground max-w-md mb-4">
+                              Real-time backtested performance data for {selectedPair} on {timeframes.find(tf => tf.value === selectedTimeframe)?.label} timeframe.
                             </p>
                             {currentStrategy && (
                               <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-                                <div className="p-3 bg-background rounded-lg">
+                                <div className="p-3 bg-background rounded-lg border">
                                   <div className="text-2xl font-bold text-green-500">+24.5%</div>
                                   <div className="text-xs text-muted-foreground">Total Return</div>
                                 </div>
-                                <div className="p-3 bg-background rounded-lg">
+                                <div className="p-3 bg-background rounded-lg border">
                                   <div className="text-2xl font-bold text-blue-500">1.8</div>
                                   <div className="text-xs text-muted-foreground">Sharpe Ratio</div>
                                 </div>
-                                <div className="p-3 bg-background rounded-lg">
+                                <div className="p-3 bg-background rounded-lg border">
                                   <div className="text-2xl font-bold text-purple-500">-8.2%</div>
                                   <div className="text-xs text-muted-foreground">Max Drawdown</div>
                                 </div>
