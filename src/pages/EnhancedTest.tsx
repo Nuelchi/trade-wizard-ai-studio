@@ -219,8 +219,8 @@ const EnhancedTest = () => {
                             </Button>
                           </div>
                           
-                          <div className="flex-1 bg-background/50 rounded-xl p-4 border border-border/30">
-                            <div className={`grid ${isAiWidgetOpen ? 'grid-cols-2' : 'grid-cols-4'} gap-4 h-full transition-all duration-300`}>
+                          <div className="flex-1 bg-background/50 rounded-xl p-6 border border-border/30 mx-4">
+                            <div className={`grid ${isAiWidgetOpen ? 'grid-cols-2' : 'grid-cols-4'} gap-6 h-full transition-all duration-300`}>
                               <div className="flex flex-col items-center justify-center bg-gradient-to-b from-success/10 to-success/5 rounded-lg border border-success/20 p-3">
                                 <TrendingUp className="w-6 h-6 text-success mb-2" />
                                 <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
