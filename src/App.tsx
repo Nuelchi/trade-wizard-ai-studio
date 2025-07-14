@@ -11,6 +11,10 @@ import Export from "./pages/Export";
 import NotFound from "./pages/NotFound";
 import MyStrategies from "./pages/MyStrategies";
 import Dashboard from "./pages/Dashboard";
+import Marketplace from './pages/Marketplace';
+import Pricing from './pages/Pricing';
+import Community from './pages/Community';
+import Learn from './pages/Learn';
 
 const App = () => {
   const location = useLocation();
@@ -27,6 +31,10 @@ const App = () => {
           <Route path="/export" element={<Export />} />
           <Route path="/mystrategies" element={<MyStrategies />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/learn" element={<Learn />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

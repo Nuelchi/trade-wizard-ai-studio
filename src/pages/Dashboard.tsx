@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -19,6 +19,11 @@ import html2canvas from 'html2canvas';
 import { Link, useLocation } from 'react-router-dom';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Area, Bar } from 'recharts';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+type Strategy = Database['public']['Tables']['strategies']['Row'];
+type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
+type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
 
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
@@ -45,6 +50,7 @@ const Dashboard = () => {
   const {
     toast
   } = useToast();
+  const autosaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
@@ -73,6 +79,22 @@ const Dashboard = () => {
   const handleSave = () => {
     // Save strategy logic
     console.log('Saving strategy...');
+  };
+
+  const handleSaveStrategy = async () => {
+    if (!currentStrategy || !user) return;
+    const { error } = await supabase
+      .from<Strategy, StrategyUpdate>('strategies')
+      .update({
+        chat_history: currentStrategy.chat_history,
+        code: generatedCode,
+        title: strategyName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', currentStrategy.id);
+    if (error) {
+      toast({ title: 'Failed to update strategy', description: error.message, variant: 'destructive' });
+    }
   };
 
   // Trading pairs and timeframes data
@@ -172,6 +194,40 @@ const Dashboard = () => {
   };
 
   const location = useLocation();
+
+  // Hydrate from navigation state if a strategy is passed in
+  useEffect(() => {
+    if (location.state && location.state.strategy) {
+      const s = location.state.strategy;
+      setCurrentStrategy(s);
+      setStrategyName(s.title || 'Untitled Strategy');
+      setGeneratedCode(s.code || null);
+      // Optionally hydrate analytics, chat, etc. if needed
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!currentStrategy || !user) return;
+    if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
+    autosaveTimeout.current = setTimeout(async () => {
+      const { error } = await supabase
+        .from<Strategy, StrategyUpdate>('strategies')
+        .update({
+          chat_history: currentStrategy.chat_history,
+          code: generatedCode,
+          title: strategyName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', currentStrategy.id);
+      if (error) {
+        toast({ title: 'Autosave failed', description: error.message, variant: 'destructive' });
+      }
+    }, 2000);
+    return () => {
+      if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
+    };
+  }, [currentStrategy, generatedCode, strategyName, user]);
+
   const sectionOptions = [
     { path: '/dashboard', label: 'Builder', icon: MessageSquare },
     { path: '/test', label: 'Strategy Tester', icon: TrendingUp },
@@ -263,6 +319,11 @@ const Dashboard = () => {
 
           {/* Right Section - Controls */}
           <div className="flex items-center gap-2">
+            {user && currentStrategy && (
+              <Button variant="outline" size="sm" className="h-8" onClick={handleSaveStrategy}>
+                Save
+              </Button>
+            )}
             {/* Code/Chart Toggle */}
             <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
               <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
@@ -331,7 +392,11 @@ const Dashboard = () => {
               <ResizablePanel defaultSize={30} minSize={25} maxSize={35} className="min-h-0">
                 <div className="h-full border-r border-border flex flex-col bg-background min-h-0">
                   <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
-                    <ChatInterface onStrategyGenerated={handleStrategyGenerated} onCodeGenerated={handleCodeGenerated} />
+                    <ChatInterface
+                      onStrategyGenerated={handleStrategyGenerated}
+                      onCodeGenerated={handleCodeGenerated}
+                      initialMessages={currentStrategy?.chat_history || undefined}
+                    />
                   </div>
                 </div>
               </ResizablePanel>

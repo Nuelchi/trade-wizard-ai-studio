@@ -7,20 +7,18 @@ import { useAuth } from "@/contexts/AuthContext";
 const Navigation = () => {
   const { user, signOut } = useAuth();
   
-  const navItems = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/dashboard", label: "Builder", icon: MessageSquare },
-    { to: "/test", label: "Strategy Tester", icon: TrendingUp },
-    { to: "/export", label: "Export", icon: Download },
+  const publicNavItems = [
+    { to: '/community', label: 'Community' },
+    { to: '/pricing', label: 'Pricing' },
+    { to: '/marketplace', label: 'Marketplace' },
+    { to: '/learn', label: 'Learn' },
   ];
-
-  const handleAuthAction = async () => {
-    if (user) {
-      await signOut();
-    } else {
-      window.location.href = '/dashboard';
-    }
-  };
+  const appNavItems = [
+    { to: '/dashboard', label: 'Builder', icon: MessageSquare },
+    { to: '/test', label: 'Strategy Tester', icon: TrendingUp },
+    { to: '/export', label: 'Export', icon: Download },
+    { to: '/mystrategies', label: 'My Strategies', icon: User },
+  ];
 
   return (
     <nav className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
@@ -28,51 +26,55 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <NavLink to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <MessageSquare className="w-4 h-4 text-primary-foreground" />
+            <div className="w-8 h-8 bg-gradient-to-tr from-orange-500 via-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
+              <span className="text-2xl font-bold text-white">❤</span>
             </div>
-            <span className="text-xl font-bold text-foreground">Trainflow</span>
+            <span className="text-xl font-bold text-foreground">Lovable</span>
           </NavLink>
-
           {/* Navigation Links & Actions */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `nav-link flex items-center space-x-2 ${
-                        isActive ? "nav-link-active" : ""
-                      }`
-                    }
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </NavLink>
-                );
-              })}
+              {!user
+                ? publicNavItems.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `nav-link flex items-center space-x-2 ${isActive ? 'nav-link-active' : ''}`
+                      }
+                    >
+                      <span>{item.label}</span>
+                    </NavLink>
+                  ))
+                : appNavItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className={({ isActive }) =>
+                          `nav-link flex items-center space-x-2 ${isActive ? 'nav-link-active' : ''}`
+                        }
+                      >
+                        {Icon && <Icon className="w-4 h-4" />}
+                        <span>{item.label}</span>
+                      </NavLink>
+                    );
+                  })}
             </div>
-            
             <div className="flex items-center space-x-2">
-              {user && (
-                <div className="flex items-center space-x-2 px-3 py-1 bg-muted/50 rounded-full">
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">{user.email}</span>
-                </div>
+              {!user ? (
+                <>
+                  <NavLink to="/login">
+                    <Button variant="outline" size="sm">Log in</Button>
+                  </NavLink>
+                  <NavLink to="/login">
+                    <Button size="sm">Get started</Button>
+                  </NavLink>
+                </>
+              ) : (
+                <Button variant="outline" size="sm" onClick={signOut}>Logout</Button>
               )}
-              
-              <Button 
-                variant={user ? "outline" : "default"} 
-                size="sm" 
-                onClick={handleAuthAction}
-              >
-                {user ? 'Logout' : 'Get Started'}
-              </Button>
-              
-              <ThemeToggle />
             </div>
           </div>
         </div>
