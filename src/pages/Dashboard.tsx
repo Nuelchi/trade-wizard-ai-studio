@@ -181,92 +181,87 @@ const Dashboard = () => {
       <div className="h-screen flex flex-col bg-background">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <MessageSquare className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Trainflow</h1>
+          {/* Left Section - Logo */}
+          <div className="flex items-center space-x-2 min-w-0">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 text-primary-foreground" />
             </div>
-            <Separator orientation="vertical" className="h-6" />
-            <div className="text-sm text-muted-foreground">
+            <h1 className="text-xl font-bold text-foreground">Trainflow</h1>
+          </div>
+
+          {/* Center Section - Strategy Info & Controls */}
+          <div className="flex items-center space-x-4 flex-1 justify-center max-w-2xl">
+            <div className="text-sm text-muted-foreground hidden md:block">
               AI Strategy Builder - Just like Lovable, but for traders
             </div>
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 hidden md:block" />
             
-            {/* Functional Toolbar */}
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center bg-muted rounded-lg p-1">
-                <Button
-                  variant={previewMode === 'code' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPreviewMode('code')}
-                  className="flex items-center gap-2 h-8"
-                >
-                  <FileCode className="w-4 h-4" />
-                  Code
-                </Button>
-                <Button
-                  variant={previewMode === 'chart' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPreviewMode('chart')}
-                  className="flex items-center gap-2 h-8"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  Chart
-                </Button>
-              </div>
-              
-              {/* Action Buttons - Only Publish */}
-              <div className="flex items-center space-x-1">
-                <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
-                  <Upload className="w-4 h-4" />
-                </Button>
-                
-                {/* Settings Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8">
-                      <Settings className="w-4 h-4" />
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={toggleTheme}>
-                      {isDarkMode ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Bell className="mr-2 h-4 w-4" />
-                      <span>Notifications</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Preferences</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>Help & Support</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+            {/* Code/Chart Toggle */}
+            <div className="flex items-center bg-muted rounded-lg p-1">
+              <Button
+                variant={previewMode === 'code' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPreviewMode('code')}
+                className="flex items-center gap-2 h-8"
+              >
+                <FileCode className="w-4 h-4" />
+                Code
+              </Button>
+              <Button
+                variant={previewMode === 'chart' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPreviewMode('chart')}
+                className="flex items-center gap-2 h-8"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Chart
+              </Button>
             </div>
+            
+            {/* Publish Button */}
+            <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
+              <Upload className="w-4 h-4" />
+            </Button>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {user && (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4" />
-                </div>
-                <span className="text-sm text-foreground">{user.email}</span>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  Logout
+
+          {/* Right Section - User Menu */}
+          <div className="flex items-center space-x-2 min-w-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8">
+                  <Settings className="w-4 h-4" />
+                  <ChevronDown className="w-3 h-3 ml-1" />
                 </Button>
-              </div>
-            )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-background border border-border shadow-lg z-50">
+                <DropdownMenuItem onClick={toggleTheme}>
+                  {isDarkMode ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Bell className="mr-2 h-4 w-4" />
+                  <span>Notifications</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Preferences</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  <span>Help & Support</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>{user?.email}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
