@@ -175,8 +175,8 @@ const Dashboard = () => {
           </div>
 
           {/* Center Section - Strategy Info & Controls */}
-          <div className="flex items-center justify-between flex-1 max-w-4xl">
-            <div className="text-sm text-muted-foreground hidden md:block pl-8">
+          <div className="flex items-center justify-between flex-1 max-w-5xl">
+            <div className="text-sm text-muted-foreground hidden md:block ml-8">
               AI Strategy Builder - Just like Lovable, but for traders
             </div>
             
