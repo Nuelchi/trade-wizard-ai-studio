@@ -8,7 +8,48 @@ import { ArrowRight, Brain, Code, TrendingUp, Zap, Star, Copy, Play, Eye, Users,
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+const RotatingPlaceholder = () => {
+  const placeholders = [
+    "Buy when RSI is oversold and price breaks above 20-day moving average...",
+    "Sell when Bitcoin price drops 5% from 24h high with high volume...",
+    "Long EUR/USD when it crosses above 50 EMA with bullish divergence on MACD...",
+    "Short SPY when VIX spikes above 30 and price breaks key support...",
+    "Buy breakout above resistance with volume confirmation and tight stop loss...",
+    "Scalp quick profits on 1-minute chart with momentum indicators..."
+  ];
+  
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayText, setDisplayText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  useEffect(() => {
+    const currentPlaceholder = placeholders[currentIndex];
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        if (displayText.length < currentPlaceholder.length) {
+          setDisplayText(currentPlaceholder.slice(0, displayText.length + 1));
+        } else {
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        if (displayText.length > 0) {
+          setDisplayText(displayText.slice(0, -1));
+        } else {
+          setIsDeleting(false);
+          setCurrentIndex((prev) => (prev + 1) % placeholders.length);
+        }
+      }
+    }, isDeleting ? 50 : 100);
+    
+    return () => clearTimeout(timeout);
+  }, [displayText, isDeleting, currentIndex, placeholders]);
+  
+  return displayText;
+};
+
 const Home = () => {
+  const rotatingPlaceholder = RotatingPlaceholder();
   const [strategy, setStrategy] = useState("");
   const [likedStrategies, setLikedStrategies] = useState<Set<number>>(new Set());
   const [strategyLikes, setStrategyLikes] = useState<Record<number, number>>({});
@@ -250,7 +291,7 @@ const Home = () => {
             <div className="trading-card p-8 max-w-4xl mx-auto mb-8">
               <h3 className="text-xl font-semibold mb-4 text-left">Describe Your Trading Strategy</h3>
               <Textarea
-                placeholder="Describe your strategy... e.g. 'Buy when 50-day moving average crosses above 200-day moving average and RSI is below 30. Sell when RSI goes above 70 or stop loss at 2%'"
+                placeholder={rotatingPlaceholder}
                 value={strategy}
                 onChange={(e) => setStrategy(e.target.value)}
                 className="strategy-input min-h-[120px] mb-6 text-base resize-none"
