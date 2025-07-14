@@ -24,7 +24,7 @@ const MyStrategies = () => {
     if (!user) return;
     setLoading(true);
     supabase
-      .from('strategies')
+      .from<Strategy>('strategies')
       .select('*')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
@@ -39,7 +39,7 @@ const MyStrategies = () => {
   }, [user]);
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('strategies').delete().eq('id', id);
+    const { error } = await supabase.from<Strategy>('strategies').delete().eq('id', id);
     if (error) {
       toast('Failed to delete strategy');
     } else {
@@ -48,10 +48,8 @@ const MyStrategies = () => {
     }
   };
 
-  const handleOpen = (strategy: any) => {
-    const chatHistory = strategy.chat_history ? 
-      (typeof strategy.chat_history === 'string' ? JSON.parse(strategy.chat_history) : strategy.chat_history) : [];
-    setMessages(Array.isArray(chatHistory) ? chatHistory : []);
+  const handleOpen = (strategy: Strategy) => {
+    setMessages(Array.isArray(strategy.chat_history) ? strategy.chat_history : []);
     navigate('/dashboard', { state: { strategy } });
   };
 
@@ -108,7 +106,7 @@ const MyStrategies = () => {
               </CardHeader>
               <CardContent>
                 <div className="mb-2 text-sm text-muted-foreground line-clamp-2">
-                  {s.description || '--'}
+                  {s.description || s.summary?.description || '--'}
                 </div>
                 <div className="flex gap-2 mt-2">
                   <Button onClick={e => { e.stopPropagation(); handleOpen(s); }} variant="default">

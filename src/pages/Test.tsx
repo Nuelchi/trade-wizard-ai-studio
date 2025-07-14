@@ -310,7 +310,7 @@ const Test = () => {
               <TabsContent value="tester" className="h-full m-0">
                 <div className="flex flex-col h-full w-full">
                   <div className="flex-1 w-full">
-                    <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
+                    <TradingChart />
                   </div>
                 </div>
               </TabsContent>

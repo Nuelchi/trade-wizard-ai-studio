@@ -90,10 +90,10 @@ const Dashboard = () => {
   const handleSaveStrategy = async () => {
     if (!currentStrategy || !user || !currentStrategy.id || currentStrategy.id === 'undefined') return;
     const { error } = await supabase
-      .from('strategies')
+      .from<Strategy, StrategyUpdate>('strategies')
       .update({
-        chat_history: JSON.stringify(currentStrategy.chat_history),
-        code: JSON.stringify(generatedCode),
+        chat_history: currentStrategy.chat_history,
+        code: generatedCode,
         title: strategyName,
         updated_at: new Date().toISOString(),
       })
@@ -236,10 +236,10 @@ const Dashboard = () => {
     if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
     autosaveTimeout.current = setTimeout(async () => {
       const { error } = await supabase
-        .from('strategies')
+        .from<Strategy, StrategyUpdate>('strategies')
         .update({
-          chat_history: JSON.stringify(currentStrategy.chat_history),
-          code: JSON.stringify(generatedCode),
+          chat_history: currentStrategy.chat_history,
+          code: generatedCode,
           title: strategyName,
           updated_at: new Date().toISOString(),
         })
@@ -451,7 +451,7 @@ const Dashboard = () => {
                   
                   {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> :
   <div className="h-full flex flex-col min-h-0 overflow-hidden">
-    <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
+    <TradingChart />
     <div className="w-full mt-4">
       <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
         {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}

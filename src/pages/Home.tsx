@@ -266,10 +266,10 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-900 dark">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative py-16 overflow-hidden bg-gray-900"> {/* Reduced from py-24 to py-16 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
+      <section className="relative py-16 overflow-hidden"> {/* Reduced from py-24 to py-16 */}
+        <div className="absolute inset-0 bg-gradient-hero"></div>
         <div className="max-w-7xl mx-auto px-6 py-12 relative">
           <div className="text-center mb-12"> {/* Reduced mb-16 to mb-12 */}
             <Badge variant="outline" className="mb-6 border-primary/20 text-primary bg-primary/10">
@@ -323,7 +323,7 @@ const Home = () => {
       </section>
 
       {/* Strategy Showcase */}
-      <section className="py-24 bg-gray-800/50">
+      <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4 border-primary/20 text-primary">
@@ -449,7 +449,7 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-gray-900">
+      <section className="py-24">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -477,7 +477,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gray-800">
+      <section className="py-24 bg-gradient-hero">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Ready to Transform Your Trading?
@@ -490,7 +490,7 @@ const Home = () => {
               <Brain className="w-5 h-5 mr-2" />
               Start Building Now
             </Button>
-            <Button size="lg" variant="outline" onClick={() => openAuthDialog()}>
+            <Button size="lg" variant="outline" onClick={openAuthDialog}>
               Get Started Free
             </Button>
           </div>
