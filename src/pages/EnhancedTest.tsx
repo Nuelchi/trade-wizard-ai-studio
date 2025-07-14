@@ -264,42 +264,42 @@ const EnhancedTest = () => {
                             <BarChart3 className="w-5 h-5 text-primary" />
                             <span>Live Performance Metrics</span>
                           </div>
-                          <div className="flex-1 bg-background/50 rounded-xl p-4 border border-border/30">
-                            <div className="grid grid-cols-3 gap-4 h-full">
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-success/10 to-success/5 rounded-lg border border-success/20 p-3">
-                                <TrendingUp className="w-5 h-5 text-success mb-1" />
+                          <div className="flex-1 bg-background/50 rounded-xl p-3 border border-border/30 mx-2">
+                            <div className="grid grid-cols-2 gap-3 h-full">
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-success/10 to-success/5 rounded-lg border border-success/20 p-2">
+                                <TrendingUp className="w-4 h-4 text-success mb-1" />
                                 <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
-                                <span className="text-lg font-bold text-success">${backtestResults.totalReturn}</span>
+                                <span className="text-sm font-bold text-success">${backtestResults.totalReturn}</span>
                               </div>
                               
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-blue-500/10 to-blue-500/5 rounded-lg border border-blue-500/20 p-3">
-                                <Target className="w-5 h-5 text-blue-600 mb-1" />
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-blue-500/10 to-blue-500/5 rounded-lg border border-blue-500/20 p-2">
+                                <Target className="w-4 h-4 text-blue-600 mb-1" />
                                 <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
-                                <span className="text-lg font-bold text-blue-600">{backtestResults.winRate}%</span>
+                                <span className="text-sm font-bold text-blue-600">{backtestResults.winRate}%</span>
                               </div>
                               
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-primary/10 to-primary/5 rounded-lg border border-primary/20 p-3">
-                                <BarChart3 className="w-5 h-5 text-primary mb-1" />
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-primary/10 to-primary/5 rounded-lg border border-primary/20 p-2">
+                                <BarChart3 className="w-4 h-4 text-primary mb-1" />
                                 <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-                                <span className="text-lg font-bold text-primary">{backtestResults.profitFactor}</span>
+                                <span className="text-sm font-bold text-primary">{backtestResults.profitFactor}</span>
                               </div>
                               
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20 p-3">
-                                <TrendingDown className="w-5 h-5 text-destructive mb-1" />
-                                <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                                <span className="text-lg font-bold text-destructive">{backtestResults.maxDrawdown}%</span>
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20 p-2">
+                                <TrendingDown className="w-4 h-4 text-destructive mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Drawdown</span>
+                                <span className="text-sm font-bold text-destructive">{backtestResults.maxDrawdown}%</span>
                               </div>
                               
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-muted/20 to-muted/10 rounded-lg border border-border p-3">
-                                <Clock className="w-5 h-5 text-foreground mb-1" />
-                                <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-                                <span className="text-lg font-bold text-foreground">{backtestResults.totalTrades}</span>
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-muted/20 to-muted/10 rounded-lg border border-border p-2">
+                                <Clock className="w-4 h-4 text-foreground mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Trades</span>
+                                <span className="text-sm font-bold text-foreground">{backtestResults.totalTrades}</span>
                               </div>
                               
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-orange-500/10 to-orange-500/5 rounded-lg border border-orange-500/20 p-3">
-                                <Percent className="w-5 h-5 text-orange-600 mb-1" />
-                                <span className="text-xs text-muted-foreground mb-1">Sharpe Ratio</span>
-                                <span className="text-lg font-bold text-orange-600">{backtestResults.sharpeRatio}</span>
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-orange-500/10 to-orange-500/5 rounded-lg border border-orange-500/20 p-2">
+                                <Percent className="w-4 h-4 text-orange-600 mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Sharpe</span>
+                                <span className="text-sm font-bold text-orange-600">{backtestResults.sharpeRatio}</span>
                               </div>
                             </div>
                           </div>
