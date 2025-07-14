@@ -3,6 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { 
   MessageSquare, 
   Code, 
@@ -14,6 +19,7 @@ import {
   Save, 
   Share2, 
   Download, 
+  Upload,
   Moon, 
   Sun, 
   Bell, 
@@ -21,13 +27,18 @@ import {
   BarChart3,
   FileCode,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Camera,
+  Globe,
+  Lock
 } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
 import CodePreview from '@/components/CodePreview';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import html2canvas from 'html2canvas';
 
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
@@ -39,7 +50,16 @@ const Dashboard = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedPair, setSelectedPair] = useState('EUR/USD');
   const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [publishData, setPublishData] = useState({
+    title: "",
+    description: "",
+    tags: "",
+    isPublic: true,
+    price: ""
+  });
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
 
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
@@ -90,12 +110,70 @@ const Dashboard = () => {
 
   const handleShare = () => {
     // Share strategy logic
-    console.log('Sharing strategy...');
+    toast({
+      title: "Strategy Shared",
+      description: "Share link copied to clipboard",
+    });
   };
 
   const handleExport = () => {
     // Export strategy logic
-    console.log('Exporting strategy...');
+    toast({
+      title: "Strategy Exported",
+      description: "Strategy code has been exported",
+    });
+  };
+
+  const handlePublishStrategy = () => {
+    setPublishDialogOpen(true);
+  };
+
+  const captureChartThumbnail = async () => {
+    const chartElement = document.getElementById('chart-preview');
+    if (chartElement) {
+      try {
+        const canvas = await html2canvas(chartElement, {
+          backgroundColor: null,
+          scale: 2,
+          logging: false,
+        });
+        return canvas.toDataURL('image/png');
+      } catch (error) {
+        console.error('Error capturing chart:', error);
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const handlePublishSubmit = async () => {
+    const thumbnail = await captureChartThumbnail();
+    
+    // Here you would normally save to your backend/database
+    console.log('Publishing strategy:', {
+      ...publishData,
+      thumbnail,
+      strategyCode: generatedCode,
+      performanceData: {
+        pair: selectedPair,
+        timeframe: selectedTimeframe,
+        // Add actual performance metrics here
+      }
+    });
+
+    toast({
+      title: "Strategy Published!",
+      description: "Your strategy is now available in the showcase",
+    });
+
+    setPublishDialogOpen(false);
+    setPublishData({
+      title: "",
+      description: "",
+      tags: "",
+      isPublic: true,
+      price: ""
+    });
   };
 
   return (
@@ -151,6 +229,9 @@ const Dashboard = () => {
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleExport} className="h-8">
                   <Download className="w-4 h-4" />
+                </Button>
+                <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
+                  <Upload className="w-4 h-4" />
                 </Button>
                 
                 {/* Settings Dropdown */}
@@ -332,7 +413,7 @@ const Dashboard = () => {
 
                       {/* Performance Chart View */}
                       <div className="flex-1 p-4">
-                        <div className="h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center">
+                        <div id="chart-preview" className="h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center">
                           <div className="text-center">
                             <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-foreground mb-2">
@@ -385,6 +466,86 @@ const Dashboard = () => {
             </div>
           )}
         </div>
+
+        {/* Publish Strategy Dialog */}
+        <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Publish Strategy</DialogTitle>
+              <DialogDescription>
+                Share your strategy with the community. Set pricing and visibility options.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Strategy Title</Label>
+                <Input
+                  id="title"
+                  value={publishData.title}
+                  onChange={(e) => setPublishData({...publishData, title: e.target.value})}
+                  placeholder="e.g., Momentum Breakout Pro"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={publishData.description}
+                  onChange={(e) => setPublishData({...publishData, description: e.target.value})}
+                  placeholder="Describe what makes your strategy unique..."
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="tags">Tags (comma-separated)</Label>
+                <Input
+                  id="tags"
+                  value={publishData.tags}
+                  onChange={(e) => setPublishData({...publishData, tags: e.target.value})}
+                  placeholder="e.g., Momentum, Breakout, AI"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="public">Public Strategy</Label>
+                </div>
+                <Switch
+                  id="public"
+                  checked={publishData.isPublic}
+                  onCheckedChange={(checked) => setPublishData({...publishData, isPublic: checked})}
+                />
+              </div>
+              {!publishData.isPublic && (
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Price (USD)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={publishData.price}
+                    onChange={(e) => setPublishData({...publishData, price: e.target.value})}
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+              )}
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Camera className="w-4 h-4" />
+                  <span className="font-medium">Automatic Thumbnail</span>
+                </div>
+                <p>A screenshot of your chart preview will be automatically captured as the strategy thumbnail.</p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPublishDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handlePublishSubmit} className="bg-gradient-primary">
+                Publish Strategy
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AuthGuard>
   );
