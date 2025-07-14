@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Code, User, LogOut } from 'lucide-react';
+import { MessageSquare, Code, User, LogOut, Eye } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'chat' | 'code'>('chat');
   const { user, signOut } = useAuth();
 
   const handleStrategyGenerated = (strategy: any) => {
@@ -43,6 +44,27 @@ const Dashboard = () => {
             <div className="text-sm text-muted-foreground">
               AI Strategy Builder - Just like Lovable, but for traders
             </div>
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex items-center bg-muted rounded-lg p-1">
+              <Button
+                variant={viewMode === 'chat' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('chat')}
+                className="flex items-center gap-2 h-8"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Chat
+              </Button>
+              <Button
+                variant={viewMode === 'code' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('code')}
+                className="flex items-center gap-2 h-8"
+              >
+                <Code className="w-4 h-4" />
+                Code
+              </Button>
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -60,51 +82,71 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Main Content - Split Layout with Resizable Panels */}
+        {/* Main Content - Conditional Layout */}
         <div className="flex-1 flex overflow-hidden">
-          <ResizablePanelGroup direction="horizontal" className="flex-1">
-            {/* Left Panel - Chat Interface */}
-            <ResizablePanel defaultSize={50} minSize={30}>
-              <div className="h-full border-r border-border flex flex-col bg-background">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                  <div className="flex items-center space-x-2">
-                    <MessageSquare className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">AI Assistant</span>
+          {viewMode === 'chat' ? (
+            <ResizablePanelGroup direction="horizontal" className="flex-1">
+              {/* Left Panel - Chat Interface */}
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="h-full border-r border-border flex flex-col bg-background">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
+                    <div className="flex items-center space-x-2">
+                      <MessageSquare className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">AI Assistant</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Describe your strategy in plain English
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Describe your strategy in plain English
-                  </div>
+                  
+                  <ChatInterface 
+                    onStrategyGenerated={handleStrategyGenerated}
+                    onCodeGenerated={handleCodeGenerated}
+                  />
                 </div>
-                
-                <ChatInterface 
-                  onStrategyGenerated={handleStrategyGenerated}
-                  onCodeGenerated={handleCodeGenerated}
-                />
-              </div>
-            </ResizablePanel>
+              </ResizablePanel>
 
-            <ResizableHandle withHandle />
+              <ResizableHandle withHandle />
 
-            {/* Right Panel - Live Preview */}
-            <ResizablePanel defaultSize={50} minSize={30}>
-              <div className="h-full flex flex-col bg-background">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                  <div className="flex items-center space-x-2">
-                    <Code className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">Live Preview</span>
+              {/* Right Panel - Live Preview */}
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="h-full flex flex-col bg-background">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
+                    <div className="flex items-center space-x-2">
+                      <Eye className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Live Preview</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Your strategy appears here in real-time
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Your strategy appears here in real-time
-                  </div>
+                  
+                  <CodePreview 
+                    strategy={currentStrategy}
+                    code={generatedCode}
+                  />
                 </div>
-                
-                <CodePreview 
-                  strategy={currentStrategy}
-                  code={generatedCode}
-                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            /* Code View - Full Width */
+            <div className="flex-1 flex flex-col bg-background">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
+                <div className="flex items-center space-x-2">
+                  <Code className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Strategy Code</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Generated strategy code and preview
+                </div>
               </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+              
+              <CodePreview 
+                strategy={currentStrategy}
+                code={generatedCode}
+              />
+            </div>
+          )}
         </div>
       </div>
     </AuthGuard>
