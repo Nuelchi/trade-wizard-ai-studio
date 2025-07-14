@@ -1,18 +1,16 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Code, User } from 'lucide-react';
+import { MessageSquare, Code, User, LogOut } from 'lucide-react';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
 import CodePreview from '@/components/CodePreview';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const { user, signOut } = useAuth();
 
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
@@ -22,12 +20,10 @@ const Dashboard = () => {
     setGeneratedCode(code);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  const handleLogout = async () => {
+    await signOut();
     setCurrentStrategy(null);
     setGeneratedCode(null);
-    window.location.reload();
   };
 
   return (
@@ -54,7 +50,7 @@ const Dashboard = () => {
                 <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
                   <User className="w-4 h-4" />
                 </div>
-                <span className="text-sm text-foreground">{user.name}</span>
+                <span className="text-sm text-foreground">{user.email}</span>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
                   Logout
                 </Button>

@@ -1,20 +1,20 @@
 import { NavLink } from "react-router-dom";
-import { Home, MessageSquare, User, Settings } from "lucide-react";
+import { Home, MessageSquare, User, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const { user, signOut } = useAuth();
   
   const navItems = [
     { to: "/", label: "Home", icon: Home },
     { to: "/dashboard", label: "Builder", icon: MessageSquare },
   ];
 
-  const handleAuthAction = () => {
+  const handleAuthAction = async () => {
     if (user) {
-      localStorage.removeItem('user');
-      window.location.reload();
+      await signOut();
     } else {
       window.location.href = '/dashboard';
     }
@@ -58,7 +58,7 @@ const Navigation = () => {
               {user && (
                 <div className="flex items-center space-x-2 px-3 py-1 bg-muted/50 rounded-full">
                   <User className="w-4 h-4" />
-                  <span className="text-sm">{user.name}</span>
+                  <span className="text-sm">{user.email}</span>
                 </div>
               )}
               
