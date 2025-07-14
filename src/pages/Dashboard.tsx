@@ -203,8 +203,8 @@ const Dashboard = () => {
                   onClick={() => setViewMode('chat')}
                   className="flex items-center gap-2 h-8"
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  Chat
+                  <FileCode className="w-4 h-4" />
+                  Code
                 </Button>
                 <Button
                   variant={viewMode === 'code' ? 'default' : 'ghost'}
@@ -212,24 +212,13 @@ const Dashboard = () => {
                   onClick={() => setViewMode('code')}
                   className="flex items-center gap-2 h-8"
                 >
-                  <Code className="w-4 h-4" />
-                  Code
+                  <BarChart3 className="w-4 h-4" />
+                  Chart
                 </Button>
               </div>
               
-              <Separator orientation="vertical" className="h-6" />
-              
-              {/* Action Buttons */}
+              {/* Action Buttons - Only Publish */}
               <div className="flex items-center space-x-1">
-                <Button variant="ghost" size="sm" onClick={handleSave} className="h-8">
-                  <Save className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleShare} className="h-8">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleExport} className="h-8">
-                  <Download className="w-4 h-4" />
-                </Button>
                 <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
                   <Upload className="w-4 h-4" />
                 </Button>
