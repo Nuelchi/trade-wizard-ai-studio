@@ -358,28 +358,30 @@ Would you like me to modify anything or run a backtest?`,
       {/* Input */}
       <div className="p-6 pt-0">
         <div className="relative border border-border rounded-2xl bg-background shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-end gap-3 p-4">
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className="w-8 h-8 rounded-lg hover:bg-muted/80 transition-colors" 
-              title="Upload Image" 
-              asChild
-            >
-              <label>
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                <Plus className="w-4 h-4" />
-              </label>
-            </Button>
-            
-            <div className="flex-1">
+          <div className="p-4">
+            {/* Main textarea taking full width */}
+            <div className="mb-3">
               <Textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  // Auto-resize logic
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  const scrollHeight = target.scrollHeight;
+                  const lineHeight = 20; // Approximate line height
+                  const maxLines = 9;
+                  const maxHeight = lineHeight * maxLines;
+                  target.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+                }}
                 onKeyPress={handleKeyPress}
                 placeholder="Describe your trading strategy..."
-                className="min-h-[50px] max-h-[120px] resize-none bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0"
+                className="w-full min-h-[50px] max-h-[180px] resize-none bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 scrollbar-hide overflow-y-auto"
                 rows={1}
+                style={{ 
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
               />
               {imagePreview && (
                 <div className="mt-3 flex items-center gap-3">
@@ -401,27 +403,45 @@ Would you like me to modify anything or run a backtest?`,
               )}
             </div>
             
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className={`w-8 h-8 rounded-lg transition-colors ${
-                isRecording ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-muted/80'
-              }`} 
-              title="Voice Input" 
-              onClick={handleVoiceInput}
-            >
-              <Mic className="w-4 h-4" />
-            </Button>
-            
-            <Button 
-              onClick={handleSend} 
-              disabled={(!input.trim() && !imageFile) || isTyping}
-              size="icon"
-              className="w-8 h-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label="Send"
-            >
-              <ArrowUp className="w-4 h-4" />
-            </Button>
+            {/* Buttons row below textarea */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="w-8 h-8 rounded-lg hover:bg-muted/80 transition-colors" 
+                  title="Upload Image" 
+                  asChild
+                >
+                  <label>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    <Plus className="w-4 h-4" />
+                  </label>
+                </Button>
+                
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className={`w-8 h-8 rounded-lg transition-colors ${
+                    isRecording ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-muted/80'
+                  }`} 
+                  title="Voice Input" 
+                  onClick={handleVoiceInput}
+                >
+                  <Mic className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <Button 
+                onClick={handleSend} 
+                disabled={(!input.trim() && !imageFile) || isTyping}
+                size="icon"
+                className="w-8 h-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Send"
+              >
+                <ArrowUp className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

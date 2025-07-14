@@ -179,4 +179,14 @@
   .nav-link-active {
     @apply text-primary bg-primary/10 border border-primary/20;
   }
+  
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
