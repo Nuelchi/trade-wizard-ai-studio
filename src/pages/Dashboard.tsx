@@ -198,18 +198,18 @@ const Dashboard = () => {
             <div className="flex items-center space-x-2">
               <div className="flex items-center bg-muted rounded-lg p-1">
                 <Button
-                  variant={viewMode === 'chat' ? 'default' : 'ghost'}
+                  variant={previewMode === 'code' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setViewMode('chat')}
+                  onClick={() => setPreviewMode('code')}
                   className="flex items-center gap-2 h-8"
                 >
                   <FileCode className="w-4 h-4" />
                   Code
                 </Button>
                 <Button
-                  variant={viewMode === 'code' ? 'default' : 'ghost'}
+                  variant={previewMode === 'chart' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setViewMode('code')}
+                  onClick={() => setPreviewMode('chart')}
                   className="flex items-center gap-2 h-8"
                 >
                   <BarChart3 className="w-4 h-4" />
@@ -270,10 +270,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Main Content - Conditional Layout */}
+        {/* Main Content - Always show chat + preview layout */}
         <div className="flex-1 flex overflow-hidden">
-          {viewMode === 'chat' ? (
-            <ResizablePanelGroup direction="horizontal" className="flex-1">
+          <ResizablePanelGroup direction="horizontal" className="flex-1">
               {/* Left Panel - Chat Interface */}
               <ResizablePanel defaultSize={50} minSize={30}>
                 <div className="h-full border-r border-border flex flex-col bg-background">
@@ -327,29 +326,6 @@ const Dashboard = () => {
                       <span className="text-sm font-medium">Live Preview</span>
                     </div>
                     
-                    {/* Preview Mode Toggle */}
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center bg-muted rounded-lg p-1">
-                        <Button
-                          variant={previewMode === 'code' ? 'default' : 'ghost'}
-                          size="sm"
-                          onClick={() => setPreviewMode('code')}
-                          className="flex items-center gap-2 h-7 text-xs"
-                        >
-                          <FileCode className="w-3 h-3" />
-                          Code
-                        </Button>
-                        <Button
-                          variant={previewMode === 'chart' ? 'default' : 'ghost'}
-                          size="sm"
-                          onClick={() => setPreviewMode('chart')}
-                          className="flex items-center gap-2 h-7 text-xs"
-                        >
-                          <BarChart3 className="w-3 h-3" />
-                          Chart
-                        </Button>
-                      </div>
-                    </div>
                   </div>
                   
                   {previewMode === 'code' ? (
@@ -435,25 +411,6 @@ const Dashboard = () => {
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
-          ) : (
-            /* Code View - Full Width */
-            <div className="flex-1 flex flex-col bg-background">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                <div className="flex items-center space-x-2">
-                  <Code className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Strategy Code</span>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Generated strategy code and preview
-                </div>
-              </div>
-              
-              <CodePreview 
-                strategy={currentStrategy}
-                code={generatedCode}
-              />
-            </div>
-          )}
         </div>
 
         {/* Publish Strategy Dialog */}
