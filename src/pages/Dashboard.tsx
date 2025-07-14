@@ -90,7 +90,7 @@ const Dashboard = () => {
   const handleSaveStrategy = async () => {
     if (!currentStrategy || !user || !currentStrategy.id || currentStrategy.id === 'undefined') return;
     const { error } = await supabase
-      .from<Strategy, StrategyUpdate>('strategies')
+      .from('strategies')
       .update({
         chat_history: currentStrategy.chat_history,
         code: generatedCode,
@@ -236,7 +236,7 @@ const Dashboard = () => {
     if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
     autosaveTimeout.current = setTimeout(async () => {
       const { error } = await supabase
-        .from<Strategy, StrategyUpdate>('strategies')
+        .from('strategies')
         .update({
           chat_history: currentStrategy.chat_history,
           code: generatedCode,
@@ -451,7 +451,7 @@ const Dashboard = () => {
                   
                   {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> :
   <div className="h-full flex flex-col min-h-0 overflow-hidden">
-    <TradingChart />
+    <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
     <div className="w-full mt-4">
       <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
         {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
