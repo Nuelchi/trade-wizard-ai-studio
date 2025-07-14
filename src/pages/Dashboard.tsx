@@ -8,30 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { 
-  MessageSquare, 
-  Code, 
-  User, 
-  LogOut, 
-  Eye, 
-  Settings, 
-  ChevronDown, 
-  Save, 
-  Share2, 
-  Download, 
-  Upload,
-  Moon, 
-  Sun, 
-  Bell, 
-  HelpCircle,
-  BarChart3,
-  FileCode,
-  ToggleLeft,
-  ToggleRight,
-  Camera,
-  Globe,
-  Lock
-} from 'lucide-react';
+import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
@@ -39,7 +16,6 @@ import CodePreview from '@/components/CodePreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import html2canvas from 'html2canvas';
-
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
@@ -58,76 +34,84 @@ const Dashboard = () => {
     pricingType: "free" as "free" | "paid",
     price: ""
   });
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
-
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
   };
-
   const handleCodeGenerated = (code: any) => {
     setGeneratedCode(code);
   };
-
   const handleLogout = async () => {
     await signOut();
     setCurrentStrategy(null);
     setGeneratedCode(null);
   };
-
   const handleNameChange = (newName: string) => {
     setStrategyName(newName || 'Untitled Strategy');
     setIsEditingName(false);
   };
-
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
     // Here you would typically update your theme context
   };
-
   const handleSave = () => {
     // Save strategy logic
     console.log('Saving strategy...');
   };
 
   // Trading pairs and timeframes data
-  const tradingPairs = [
-    'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD',
-    'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'BTC/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD'
-  ];
-
-  const timeframes = [
-    { value: '1M', label: '1 Minute' },
-    { value: '5M', label: '5 Minutes' },
-    { value: '15M', label: '15 Minutes' },
-    { value: '30M', label: '30 Minutes' },
-    { value: '1H', label: '1 Hour' },
-    { value: '4H', label: '4 Hours' },
-    { value: '1D', label: '1 Day' },
-    { value: '1W', label: '1 Week' },
-    { value: '1MO', label: '1 Month' }
-  ];
-
+  const tradingPairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'BTC/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD'];
+  const timeframes = [{
+    value: '1M',
+    label: '1 Minute'
+  }, {
+    value: '5M',
+    label: '5 Minutes'
+  }, {
+    value: '15M',
+    label: '15 Minutes'
+  }, {
+    value: '30M',
+    label: '30 Minutes'
+  }, {
+    value: '1H',
+    label: '1 Hour'
+  }, {
+    value: '4H',
+    label: '4 Hours'
+  }, {
+    value: '1D',
+    label: '1 Day'
+  }, {
+    value: '1W',
+    label: '1 Week'
+  }, {
+    value: '1MO',
+    label: '1 Month'
+  }];
   const handleShare = () => {
     // Share strategy logic
     toast({
       title: "Strategy Shared",
-      description: "Share link copied to clipboard",
+      description: "Share link copied to clipboard"
     });
   };
-
   const handleExport = () => {
     // Export strategy logic
     toast({
       title: "Strategy Exported",
-      description: "Strategy code has been exported",
+      description: "Strategy code has been exported"
     });
   };
-
   const handlePublishStrategy = () => {
     setPublishDialogOpen(true);
   };
-
   const captureChartThumbnail = async () => {
     const chartElement = document.getElementById('chart-preview');
     if (chartElement) {
@@ -135,7 +119,7 @@ const Dashboard = () => {
         const canvas = await html2canvas(chartElement, {
           backgroundColor: null,
           scale: 2,
-          logging: false,
+          logging: false
         });
         return canvas.toDataURL('image/png');
       } catch (error) {
@@ -145,10 +129,9 @@ const Dashboard = () => {
     }
     return null;
   };
-
   const handlePublishSubmit = async () => {
     const thumbnail = await captureChartThumbnail();
-    
+
     // Here you would normally save to your backend/database
     console.log('Publishing strategy:', {
       ...publishData,
@@ -156,16 +139,14 @@ const Dashboard = () => {
       strategyCode: generatedCode,
       performanceData: {
         pair: selectedPair,
-        timeframe: selectedTimeframe,
+        timeframe: selectedTimeframe
         // Add actual performance metrics here
       }
     });
-
     toast({
       title: "Strategy Published!",
-      description: "Your strategy is now available in the showcase",
+      description: "Your strategy is now available in the showcase"
     });
-
     setPublishDialogOpen(false);
     setPublishData({
       title: "",
@@ -175,44 +156,22 @@ const Dashboard = () => {
       price: ""
     });
   };
-
-  return (
-    <AuthGuard requireAuth={true}>
+  return <AuthGuard requireAuth={true}>
       <div className="h-screen flex flex-col bg-background">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
           {/* Left Section - Strategy Name */}
           <div className="flex items-center space-x-2 min-w-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 text-primary-foreground" />
+              <MessageSquare className="w-4 h-4 text-primary-foreground" />
             </div>
-            {isEditingName ? (
-              <input
-                type="text"
-                value={strategyName}
-                onChange={(e) => setStrategyName(e.target.value)}
-                onBlur={() => setIsEditingName(false)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    setIsEditingName(false);
-                  }
-                  if (e.key === 'Escape') {
-                    setIsEditingName(false);
-                  }
-                }}
-                className="text-xl font-bold text-foreground bg-muted border border-primary rounded px-2 py-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-primary"
-                autoFocus
-                onFocus={(e) => e.target.select()}
-              />
-            ) : (
-              <button 
-                className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted text-left"
-                onClick={() => setIsEditingName(true)}
-                title="Click to edit strategy name"
-              >
+            {isEditingName ? <input type="text" value={strategyName} onChange={e => setStrategyName(e.target.value)} onBlur={() => setIsEditingName(false)} onKeyDown={e => {
+            if (e.key === 'Enter') {
+              setIsEditingName(false);
+            }
+          }} className="text-xl font-bold text-foreground bg-transparent border-none outline-none focus:bg-muted px-2 py-1 rounded" autoFocus /> : <h1 className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted" onClick={() => setIsEditingName(true)} title="Click to edit strategy name">
                 {strategyName}
-              </button>
-            )}
+              </h1>}
           </div>
 
           {/* Center Section - Strategy Info & Controls */}
@@ -224,21 +183,11 @@ const Dashboard = () => {
             
             {/* Code/Chart Toggle */}
             <div className="flex items-center bg-muted rounded-lg p-1">
-              <Button
-                variant={previewMode === 'code' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPreviewMode('code')}
-                className="flex items-center gap-2 h-8"
-              >
+              <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
                 <FileCode className="w-4 h-4" />
                 Code
               </Button>
-              <Button
-                variant={previewMode === 'chart' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPreviewMode('chart')}
-                className="flex items-center gap-2 h-8"
-              >
+              <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
                 <BarChart3 className="w-4 h-4" />
                 Chart
               </Button>
@@ -297,42 +246,9 @@ const Dashboard = () => {
               {/* Left Panel - Chat Interface */}
               <ResizablePanel defaultSize={50} minSize={30}>
                 <div className="h-full border-r border-border flex flex-col bg-background">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                    <div className="flex items-center space-x-2">
-                      <MessageSquare className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">AI Assistant</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        {isEditingName ? (
-                          <input
-                            type="text"
-                            value={strategyName}
-                            onChange={(e) => setStrategyName(e.target.value)}
-                            onBlur={(e) => handleNameChange(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleNameChange(strategyName)}
-                            className="text-sm font-medium bg-transparent border border-border rounded px-2 py-1 min-w-[120px]"
-                            autoFocus
-                          />
-                        ) : (
-                          <button
-                            onClick={() => setIsEditingName(true)}
-                            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                          >
-                            {strategyName}
-                          </button>
-                        )}
-                        <button className="text-xs text-muted-foreground hover:text-foreground">
-                          Settings
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                   
-                  <ChatInterface 
-                    onStrategyGenerated={handleStrategyGenerated}
-                    onCodeGenerated={handleCodeGenerated}
-                  />
+                  
+                  <ChatInterface onStrategyGenerated={handleStrategyGenerated} onCodeGenerated={handleCodeGenerated} />
                 </div>
               </ResizablePanel>
 
@@ -349,13 +265,7 @@ const Dashboard = () => {
                     
                   </div>
                   
-                  {previewMode === 'code' ? (
-                    <CodePreview 
-                      strategy={currentStrategy}
-                      code={generatedCode}
-                    />
-                  ) : (
-                    <div className="h-full flex flex-col">
+                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col">
                       {/* Chart Controls */}
                       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/10">
                         <div className="flex items-center space-x-4">
@@ -366,11 +276,9 @@ const Dashboard = () => {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {tradingPairs.map((pair) => (
-                                  <SelectItem key={pair} value={pair}>
+                                {tradingPairs.map(pair => <SelectItem key={pair} value={pair}>
                                     {pair}
-                                  </SelectItem>
-                                ))}
+                                  </SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -382,11 +290,9 @@ const Dashboard = () => {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {timeframes.map((tf) => (
-                                  <SelectItem key={tf.value} value={tf.value}>
+                                {timeframes.map(tf => <SelectItem key={tf.value} value={tf.value}>
                                     {tf.label}
-                                  </SelectItem>
-                                ))}
+                                  </SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -408,8 +314,7 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground max-w-md mb-4">
                               Real-time backtested performance data for {selectedPair} on {timeframes.find(tf => tf.value === selectedTimeframe)?.label} timeframe.
                             </p>
-                            {currentStrategy && (
-                              <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+                            {currentStrategy && <div className="mt-6 grid grid-cols-3 gap-4 text-center">
                                 <div className="p-3 bg-background rounded-lg border">
                                   <div className="text-2xl font-bold text-green-500">+24.5%</div>
                                   <div className="text-xs text-muted-foreground">Total Return</div>
@@ -422,13 +327,11 @@ const Dashboard = () => {
                                   <div className="text-2xl font-bold text-purple-500">-8.2%</div>
                                   <div className="text-xs text-muted-foreground">Max Drawdown</div>
                                 </div>
-                              </div>
-                            )}
+                              </div>}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
@@ -446,54 +349,45 @@ const Dashboard = () => {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="title">Strategy Title</Label>
-                <Input
-                  id="title"
-                  value={publishData.title}
-                  onChange={(e) => setPublishData({...publishData, title: e.target.value})}
-                  placeholder="e.g., Momentum Breakout Pro"
-                />
+                <Input id="title" value={publishData.title} onChange={e => setPublishData({
+                ...publishData,
+                title: e.target.value
+              })} placeholder="e.g., Momentum Breakout Pro" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={publishData.description}
-                  onChange={(e) => setPublishData({...publishData, description: e.target.value})}
-                  placeholder="Describe what makes your strategy unique..."
-                />
+                <Textarea id="description" value={publishData.description} onChange={e => setPublishData({
+                ...publishData,
+                description: e.target.value
+              })} placeholder="Describe what makes your strategy unique..." />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
-                <Input
-                  id="tags"
-                  value={publishData.tags}
-                  onChange={(e) => setPublishData({...publishData, tags: e.target.value})}
-                  placeholder="e.g., Momentum, Breakout, AI"
-                />
+                <Input id="tags" value={publishData.tags} onChange={e => setPublishData({
+                ...publishData,
+                tags: e.target.value
+              })} placeholder="e.g., Momentum, Breakout, AI" />
               </div>
               
               {/* Pricing Selection */}
               <div className="grid gap-3">
                 <Label>Strategy Pricing</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={publishData.pricingType === "free" ? "default" : "outline"}
-                    className="h-auto p-3 flex flex-col items-center gap-2"
-                    onClick={() => setPublishData({...publishData, pricingType: "free", price: ""})}
-                  >
+                  <Button type="button" variant={publishData.pricingType === "free" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
+                  ...publishData,
+                  pricingType: "free",
+                  price: ""
+                })}>
                     <Globe className="w-4 h-4" />
                     <div className="text-center">
                       <div className="font-medium">Free</div>
                       <div className="text-xs text-muted-foreground">Anyone can copy</div>
                     </div>
                   </Button>
-                  <Button
-                    type="button"
-                    variant={publishData.pricingType === "paid" ? "default" : "outline"}
-                    className="h-auto p-3 flex flex-col items-center gap-2"
-                    onClick={() => setPublishData({...publishData, pricingType: "paid"})}
-                  >
+                  <Button type="button" variant={publishData.pricingType === "paid" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
+                  ...publishData,
+                  pricingType: "paid"
+                })}>
                     <Lock className="w-4 h-4" />
                     <div className="text-center">
                       <div className="font-medium">Sell</div>
@@ -504,19 +398,13 @@ const Dashboard = () => {
               </div>
               
               {/* Price Input - Only show when "Sell" is selected */}
-              {publishData.pricingType === "paid" && (
-                <div className="grid gap-2">
+              {publishData.pricingType === "paid" && <div className="grid gap-2">
                   <Label htmlFor="price">Price (USD)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={publishData.price}
-                    onChange={(e) => setPublishData({...publishData, price: e.target.value})}
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-              )}
+                  <Input id="price" type="number" value={publishData.price} onChange={e => setPublishData({
+                ...publishData,
+                price: e.target.value
+              })} placeholder="0" min="0" />
+                </div>}
               <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <Camera className="w-4 h-4" />
@@ -536,8 +424,6 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </AuthGuard>
-  );
+    </AuthGuard>;
 };
-
 export default Dashboard;
