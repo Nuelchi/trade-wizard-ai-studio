@@ -22,6 +22,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useChatContext } from '@/contexts/ChatContext';
+import TradingChart from '@/components/TradingChart';
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
 type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
@@ -448,109 +449,53 @@ const Dashboard = () => {
               <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
                   
                   
-                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col min-h-0 overflow-hidden">
-                      {/* Chart Controls */}
-                      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/10 flex-shrink-0" style={{minHeight: '48px', maxHeight: '48px'}}>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-foreground">Pair:</span>
-                            <Select value={selectedPair} onValueChange={setSelectedPair}>
-                              <SelectTrigger className="w-32 h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {tradingPairs.map(pair => <SelectItem key={pair} value={pair}>
-                                    {pair}
-                                  </SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-foreground">Timeframe:</span>
-                            <Select value={selectedTimeframe} onValueChange={setSelectedTimeframe}>
-                              <SelectTrigger className="w-32 h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {timeframes.map(tf => <SelectItem key={tf.value} value={tf.value}>
-                                    {tf.label}
-                                  </SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        
-                        <div className="text-xs text-muted-foreground">
-                          {selectedPair} • {timeframes.find(tf => tf.value === selectedTimeframe)?.label}
-                        </div>
-                      </div>
-
-                      {/* Chart + Performance Metrics */}
-                      <div className="flex-1 min-h-0 p-2 overflow-hidden flex flex-col gap-4">
-                        {/* Chart and Metrics Split */}
-                        <div className="flex-1 flex flex-col h-full min-h-0 gap-4">
-                          <div className="flex-1" style={{ flexBasis: '80%', minHeight: 0 }}>
-                            <div className="w-full h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center overflow-hidden">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={priceData} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
-                                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                  <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
-                                  <YAxis domain={['dataMin - 0.5', 'dataMax + 0.5']} className="text-xs" tick={{ fontSize: 10 }} />
-                                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} formatter={(value, name) => [typeof value === 'number' ? value.toFixed(4) : value, name]} />
-                                  <Legend />
-                                  <Line type="monotone" dataKey="close" stroke="hsl(var(--primary))" strokeWidth={3} name="Close Price" dot={false} />
-                                  <Line type="monotone" dataKey="high" stroke="hsl(var(--success))" strokeWidth={1.5} strokeDasharray="5 5" name="High" dot={false} />
-                                  <Line type="monotone" dataKey="low" stroke="hsl(var(--danger))" strokeWidth={1.5} strokeDasharray="5 5" name="Low" dot={false} />
-                                </LineChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </div>
-                          <div style={{ flexBasis: '20%' }} className="w-full mt-2">
-                            <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
-                              {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
-                              <div className="flex flex-row justify-between items-end w-full mb-4">
-                                <div className="flex flex-col items-center">
-                                  <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
-                                  <span className="text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                  <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                                  <span className="text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                  <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-                                  <span className="text-lg font-bold text-foreground">{analytics.totalTrades}</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                  <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
-                                  <span className="text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                  <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-                                  <span className="text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
-                                </div>
-                              </div>
-                              {/* Equity/Drawdown Curve Chart */}
-                              <div className="w-full h-[220px] mt-4">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <ComposedChart data={equityCurve} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                    <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
-                                    <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
-                                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Area yAxisId="left" type="monotone" dataKey="equity" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} name="Equity" />
-                                    <Bar yAxisId="right" dataKey="drawdown" fill="#ef4444" fillOpacity={0.3} name="Drawdown %" />
-                                  </ComposedChart>
-                                </ResponsiveContainer>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>}
+                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> :
+  <div className="h-full flex flex-col min-h-0 overflow-hidden">
+    <TradingChart />
+    <div className="w-full mt-4">
+      <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
+        {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
+        <div className="flex flex-row justify-between items-end w-full mb-4">
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
+            <span className="text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+            <span className="text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+            <span className="text-lg font-bold text-foreground">{analytics.totalTrades}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
+            <span className="text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+            <span className="text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
+          </div>
+        </div>
+        {/* Equity/Drawdown Curve Chart */}
+        <div className="w-full h-[220px] mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={equityCurve} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Legend />
+              <Area yAxisId="left" type="monotone" dataKey="equity" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} name="Equity" />
+              <Bar yAxisId="right" dataKey="drawdown" fill="#ef4444" fillOpacity={0.3} name="Drawdown %" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  </div>
+}
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>

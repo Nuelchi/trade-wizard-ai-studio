@@ -12,6 +12,7 @@ import AuthGuard from "@/components/AuthGuard";
 import CodeCompiler from "@/components/CodeCompiler";
 import { Play, Pause, Square, Upload, BarChart3, TrendingUp, TrendingDown, Clock, DollarSign, Percent, Target, MessageSquare, Code, Download, Settings, FileText, Send } from 'lucide-react';
 import { toast } from "sonner";
+import TradingChart from '@/components/TradingChart';
 
 const EnhancedTest = () => {
   const [selectedStrategy, setSelectedStrategy] = useState<string>('');
@@ -275,82 +276,10 @@ const EnhancedTest = () => {
 
               <div className="flex-1 overflow-auto">
                 {/* Chart Tab - Full Width Layout */}
-                <TabsContent value="chart" className="h-full m-0 p-6">
-                  {/* TradingView-style Chart - Full Width */}
-                  <Card className="trading-card mb-6">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <BarChart3 className="w-5 h-5 text-primary" />
-                          EURUSD • 1H
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <Settings className="w-4 h-4" />
-                          </Button>
-                          <Badge variant="outline">Live</Badge>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[500px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={priceData}>
-                            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                            <XAxis 
-                              dataKey="time" 
-                              className="text-xs"
-                              tick={{ fontSize: 10 }}
-                            />
-                            <YAxis 
-                              domain={['dataMin - 0.5', 'dataMax + 0.5']}
-                              className="text-xs"
-                              tick={{ fontSize: 10 }}
-                            />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: 'hsl(var(--background))', 
-                                border: '1px solid hsl(var(--border))',
-                                borderRadius: '8px'
-                              }}
-                              formatter={(value, name) => [
-                                typeof value === 'number' ? value.toFixed(4) : value,
-                                name
-                              ]}
-                            />
-                            <Legend />
-                            <Line 
-                              type="monotone" 
-                              dataKey="close" 
-                              stroke="hsl(var(--primary))" 
-                              strokeWidth={3}
-                              name="Close Price"
-                              dot={false}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="high" 
-                              stroke="hsl(var(--success))" 
-                              strokeWidth={1.5}
-                              strokeDasharray="5 5"
-                              name="High"
-                              dot={false}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="low" 
-                              stroke="hsl(var(--danger))" 
-                              strokeWidth={1.5}
-                              strokeDasharray="5 5"
-                              name="Low"
-                              dot={false}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-
+                <TabsContent value="chart" className="h-full m-0 p-0">
+                  <div className="flex-1 w-full h-full min-h-[500px]">
+                    <TradingChart />
+                  </div>
                   {/* Bottom Section: AI Prompt (Left) + Live Metrics (Right) */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* AI Prompt Box - Left Side */}
