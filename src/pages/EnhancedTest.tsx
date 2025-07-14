@@ -155,67 +155,72 @@ const EnhancedTest = () => {
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 {/* Chart Tab - Full Height Layout */}
                 <TabsContent value="chart" className="flex-1 h-full w-full min-h-0 p-0 m-0 flex flex-col">
-                  <div className="flex-1 min-h-0 flex flex-row">
-                    {/* Left: Trading Chart */}
-                    <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    {/* Trading Chart - Full Width */}
+                    <div className="flex-1 min-h-0 w-full">
                       <TradingChart onStrategySelect={handleStrategySelect} onStrategyUpload={handleStrategyUpload} />
                     </div>
-                    {/* Right: Mini Chat + Metrics */}
-                    <div className="w-[400px] max-w-full flex flex-col border-l border-border bg-background p-4">
-                      <div className="mb-4">
-                        <div className="font-semibold text-lg mb-2 flex items-center gap-2">
-                          <MessageSquare className="w-5 h-5 text-primary" />
-                          Mini Strategy Chat
-                        </div>
-                        <div className="flex flex-col h-48 overflow-y-auto bg-muted/10 rounded p-2 border border-border mb-2">
-                          {miniChatMessages.length === 0 ? (
-                            <div className="text-xs text-muted-foreground text-center py-6">No messages yet. Try asking the mini AI something about your strategy.</div>
-                          ) : (
-                            miniChatMessages.map((msg, idx) => (
-                              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-1`}>
-                                <div className={`rounded-lg px-3 py-2 max-w-[80%] text-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground border border-border'}`}>
-                                  {msg.content}
+                    
+                    {/* Bottom Footer - Mini Chat + Metrics */}
+                    <div className="h-48 w-full flex flex-row border-t border-border bg-background">
+                      {/* Left: Mini Chat */}
+                      <div className="flex-1 p-4 border-r border-border">
+                        <div className="mb-4">
+                          <div className="font-semibold text-lg mb-2 flex items-center gap-2">
+                            <MessageSquare className="w-5 h-5 text-primary" />
+                            Mini Strategy Chat
+                          </div>
+                          <div className="flex flex-col h-24 overflow-y-auto bg-muted/10 rounded p-2 border border-border mb-2">
+                            {miniChatMessages.length === 0 ? (
+                              <div className="text-xs text-muted-foreground text-center py-2">No messages yet. Try asking the mini AI something about your strategy.</div>
+                            ) : (
+                              miniChatMessages.map((msg, idx) => (
+                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-1`}>
+                                  <div className={`rounded-lg px-3 py-2 max-w-[80%] text-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground border border-border'}`}>
+                                    {msg.content}
+                                  </div>
                                 </div>
-                              </div>
-                            ))
-                          )}
+                              ))
+                            )}
+                          </div>
+                          <form className="flex gap-2" onSubmit={handleMiniChatSend}>
+                            <input
+                              type="text"
+                              className="flex-1 px-3 py-2 rounded bg-background text-base border border-border focus:outline-none"
+                              placeholder="Ask the mini AI..."
+                              value={miniChatInput}
+                              onChange={e => setMiniChatInput(e.target.value)}
+                            />
+                            <Button size="icon" type="submit" disabled={!miniChatInput.trim()}>
+                              <Send className="w-5 h-5" />
+                            </Button>
+                          </form>
                         </div>
-                        <form className="flex gap-2" onSubmit={handleMiniChatSend}>
-                          <input
-                            type="text"
-                            className="flex-1 px-3 py-2 rounded bg-background text-base border border-border focus:outline-none"
-                            placeholder="Ask the mini AI..."
-                            value={miniChatInput}
-                            onChange={e => setMiniChatInput(e.target.value)}
-                          />
-                          <Button size="icon" type="submit" disabled={!miniChatInput.trim()}>
-                            <Send className="w-5 h-5" />
-                          </Button>
-                        </form>
                       </div>
-                      {/* Metrics Card */}
-                      <div className="flex-1 flex flex-col justify-end">
+                      
+                      {/* Right: Metrics */}
+                      <div className="w-96 p-4">
                         <div className="font-semibold text-lg mb-2">Live Performance Metrics</div>
-                        <div className="flex flex-row gap-8 justify-between items-center flex-wrap mb-2">
+                        <div className="flex flex-row gap-4 justify-between items-center flex-wrap">
                           <div className="flex flex-col items-center">
                             <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
-                            <span className="text-2xl font-bold text-success">${backtestResults.totalReturn}</span>
+                            <span className="text-xl font-bold text-success">${backtestResults.totalReturn}</span>
                           </div>
                           <div className="flex flex-col items-center">
                             <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
-                            <span className="text-2xl font-bold text-blue-600">{backtestResults.winRate}%</span>
+                            <span className="text-xl font-bold text-blue-600">{backtestResults.winRate}%</span>
                           </div>
                           <div className="flex flex-col items-center">
                             <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-                            <span className="text-2xl font-bold text-black">{backtestResults.profitFactor}</span>
+                            <span className="text-xl font-bold text-black">{backtestResults.profitFactor}</span>
                           </div>
                           <div className="flex flex-col items-center">
                             <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                            <span className="text-2xl font-bold text-danger">{backtestResults.maxDrawdown}%</span>
+                            <span className="text-xl font-bold text-danger">{backtestResults.maxDrawdown}%</span>
                           </div>
                           <div className="flex flex-col items-center">
                             <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-                            <span className="text-2xl font-bold">{backtestResults.totalTrades}</span>
+                            <span className="text-xl font-bold">{backtestResults.totalTrades}</span>
                           </div>
                         </div>
                       </div>
