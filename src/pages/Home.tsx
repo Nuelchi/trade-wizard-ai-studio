@@ -30,7 +30,7 @@ const RotatingPlaceholder = () => {
         if (displayText.length < currentPlaceholder.length) {
           setDisplayText(currentPlaceholder.slice(0, displayText.length + 1));
         } else {
-          setTimeout(() => setIsDeleting(true), 2000);
+          setTimeout(() => setIsDeleting(true), 800);
         }
       } else {
         if (displayText.length > 0) {
@@ -40,7 +40,7 @@ const RotatingPlaceholder = () => {
           setCurrentIndex((prev) => (prev + 1) % placeholders.length);
         }
       }
-    }, isDeleting ? 50 : 100);
+    }, isDeleting ? 20 : 40);
     
     return () => clearTimeout(timeout);
   }, [displayText, isDeleting, currentIndex, placeholders]);
