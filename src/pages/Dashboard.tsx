@@ -257,13 +257,7 @@ const Dashboard = () => {
               {/* Right Panel - Live Preview */}
               <ResizablePanel defaultSize={50} minSize={30}>
                 <div className="h-full flex flex-col bg-background">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                    <div className="flex items-center space-x-2">
-                      <Eye className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">Live Preview</span>
-                    </div>
-                    
-                  </div>
+                  
                   
                   {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col">
                       {/* Chart Controls */}
