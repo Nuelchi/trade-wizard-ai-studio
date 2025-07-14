@@ -59,6 +59,13 @@ const Home = () => {
   const { toast } = useToast();
   const { openAuthDialog } = useAuthDialog();
 
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    return () => {
+      document.documentElement.classList.remove('dark');
+    };
+  }, []);
+
   const handleBuildStrategy = () => {
     if (strategy.trim()) {
       localStorage.setItem("userStrategy", strategy);
