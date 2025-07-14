@@ -192,7 +192,7 @@ const EnhancedTest = () => {
                 {/* Chart Tab */}
                 <TabsContent value="chart" className="flex-1 flex flex-col p-0 m-0">
                   {/* Trading Chart */}
-                  <div className="flex-1 min-h-[60vh]">
+                  <div className="flex-1 min-h-[60vh] w-full">
                     <TradingChart onStrategySelect={handleStrategySelect} onStrategyUpload={handleStrategyUpload} />
                   </div>
                   

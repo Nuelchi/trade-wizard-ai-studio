@@ -196,7 +196,7 @@ const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full p-0 m-0">
+    <div className="flex flex-col h-full w-full">
       {/* Horizontal selector bar */}
       <div className="flex flex-row items-center gap-2 px-4 py-2 border-b border-border bg-muted/30" style={{ minHeight: 48, maxHeight: 56 }}>
         {/* Asset class pills */}
@@ -278,14 +278,15 @@ const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
         </div>
       </div>
       {/* Chart area fills all remaining space */}
-      <div className="flex-1 h-0 w-full">
+      <div className="flex-1 w-full" style={{ height: 'calc(100% - 56px)' }}>
         <TradingViewWidget
           symbol={symbol}
           interval={interval}
           theme="Dark"
           locale="en"
           autosize
-          style={{ height: '100%', width: '100%' }}
+          width="100%"
+          height="100%"
           hide_side_toolbar={false}
           allow_symbol_change={false}
           toolbar_bg="#141413"
