@@ -220,9 +220,10 @@ void OnTick() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Strategy Selection */}
-        <div className="space-y-6">
+      <div className="space-y-8">
+        {/* Strategy and Format Selection - Side by Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Strategy Selection */}
           <Card className="trading-card">
             <CardHeader>
               <CardTitle>Select Strategy</CardTitle>
@@ -256,6 +257,7 @@ void OnTick() {
             </CardContent>
           </Card>
 
+          {/* Format Selection */}
           <Card className="trading-card">
             <CardHeader>
               <CardTitle>Select Format</CardTitle>
@@ -306,59 +308,57 @@ void OnTick() {
           </Card>
         </div>
 
-        {/* Export Options */}
-        <div className="space-y-6">
-          {convertedCode ? (
-            <>
-              <Card className="trading-card">
-                <CardHeader>
-                  <CardTitle>Conversion Complete!</CardTitle>
-                  <CardDescription>
-                    Your strategy has been converted to {formats.find(f => f.id === selectedFormat)?.name}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-3">
-                    <Button onClick={handleDownload} className="glow-button">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download {formats.find(f => f.id === selectedFormat)?.extension}
-                    </Button>
-                    <Button onClick={handleCopy} variant="outline">
-                      Copy Code
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="trading-card">
-                <CardHeader>
-                  <CardTitle>Code Preview</CardTitle>
-                  <CardDescription>Review your converted strategy code</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="max-h-96 overflow-y-auto">
-                    <pre className="bg-muted/30 rounded p-4 text-xs font-mono overflow-x-auto">
-                      {convertedCode}
-                    </pre>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
+        {/* Conversion Results - Full Width Below */}
+        {convertedCode ? (
+          <div className="space-y-6">
             <Card className="trading-card">
               <CardHeader>
-                <CardTitle>Ready to Convert</CardTitle>
-                <CardDescription>Select a strategy and format to get started</CardDescription>
+                <CardTitle>Conversion Complete!</CardTitle>
+                <CardDescription>
+                  Your strategy has been converted to {formats.find(f => f.id === selectedFormat)?.name}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Choose your strategy and target platform, then click "AI Convert Strategy" to generate optimized code.</p>
+                <div className="flex gap-3">
+                  <Button onClick={handleDownload} className="glow-button">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download {formats.find(f => f.id === selectedFormat)?.extension}
+                  </Button>
+                  <Button onClick={handleCopy} variant="outline">
+                    Copy Code
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-          )}
-        </div>
+
+            <Card className="trading-card">
+              <CardHeader>
+                <CardTitle>Code Preview</CardTitle>
+                <CardDescription>Review your converted strategy code</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="max-h-96 overflow-y-auto">
+                  <pre className="bg-muted/30 rounded p-4 text-xs font-mono overflow-x-auto">
+                    {convertedCode}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <Card className="trading-card">
+            <CardHeader>
+              <CardTitle>Ready to Convert</CardTitle>
+              <CardDescription>Select a strategy and format to get started</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Choose your strategy and target platform, then click "AI Convert Strategy" to generate optimized code.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Deploy & Share Section */}
