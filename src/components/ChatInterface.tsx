@@ -20,9 +20,10 @@ interface Message {
 interface ChatInterfaceProps {
   onStrategyGenerated: (strategy: any) => void;
   onCodeGenerated: (code: any) => void;
+  initialChatHistory?: any[];
 }
 
-const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfaceProps) => {
+const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialChatHistory = [] }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -45,6 +46,20 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
   // Voice input state and logic
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+
+  // Initialize chat history when component mounts or initialChatHistory changes
+  useEffect(() => {
+    if (initialChatHistory && initialChatHistory.length > 0) {
+      setMessages(initialChatHistory);
+    }
+  }, [initialChatHistory]);
+
+  // Save chat history to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 1) { // Only save if there are messages beyond the initial greeting
+      localStorage.setItem('chatHistory', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window)) {
