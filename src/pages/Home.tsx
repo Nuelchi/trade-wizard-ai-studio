@@ -490,7 +490,7 @@ const Home = () => {
               <Brain className="w-5 h-5 mr-2" />
               Start Building Now
             </Button>
-            <Button size="lg" variant="outline" onClick={openAuthDialog}>
+            <Button size="lg" variant="outline" onClick={() => openAuthDialog()}>
               Get Started Free
             </Button>
           </div>
