@@ -310,11 +310,11 @@ const Dashboard = () => {
 
         {/* Main Content - Always show chat + preview layout */}
         <div className="flex-1 flex overflow-hidden min-h-0">
-          <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+          <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0 scrollbar-hide">
               {/* Left Panel - Chat Interface */}
               <ResizablePanel defaultSize={30} minSize={25} maxSize={35} className="min-h-0">
                 <div className="h-full border-r border-border flex flex-col bg-background min-h-0">
-                  <div className="flex-1 min-h-0 overflow-y-auto">
+                  <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
                     <ChatInterface onStrategyGenerated={handleStrategyGenerated} onCodeGenerated={handleCodeGenerated} />
                   </div>
                 </div>
@@ -324,7 +324,7 @@ const Dashboard = () => {
 
               {/* Right Panel - Live Preview */}
               <ResizablePanel defaultSize={50} minSize={30} className="min-h-0">
-                <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden">
+                <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
                   
                   
                   {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col min-h-0 overflow-hidden">
