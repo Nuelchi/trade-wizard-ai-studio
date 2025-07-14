@@ -10,12 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 const RotatingPlaceholder = () => {
   const placeholders = [
-    "Create a strategy that buys when the 50 EMA is above the 200 EMA and RSI is below 40, only during London session.",
-    "Build a strategy that avoids trades when price is ranging and only enters if ADX > 25 and MA crossover occurs.",
-    "Build a bot that enters trades only if volume on the entry candle is above average by 30%. Works with MA cross logic.",
-    "Buy when RSI is oversold and price breaks above 20-day moving average with high volume confirmation...",
-    "Long EUR/USD when it crosses above 50 EMA with bullish divergence on MACD during high volatility periods...",
-    "Short SPY when VIX spikes above 30 and price breaks key support with volume confirmation..."
+    "Create a strategy that buys when the 50 EMA is above the 200 EMA and RSI is below 40",
+    "Build a strategy that enters long when price breaks above resistance with volume",
+    "Design a strategy that buys Bitcoin when MACD crosses up and daily volume is high",
+    "Generate a strategy that shorts SPY if VIX spikes above 30 and price breaks support",
+    "Develop a strategy that buys when 20-day MA crosses above 50-day MA and ADX > 25",
+    "Write a strategy that sells when RSI exceeds 70 or stop loss is hit at 2%",
+    "Construct a strategy that goes long on EUR/USD when bullish divergence appears on 1H"
   ];
   
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -265,54 +266,56 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative py-24 overflow-hidden">
+      <section className="relative py-16 overflow-hidden"> {/* Reduced from py-24 to py-16 */}
         <div className="absolute inset-0 bg-gradient-hero"></div>
-        <div className="container mx-auto px-6 relative">
-          <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto px-6 py-12 relative">
+          <div className="text-center mb-12"> {/* Reduced mb-16 to mb-12 */}
             <Badge variant="outline" className="mb-6 border-primary/20 text-primary bg-primary/10">
               <Zap className="w-3 h-3 mr-1" />
               AI-Powered Strategy Builder
             </Badge>
-            
             <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-              Turn trading ideas into<br />
-              <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">automated strategies in seconds</span>
+              Turn trading ideas into <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">automated strategies</span> in seconds
             </h1>
-            
-            <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-muted-foreground mb-10 max-w-3xl mx-auto">
               Describe your trading strategy in plain English and watch our AI convert it into 
               executable Pine Script, MQL4, and MQL5 code. No programming experience required.
             </p>
-            
-            {/* Strategy Input Card */}
-            <div className="trading-card p-8 max-w-4xl mx-auto mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-left">Describe Your Trading Strategy</h3>
+          </div>
+
+          {/* Beautiful Prompt Area */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="backdrop-blur-md bg-black/70 border border-white/10 shadow-xl rounded-2xl px-6 py-8 w-full max-w-3xl mx-auto mb-8 relative">
               <Textarea
                 placeholder={rotatingPlaceholder}
                 value={strategy}
                 onChange={(e) => setStrategy(e.target.value)}
-                className="strategy-input min-h-[120px] mb-6 text-base resize-none"
+                className="bg-transparent border-none text-lg text-white placeholder:text-white/50 focus:ring-2 focus:ring-primary/50 min-h-[56px] mb-4 resize-none shadow-none"
+                style={{boxShadow: 'none'}}
               />
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={handleBuildStrategy} className="glow-button flex-1 text-base py-3">
-                  Build My Strategy →
-                </Button>
-                <span className="text-sm text-muted-foreground self-center">Or try an example below</span>
-              </div>
+              <button
+                onClick={handleBuildStrategy}
+                className={`absolute right-6 bottom-8 rounded-full p-3 shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 ${!strategy.trim() ? 'bg-gray-400 cursor-not-allowed opacity-60' : 'bg-primary hover:bg-primary/80 text-white'}`}
+                style={{boxShadow: '0 4px 24px 0 rgba(0,0,0,0.15)'}}
+                aria-label="Submit"
+                disabled={!strategy.trim()}
+              >
+                <ArrowRight className="w-6 h-6" />
+              </button>
             </div>
+          </div>
 
-            {/* Example Strategy Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-              {exampleStrategies.map((example, index) => (
-                <Card key={index} className="trading-card hover:shadow-glow transition-all cursor-pointer group text-left" onClick={() => setStrategy(example)}>
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                      {example}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          {/* Example Strategy Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+            {exampleStrategies.map((example, index) => (
+              <Card key={index} className="trading-card hover:shadow-glow transition-all cursor-pointer group text-left" onClick={() => setStrategy(example)}>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                    {example}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>

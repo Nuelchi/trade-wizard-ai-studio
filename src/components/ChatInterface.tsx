@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3 } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3, Paperclip, Mic, Plus, ArrowUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -14,6 +14,7 @@ interface Message {
   timestamp: Date;
   suggestions?: string[];
   codeGenerated?: boolean;
+  image?: string;
 }
 
 interface ChatInterfaceProps {
@@ -40,6 +41,52 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Voice input state and logic
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      toast({ title: 'Voice input not supported', description: 'Your browser does not support speech recognition.' });
+      return;
+    }
+    if (!isRecording) {
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput((prev) => prev ? prev + ' ' + transcript : transcript);
+      };
+      recognition.onend = () => setIsRecording(false);
+      recognition.onerror = () => setIsRecording(false);
+      recognition.start();
+      recognitionRef.current = recognition;
+      setIsRecording(true);
+    } else {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -152,17 +199,19 @@ void OnTick()
   };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !imageFile) return;
 
-    const userMessage: Message = {
+    let userMessage: Message = {
       id: Date.now().toString(),
       content: input,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      image: imagePreview || undefined
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setImageFile(null);
+    setImagePreview(null);
     setIsTyping(true);
 
     // Simulate AI processing
@@ -245,6 +294,9 @@ Would you like me to modify anything or run a backtest?`,
               <div className={`${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
                 <Card className={`p-3 ${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/50'}`}>
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  {message.image && (
+                    <img src={message.image} alt="uploaded" className="mt-2 rounded-lg max-w-[160px] max-h-[120px] border border-border" />
+                  )}
                   {message.codeGenerated && (
                     <div className="flex items-center space-x-2 mt-2 pt-2 border-t border-border">
                       <Badge variant="secondary" className="text-xs">
@@ -302,39 +354,47 @@ Would you like me to modify anything or run a backtest?`,
       </div>
 
       {/* Input */}
-      <div className="border-t border-border p-4">
-        <div className="flex space-x-2">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Describe your trading strategy..."
-            className="flex-1 min-h-[60px] resize-none"
-            rows={2}
-          />
-          <Button 
-            onClick={handleSend} 
-            disabled={!input.trim() || isTyping}
-            size="icon"
-            className="h-[60px] w-[60px]"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-        
-        <div className="flex flex-wrap gap-2 mt-2">
-          <Button variant="outline" size="sm" onClick={() => handleSuggestionClick("Create a moving average crossover strategy")}>
-            <TrendingUp className="w-3 h-3 mr-1" />
-            MA Crossover
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleSuggestionClick("Build an RSI mean reversion strategy")}>
-            <BarChart3 className="w-3 h-3 mr-1" />
-            RSI Strategy
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleSuggestionClick("Design a breakout strategy")}>
-            <Sparkles className="w-3 h-3 mr-1" />
-            Breakout
-          </Button>
+      <div className="p-4">
+        <div className="backdrop-blur-md bg-background/80 dark:bg-black/70 border border-border shadow-xl rounded-2xl px-4 py-4 flex flex-col gap-2 w-full">
+          <div className="flex items-end gap-2 w-full">
+            <Button size="icon" variant="ghost" className="rounded-full" title="Upload Image" asChild>
+              <label>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                <Plus className="w-6 h-6" />
+              </label>
+            </Button>
+            <Button size="icon" variant={isRecording ? 'default' : 'ghost'} className={`rounded-full ${isRecording ? 'bg-primary text-white' : ''}`} title="Voice Input" onClick={handleVoiceInput}>
+              <Mic className="w-6 h-6" />
+            </Button>
+            <div className="flex-1 flex flex-col min-h-[96px] max-h-[160px]">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Describe your trading strategy..."
+                className="flex-1 min-h-[96px] max-h-[160px] resize-none bg-transparent border-none text-base text-foreground placeholder:text-muted-foreground shadow-none focus:ring-0"
+                rows={3}
+                style={{ boxShadow: 'none' }}
+              />
+              {imagePreview && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={imagePreview} alt="preview" className="w-14 h-14 object-cover rounded-lg border border-border" />
+                  <Button size="icon" variant="ghost" className="rounded-full" onClick={handleRemoveImage} title="Remove image">
+                    ×
+                  </Button>
+                </div>
+              )}
+            </div>
+            <Button 
+              onClick={handleSend} 
+              disabled={(!input.trim() && !imageFile) || isTyping}
+              size="icon"
+              className="rounded-full bg-primary hover:bg-primary/80 text-white h-16 w-16 ml-1 shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label="Send"
+            >
+              <ArrowUp className="w-7 h-7" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

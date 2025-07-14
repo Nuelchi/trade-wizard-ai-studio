@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock } from 'lucide-react';
+import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
@@ -16,6 +16,9 @@ import CodePreview from '@/components/CodePreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import html2canvas from 'html2canvas';
+import { Link, useLocation } from 'react-router-dom';
+import ThemeToggle from '@/components/ThemeToggle';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Area, Bar } from 'recharts';
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
@@ -156,10 +159,53 @@ const Dashboard = () => {
       price: ""
     });
   };
+  const location = useLocation();
+  const sectionOptions = [
+    { path: '/dashboard', label: 'Builder', icon: MessageSquare },
+    { path: '/test', label: 'Strategy Tester', icon: TrendingUp },
+    { path: '/export', label: 'Export', icon: Download },
+    { path: '/mystrategies', label: 'My Strategies', icon: User },
+  ];
+  const currentSection = sectionOptions.find(opt => location.pathname.startsWith(opt.path)) || sectionOptions[0];
+  // Mock price data for chart
+  const priceData = [
+    { time: '2024-01-01', open: 100, high: 105, low: 98, close: 103 },
+    { time: '2024-01-02', open: 103, high: 108, low: 101, close: 106 },
+    { time: '2024-01-03', open: 106, high: 109, low: 104, close: 107 },
+    { time: '2024-01-04', open: 107, high: 112, low: 105, close: 110 },
+    { time: '2024-01-05', open: 110, high: 115, low: 108, close: 113 },
+    { time: '2024-01-06', open: 113, high: 116, low: 111, close: 114 },
+    { time: '2024-01-07', open: 114, high: 118, low: 112, close: 117 },
+  ];
+  // Add mock analytics data for advanced metrics and equity/drawdown curve
+  const analytics = {
+    totalPnL: 2450.75,
+    totalReturn: 24.5,
+    maxDrawdown: -8.2,
+    totalTrades: 145,
+    profitableTrades: 87,
+    losingTrades: 58,
+    profitFactor: 1.73,
+    winRate: 60.0,
+    sharpeRatio: 1.8,
+    largestWin: 520.5,
+    largestLoss: -310.2,
+    avgWin: 110.3,
+    avgLoss: -75.6,
+  };
+  const equityCurve = [
+    { time: '2024-01-01', equity: 10000, drawdown: 0 },
+    { time: '2024-01-02', equity: 10250, drawdown: 0 },
+    { time: '2024-01-03', equity: 10400, drawdown: 0 },
+    { time: '2024-01-04', equity: 10100, drawdown: 2.88 },
+    { time: '2024-01-05', equity: 10600, drawdown: 0 },
+    { time: '2024-01-06', equity: 10800, drawdown: 0 },
+    { time: '2024-01-07', equity: 11250, drawdown: 0 },
+  ];
   return <AuthGuard requireAuth={true}>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">
           {/* Left Section - Strategy Name */}
           <div className="flex items-center space-x-2 min-w-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -174,41 +220,56 @@ const Dashboard = () => {
               </h1>}
           </div>
 
-          {/* Center Section - Strategy Info & Controls */}
-          <div className="flex items-center justify-between flex-1 max-w-5xl">
-            <div className="text-sm text-muted-foreground hidden md:block ml-8">
-              AI Strategy Builder - Just like Lovable, but for traders
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              {/* Code/Chart Toggle */}
-              <div className="flex items-center bg-muted rounded-lg p-1">
-                <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
-                  <FileCode className="w-4 h-4" />
-                  Code
+          {/* Center Section - Navigation Dropdown as Select Field */}
+          <div className="ml-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 min-w-[160px] justify-between border border-border bg-background text-foreground font-medium shadow-none">
+                  <span className="flex items-center gap-2">
+                    {currentSection.icon && <currentSection.icon className="w-4 h-4" />}
+                    {currentSection.label}
+                  </span>
+                  <ChevronDown className="w-4 h-4 opacity-70" />
                 </Button>
-                <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
-                  <BarChart3 className="w-4 h-4" />
-                  Chart
-                </Button>
-              </div>
-              
-              {/* Publish Button */}
-              <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
-                <Upload className="w-4 h-4" />
-              </Button>
-              
-              <Separator orientation="vertical" className="h-6 hidden md:block" />
-              
-              {/* Upgrade Button */}
-              <Button variant="outline" size="sm" className="h-8">
-                Upgrade
-              </Button>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {sectionOptions.map(opt => (
+                  <DropdownMenuItem asChild key={opt.path} className={opt.path === currentSection.path ? 'bg-muted font-semibold' : ''}>
+                    <Link to={opt.path} className="flex items-center gap-2">
+                      {opt.icon && <opt.icon className="w-4 h-4 mr-2" />}
+                      {opt.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          {/* Right Section - User Menu */}
-          <div className="flex items-center space-x-2 min-w-0">
+          {/* Right Section - Controls */}
+          <div className="flex items-center gap-2">
+            {/* Code/Chart Toggle */}
+            <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
+              <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
+                <FileCode className="w-4 h-4" />
+                Code
+              </Button>
+              <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
+                <BarChart3 className="w-4 h-4" />
+                Chart
+              </Button>
+            </div>
+            {/* Publish Button - now labeled and primary */}
+            <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary flex items-center gap-2 px-4">
+              <Upload className="w-4 h-4" />
+              Publish
+            </Button>
+            {/* Upgrade Button */}
+            <Button variant="outline" size="sm" className="h-8">
+              Upgrade
+            </Button>
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            {/* Settings/User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8">
@@ -248,27 +309,27 @@ const Dashboard = () => {
         </div>
 
         {/* Main Content - Always show chat + preview layout */}
-        <div className="flex-1 flex overflow-hidden">
-          <ResizablePanelGroup direction="horizontal" className="flex-1">
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
               {/* Left Panel - Chat Interface */}
-              <ResizablePanel defaultSize={50} minSize={30}>
-                <div className="h-full border-r border-border flex flex-col bg-background">
-                  
-                  
-                  <ChatInterface onStrategyGenerated={handleStrategyGenerated} onCodeGenerated={handleCodeGenerated} />
+              <ResizablePanel defaultSize={30} minSize={25} maxSize={35} className="min-h-0">
+                <div className="h-full border-r border-border flex flex-col bg-background min-h-0">
+                  <div className="flex-1 min-h-0 overflow-y-auto">
+                    <ChatInterface onStrategyGenerated={handleStrategyGenerated} onCodeGenerated={handleCodeGenerated} />
+                  </div>
                 </div>
               </ResizablePanel>
 
               <ResizableHandle withHandle />
 
               {/* Right Panel - Live Preview */}
-              <ResizablePanel defaultSize={50} minSize={30}>
-                <div className="h-full flex flex-col bg-background">
+              <ResizablePanel defaultSize={50} minSize={30} className="min-h-0">
+                <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden">
                   
                   
-                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col">
+                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col min-h-0 overflow-hidden">
                       {/* Chart Controls */}
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/10">
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/10 flex-shrink-0" style={{minHeight: '48px', maxHeight: '48px'}}>
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-2">
                             <span className="text-sm font-medium text-foreground">Pair:</span>
@@ -304,31 +365,67 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      {/* Performance Chart View */}
-                      <div className="flex-1 p-4">
-                        <div id="chart-preview" className="h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center">
-                          <div className="text-center">
-                            <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-foreground mb-2">
-                              {selectedPair} Performance Chart
-                            </h3>
-                            <p className="text-sm text-muted-foreground max-w-md mb-4">
-                              Real-time backtested performance data for {selectedPair} on {timeframes.find(tf => tf.value === selectedTimeframe)?.label} timeframe.
-                            </p>
-                            {currentStrategy && <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-                                <div className="p-3 bg-background rounded-lg border">
-                                  <div className="text-2xl font-bold text-green-500">+24.5%</div>
-                                  <div className="text-xs text-muted-foreground">Total Return</div>
+                      {/* Chart + Performance Metrics */}
+                      <div className="flex-1 min-h-0 p-2 overflow-hidden flex flex-col gap-4">
+                        {/* Chart and Metrics Split */}
+                        <div className="flex-1 flex flex-col h-full min-h-0 gap-4">
+                          <div className="flex-1" style={{ flexBasis: '80%', minHeight: 0 }}>
+                            <div className="w-full h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center overflow-hidden">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={priceData} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
+                                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                  <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
+                                  <YAxis domain={['dataMin - 0.5', 'dataMax + 0.5']} className="text-xs" tick={{ fontSize: 10 }} />
+                                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} formatter={(value, name) => [typeof value === 'number' ? value.toFixed(4) : value, name]} />
+                                  <Legend />
+                                  <Line type="monotone" dataKey="close" stroke="hsl(var(--primary))" strokeWidth={3} name="Close Price" dot={false} />
+                                  <Line type="monotone" dataKey="high" stroke="hsl(var(--success))" strokeWidth={1.5} strokeDasharray="5 5" name="High" dot={false} />
+                                  <Line type="monotone" dataKey="low" stroke="hsl(var(--danger))" strokeWidth={1.5} strokeDasharray="5 5" name="Low" dot={false} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                          <div style={{ flexBasis: '20%' }} className="w-full mt-2">
+                            <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
+                              {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
+                              <div className="flex flex-row justify-between items-end w-full mb-4">
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
+                                  <span className="text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
                                 </div>
-                                <div className="p-3 bg-background rounded-lg border">
-                                  <div className="text-2xl font-bold text-blue-500">1.8</div>
-                                  <div className="text-xs text-muted-foreground">Sharpe Ratio</div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                                  <span className="text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
                                 </div>
-                                <div className="p-3 bg-background rounded-lg border">
-                                  <div className="text-2xl font-bold text-purple-500">-8.2%</div>
-                                  <div className="text-xs text-muted-foreground">Max Drawdown</div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+                                  <span className="text-lg font-bold text-foreground">{analytics.totalTrades}</span>
                                 </div>
-                              </div>}
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
+                                  <span className="text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+                                  <span className="text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
+                                </div>
+                              </div>
+                              {/* Equity/Drawdown Curve Chart */}
+                              <div className="w-full h-[220px] mt-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <ComposedChart data={equityCurve} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                    <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
+                                    <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Area yAxisId="left" type="monotone" dataKey="equity" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} name="Equity" />
+                                    <Bar yAxisId="right" dataKey="drawdown" fill="#ef4444" fillOpacity={0.3} name="Drawdown %" />
+                                  </ComposedChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
