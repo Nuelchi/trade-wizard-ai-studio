@@ -7,6 +7,7 @@ import { Trash, Download, Edit, FileText, Image, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
+import { useChatContext } from '@/contexts/ChatContext';
 
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
@@ -17,6 +18,7 @@ const MyStrategies = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { setMessages } = useChatContext();
 
   useEffect(() => {
     if (!user) return;
@@ -47,6 +49,7 @@ const MyStrategies = () => {
   };
 
   const handleOpen = (strategy: Strategy) => {
+    setMessages(Array.isArray(strategy.chat_history) ? strategy.chat_history : []);
     navigate('/dashboard', { state: { strategy } });
   };
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -8,7 +8,8 @@ import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3, Paperclip, Mic,
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Database } from '@/integrations/supabase/types';
+import { useChatContext } from '@/contexts/ChatContext';
+import type { Database, TablesInsert } from '@/integrations/supabase/types';
 
 interface Message {
   id: string;
@@ -23,7 +24,6 @@ interface Message {
 interface ChatInterfaceProps {
   onStrategyGenerated: (strategy: any) => void;
   onCodeGenerated: (code: any) => void;
-  initialMessages?: Message[];
 }
 
 const WELCOME_MESSAGE: Message = {
@@ -38,12 +38,8 @@ const WELCOME_MESSAGE: Message = {
   ]
 };
 
-const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialMessages }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>(
-    initialMessages && initialMessages.length > 0
-      ? initialMessages
-      : []
-  );
+const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfaceProps) => {
+  const { messages, setMessages, strategy, setStrategy, resetChat, saveCurrentStrategy } = useChatContext();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -103,12 +99,6 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialMessages }
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  useEffect(() => {
-    if (initialMessages && initialMessages.length > 0) {
-      setMessages(initialMessages);
-    }
-  }, [initialMessages]);
 
   const generateStrategy = (prompt: string) => {
     // Mock strategy generation based on prompt analysis
@@ -221,7 +211,7 @@ void OnTick()
       timestamp: new Date(),
       image: imagePreview || undefined
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages([...messages, userMessage]);
     setInput('');
     setImageFile(null);
     setImagePreview(null);
@@ -255,47 +245,48 @@ Would you like me to modify anything or run a backtest?`,
         codeGenerated: true
       };
 
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages([...messages, userMessage, aiResponse]);
       setIsTyping(false);
 
-      toast({
-        title: 'Strategy Generated!',
-        description: 'Your code is ready in the preview panel.',
-      });
+      // toast({
+      //   title: 'Strategy Generated!',
+      //   description: 'Your code is ready in the preview panel.',
+      // });
       // --- Persist strategy to Supabase ---
       if (user) {
+        const chatHistoryJson = [
+          ...messages,
+          userMessage,
+          aiResponse
+        ].map((msg) => ({
+          ...msg,
+          timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp
+        }));
+        const insertObj: TablesInsert<'strategies'> = {
+          user_id: user.id,
+          title: strategy.name,
+          description: strategy.description,
+          summary: {
+            type: strategy.type,
+            confidence: strategy.confidence,
+            indicators: strategy.indicators,
+            riskManagement: strategy.riskManagement
+          },
+          code: code,
+          chat_history: chatHistoryJson,
+          analytics: null,
+          tags: [],
+          is_public: false,
+          thumbnail: null,
+          likes: 0,
+          copies: 0,
+          price: null,
+        };
         const { error } = await supabase
           .from('strategies')
-          .insert([
-            {
-              user_id: user.id,
-              title: strategy.name,
-              description: strategy.description,
-              summary: {
-                type: strategy.type,
-                confidence: strategy.confidence,
-                indicators: strategy.indicators,
-                riskManagement: strategy.riskManagement
-              },
-              code: code,
-              chat_history: [
-                ...messages,
-                userMessage,
-                aiResponse
-              ],
-              analytics: null,
-              tags: [],
-              is_public: false,
-              thumbnail: null,
-              likes: 0,
-              copies: 0,
-              price: null,
-            }
-          ]);
+          .insert(insertObj);
         if (error) {
           toast({ title: 'Failed to save strategy', description: error.message, variant: 'destructive' });
-        } else {
-          toast({ title: 'Strategy saved!', description: 'You can find it in My Strategies.' });
         }
       }
     }, 2000);

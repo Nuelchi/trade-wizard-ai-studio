@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Brain, Code, TrendingUp, Zap, Star, Copy, Play, Eye, Users, Activity, DollarSign, Heart, Download, GitFork } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthDialog } from "@/contexts/AuthDialogContext";
 
 const RotatingPlaceholder = () => {
   const placeholders = [
@@ -56,6 +57,7 @@ const Home = () => {
   const [strategyLikes, setStrategyLikes] = useState<Record<number, number>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { openAuthDialog } = useAuthDialog();
 
   const handleBuildStrategy = () => {
     if (strategy.trim()) {
@@ -488,8 +490,8 @@ const Home = () => {
               <Brain className="w-5 h-5 mr-2" />
               Start Building Now
             </Button>
-            <Button size="lg" variant="outline">
-              View Documentation
+            <Button size="lg" variant="outline" onClick={openAuthDialog}>
+              Get Started Free
             </Button>
           </div>
         </div>

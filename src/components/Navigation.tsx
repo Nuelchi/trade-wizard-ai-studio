@@ -1,12 +1,26 @@
-import { NavLink } from "react-router-dom";
-import { Home, MessageSquare, User, LogOut, TrendingUp, TestTube, Download } from "lucide-react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Home, MessageSquare, User, LogOut, TrendingUp, TestTube, Download, MessageSquarePlus } from "lucide-react";
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthDialog } from "@/contexts/AuthDialogContext";
+import { useChatContext } from "@/contexts/ChatContext";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
-  
+  const { openAuthDialog } = useAuthDialog();
+  const { saveCurrentStrategy, resetChat } = useChatContext();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNewChat = () => {
+    saveCurrentStrategy();
+    resetChat();
+    if (!location.pathname.startsWith('/dashboard')) {
+      navigate('/dashboard');
+    }
+  };
+
   const publicNavItems = [
     { to: '/community', label: 'Community' },
     { to: '/pricing', label: 'Pricing' },
@@ -65,12 +79,8 @@ const Navigation = () => {
             <div className="flex items-center space-x-2">
               {!user ? (
                 <>
-                  <NavLink to="/login">
-                    <Button variant="outline" size="sm">Log in</Button>
-                  </NavLink>
-                  <NavLink to="/login">
-                    <Button size="sm">Get started</Button>
-                  </NavLink>
+                  <Button variant="outline" size="sm" onClick={() => openAuthDialog('login')}>Log in</Button>
+                  <Button size="sm" onClick={() => openAuthDialog('signup')}>Get started</Button>
                 </>
               ) : (
                 <Button variant="outline" size="sm" onClick={signOut}>Logout</Button>

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu } from 'lucide-react';
+import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu, Square, MessageSquarePlus, LayoutPanelLeft } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
@@ -16,11 +16,12 @@ import CodePreview from '@/components/CodePreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import html2canvas from 'html2canvas';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Area, Bar } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { useChatContext } from '@/contexts/ChatContext';
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
 type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
@@ -51,6 +52,10 @@ const Dashboard = () => {
     toast
   } = useToast();
   const autosaveTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
+  const { resetChat, setMessages, strategy } = useChatContext();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
@@ -82,7 +87,7 @@ const Dashboard = () => {
   };
 
   const handleSaveStrategy = async () => {
-    if (!currentStrategy || !user) return;
+    if (!currentStrategy || !user || !currentStrategy.id || currentStrategy.id === 'undefined') return;
     const { error } = await supabase
       .from<Strategy, StrategyUpdate>('strategies')
       .update({
@@ -193,7 +198,26 @@ const Dashboard = () => {
     });
   };
 
-  const location = useLocation();
+  const startNewChat = async () => {
+    // 1. Save current strategy if valid
+    if (strategy && strategy.id && strategy.id !== 'undefined') {
+      // Optionally call your save logic here
+      await handleSaveStrategy();
+    }
+    // 2. Reset chat context and messages
+    resetChat();
+    setMessages([]);
+    // 3. Reset UI state
+    setChatCollapsed(false);
+    setPreviewMode('code');
+    setStrategyName('Untitled Strategy');
+    setCurrentStrategy(null);
+    setGeneratedCode(null);
+    // 4. Optionally navigate to builder/dashboard if not already there
+    if (!location.pathname.startsWith('/dashboard')) {
+      navigate('/dashboard');
+    }
+  };
 
   // Hydrate from navigation state if a strategy is passed in
   useEffect(() => {
@@ -207,7 +231,7 @@ const Dashboard = () => {
   }, [location.state]);
 
   useEffect(() => {
-    if (!currentStrategy || !user) return;
+    if (!currentStrategy || !user || !currentStrategy.id || currentStrategy.id === 'undefined') return;
     if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
     autosaveTimeout.current = setTimeout(async () => {
       const { error } = await supabase
@@ -292,8 +316,24 @@ const Dashboard = () => {
               </h1>}
           </div>
 
-          {/* Center Section - Navigation Dropdown as Select Field */}
-          <div className="ml-12">
+          {/* Center Section - New Chat & Min/Max Icons + Navigation Dropdown */}
+          <div className="flex items-center ml-12 gap-2">
+            <button
+              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-muted transition-colors"
+              onClick={startNewChat}
+              title="New Chat"
+              aria-label="New Chat"
+            >
+              <MessageSquarePlus className="w-5 h-5 text-primary" />
+            </button>
+            <button
+              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setChatCollapsed(c => !c)}
+              title={chatCollapsed ? "Expand Chat" : "Collapse Chat"}
+              aria-label={chatCollapsed ? "Expand Chat" : "Collapse Chat"}
+            >
+              <LayoutPanelLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 min-w-[160px] justify-between border border-border bg-background text-foreground font-medium shadow-none">
@@ -388,24 +428,24 @@ const Dashboard = () => {
         {/* Main Content - Always show chat + preview layout */}
         <div className="flex-1 flex overflow-hidden min-h-0">
           <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0 scrollbar-hide">
-              {/* Left Panel - Chat Interface */}
+            {/* Left Panel - Chat Interface */}
+            {!chatCollapsed && (
               <ResizablePanel defaultSize={30} minSize={25} maxSize={35} className="min-h-0">
                 <div className="h-full border-r border-border flex flex-col bg-background min-h-0">
                   <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
                     <ChatInterface
                       onStrategyGenerated={handleStrategyGenerated}
                       onCodeGenerated={handleCodeGenerated}
-                      initialMessages={currentStrategy?.chat_history || undefined}
                     />
                   </div>
                 </div>
               </ResizablePanel>
-
-              <ResizableHandle withHandle />
-
-              {/* Right Panel - Live Preview */}
-              <ResizablePanel defaultSize={50} minSize={30} className="min-h-0">
-                <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
+            )}
+            {/* No collapsed button in the chat panel anymore */}
+            <ResizableHandle withHandle />
+            {/* Right Panel - Live Preview */}
+            <ResizablePanel defaultSize={chatCollapsed ? 100 : 50} minSize={30} className="min-h-0">
+              <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
                   
                   
                   {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col min-h-0 overflow-hidden">
