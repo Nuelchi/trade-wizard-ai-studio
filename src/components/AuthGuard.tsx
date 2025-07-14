@@ -10,6 +10,7 @@ import { Mail, Lock, User, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import AuthDialog from './AuthDialog';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ const AuthGuard = ({ children, requireAuth = false }: AuthGuardProps) => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Check authentication status
   useEffect(() => {
@@ -39,6 +41,7 @@ const AuthGuard = ({ children, requireAuth = false }: AuthGuardProps) => {
             title: 'Welcome!',
             description: "You're successfully logged in.",
           });
+          navigate('/dashboard');
         }
       }
     );
@@ -55,7 +58,7 @@ const AuthGuard = ({ children, requireAuth = false }: AuthGuardProps) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [requireAuth, toast]);
+  }, [requireAuth, toast, navigate]);
 
   const handleAuth = async (type: 'login' | 'signup', formData: FormData) => {
     setLoading(true);
