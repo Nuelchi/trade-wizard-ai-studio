@@ -19,6 +19,7 @@ import html2canvas from 'html2canvas';
 import { Link, useLocation } from 'react-router-dom';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Area, Bar } from 'recharts';
+
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
@@ -44,25 +45,31 @@ const Dashboard = () => {
   const {
     toast
   } = useToast();
+
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
   };
+
   const handleCodeGenerated = (code: any) => {
     setGeneratedCode(code);
   };
+
   const handleLogout = async () => {
     await signOut();
     setCurrentStrategy(null);
     setGeneratedCode(null);
   };
+
   const handleNameChange = (newName: string) => {
     setStrategyName(newName || 'Untitled Strategy');
     setIsEditingName(false);
   };
+
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
     // Here you would typically update your theme context
   };
+
   const handleSave = () => {
     // Save strategy logic
     console.log('Saving strategy...');
@@ -105,6 +112,7 @@ const Dashboard = () => {
       description: "Share link copied to clipboard"
     });
   };
+
   const handleExport = () => {
     // Export strategy logic
     toast({
@@ -112,9 +120,11 @@ const Dashboard = () => {
       description: "Strategy code has been exported"
     });
   };
+
   const handlePublishStrategy = () => {
     setPublishDialogOpen(true);
   };
+
   const captureChartThumbnail = async () => {
     const chartElement = document.getElementById('chart-preview');
     if (chartElement) {
@@ -132,6 +142,7 @@ const Dashboard = () => {
     }
     return null;
   };
+
   const handlePublishSubmit = async () => {
     const thumbnail = await captureChartThumbnail();
 
@@ -159,6 +170,7 @@ const Dashboard = () => {
       price: ""
     });
   };
+
   const location = useLocation();
   const sectionOptions = [
     { path: '/dashboard', label: 'Builder', icon: MessageSquare },
@@ -167,6 +179,7 @@ const Dashboard = () => {
     { path: '/mystrategies', label: 'My Strategies', icon: User },
   ];
   const currentSection = sectionOptions.find(opt => location.pathname.startsWith(opt.path)) || sectionOptions[0];
+
   // Mock price data for chart
   const priceData = [
     { time: '2024-01-01', open: 100, high: 105, low: 98, close: 103 },
@@ -177,6 +190,7 @@ const Dashboard = () => {
     { time: '2024-01-06', open: 113, high: 116, low: 111, close: 114 },
     { time: '2024-01-07', open: 114, high: 118, low: 112, close: 117 },
   ];
+
   // Add mock analytics data for advanced metrics and equity/drawdown curve
   const analytics = {
     totalPnL: 2450.75,
@@ -193,6 +207,7 @@ const Dashboard = () => {
     avgWin: 110.3,
     avgLoss: -75.6,
   };
+
   const equityCurve = [
     { time: '2024-01-01', equity: 10000, drawdown: 0 },
     { time: '2024-01-02', equity: 10250, drawdown: 0 },
@@ -202,6 +217,7 @@ const Dashboard = () => {
     { time: '2024-01-06', equity: 10800, drawdown: 0 },
     { time: '2024-01-07', equity: 11250, drawdown: 0 },
   ];
+
   return <AuthGuard requireAuth={true}>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
@@ -221,7 +237,7 @@ const Dashboard = () => {
           </div>
 
           {/* Center Section - Navigation Dropdown as Select Field */}
-          <div className="ml-6">
+          <div className="ml-12">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 min-w-[160px] justify-between border border-border bg-background text-foreground font-medium shadow-none">
@@ -524,4 +540,5 @@ const Dashboard = () => {
       </div>
     </AuthGuard>;
 };
+
 export default Dashboard;
