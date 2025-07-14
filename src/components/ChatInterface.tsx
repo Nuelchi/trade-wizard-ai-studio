@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3, Paperclip, Mic, Plus, ArrowUp } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3, Paperclip, Mic, Plus, ArrowUp, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -264,88 +264,90 @@ Would you like me to modify anything or run a backtest?`,
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`flex items-start space-x-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-              <Avatar className="w-8 h-8 mt-1">
-                {message.sender === 'ai' ? (
-                  <>
-                    <AvatarImage src="/ai-avatar.png" />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      <Bot className="w-4 h-4" />
-                    </AvatarFallback>
-                  </>
-                ) : (
-                  <>
-                    <AvatarImage src="/user-avatar.png" />
-                    <AvatarFallback className="bg-muted">
-                      <User className="w-4 h-4" />
-                    </AvatarFallback>
-                  </>
+            {message.sender === 'ai' && (
+              <div className="flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-primary-foreground" />
+                </div>
+              </div>
+            )}
+            
+            <div className={`max-w-[85%] ${message.sender === 'user' ? 'order-first' : ''}`}>
+              <div className={`rounded-2xl px-4 py-3 ${
+                message.sender === 'user' 
+                  ? 'bg-primary text-primary-foreground ml-auto' 
+                  : 'bg-muted/50 text-foreground'
+              }`}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                {message.image && (
+                  <img 
+                    src={message.image} 
+                    alt="uploaded" 
+                    className="mt-3 rounded-xl max-w-[200px] max-h-[150px] border border-border/20" 
+                  />
                 )}
-              </Avatar>
-              
-              <div className={`${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                <Card className={`p-3 ${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/50'}`}>
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  {message.image && (
-                    <img src={message.image} alt="uploaded" className="mt-2 rounded-lg max-w-[160px] max-h-[120px] border border-border" />
-                  )}
-                  {message.codeGenerated && (
-                    <div className="flex items-center space-x-2 mt-2 pt-2 border-t border-border">
-                      <Badge variant="secondary" className="text-xs">
-                        <Code className="w-3 h-3 mr-1" />
-                        Code Generated
-                      </Badge>
-                    </div>
-                  )}
-                </Card>
-                
-                {message.suggestions && (
-                  <div className="mt-2 space-y-1">
-                    {message.suggestions.map((suggestion, index) => (
-                      <Button
-                        key={index}
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-auto p-2 hover:bg-muted"
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        {suggestion}
-                      </Button>
-                    ))}
+                {message.codeGenerated && (
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+                    <Badge variant="secondary" className="text-xs font-medium">
+                      <Code className="w-3 h-3 mr-1.5" />
+                      Code Generated
+                    </Badge>
                   </div>
                 )}
-                
-                <p className="text-xs text-muted-foreground mt-1">
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
               </div>
+              
+              {message.suggestions && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {message.suggestions.map((suggestion, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-medium px-3 py-1.5 h-auto rounded-full border-border/50 hover:bg-muted/80 hover:border-border transition-colors"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-muted-foreground mt-2 px-1">
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
+            
+            {message.sender === 'user' && (
+              <div className="flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+            )}
           </div>
         ))}
         
         {isTyping && (
-          <div className="flex justify-start">
-            <div className="flex items-start space-x-3">
-              <Avatar className="w-8 h-8 mt-1">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <Bot className="w-4 h-4" />
-                </AvatarFallback>
-              </Avatar>
-              <Card className="p-3 bg-muted/50">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                </div>
-              </Card>
+          <div className="flex gap-4 justify-start">
+            <div className="flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+                <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+              </div>
+            </div>
+            <div className="bg-muted/50 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse"></div>
+                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              </div>
             </div>
           </div>
         )}
@@ -354,45 +356,71 @@ Would you like me to modify anything or run a backtest?`,
       </div>
 
       {/* Input */}
-      <div className="p-4">
-        <div className="backdrop-blur-md bg-background/80 dark:bg-black/70 border border-border shadow-xl rounded-2xl px-4 py-4 flex flex-col gap-2 w-full">
-          <div className="flex items-end gap-2 w-full">
-            <Button size="icon" variant="ghost" className="rounded-full" title="Upload Image" asChild>
+      <div className="p-6 pt-0">
+        <div className="relative border border-border rounded-2xl bg-background shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-end gap-3 p-4">
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className="w-8 h-8 rounded-lg hover:bg-muted/80 transition-colors" 
+              title="Upload Image" 
+              asChild
+            >
               <label>
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                <Plus className="w-6 h-6" />
+                <Plus className="w-4 h-4" />
               </label>
             </Button>
-            <Button size="icon" variant={isRecording ? 'default' : 'ghost'} className={`rounded-full ${isRecording ? 'bg-primary text-white' : ''}`} title="Voice Input" onClick={handleVoiceInput}>
-              <Mic className="w-6 h-6" />
-            </Button>
-            <div className="flex-1 flex flex-col min-h-[96px] max-h-[160px]">
+            
+            <div className="flex-1">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Describe your trading strategy..."
-                className="flex-1 min-h-[96px] max-h-[160px] resize-none bg-transparent border-none text-base text-foreground placeholder:text-muted-foreground shadow-none focus:ring-0"
-                rows={3}
-                style={{ boxShadow: 'none' }}
+                className="min-h-[50px] max-h-[120px] resize-none bg-transparent border-none text-sm text-foreground placeholder:text-muted-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0"
+                rows={1}
               />
               {imagePreview && (
-                <div className="mt-2 flex items-center gap-2">
-                  <img src={imagePreview} alt="preview" className="w-14 h-14 object-cover rounded-lg border border-border" />
-                  <Button size="icon" variant="ghost" className="rounded-full" onClick={handleRemoveImage} title="Remove image">
-                    ×
+                <div className="mt-3 flex items-center gap-3">
+                  <img 
+                    src={imagePreview} 
+                    alt="preview" 
+                    className="w-12 h-12 object-cover rounded-lg border border-border/50" 
+                  />
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="w-6 h-6 rounded-full hover:bg-muted/80" 
+                    onClick={handleRemoveImage} 
+                    title="Remove image"
+                  >
+                    <span className="text-muted-foreground text-sm">×</span>
                   </Button>
                 </div>
               )}
             </div>
+            
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className={`w-8 h-8 rounded-lg transition-colors ${
+                isRecording ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-muted/80'
+              }`} 
+              title="Voice Input" 
+              onClick={handleVoiceInput}
+            >
+              <Mic className="w-4 h-4" />
+            </Button>
+            
             <Button 
               onClick={handleSend} 
               disabled={(!input.trim() && !imageFile) || isTyping}
               size="icon"
-              className="rounded-full bg-primary hover:bg-primary/80 text-white h-16 w-16 ml-1 shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-8 h-8 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label="Send"
             >
-              <ArrowUp className="w-7 h-7" />
+              <ArrowUp className="w-4 h-4" />
             </Button>
           </div>
         </div>
