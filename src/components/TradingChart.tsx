@@ -278,22 +278,25 @@ const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
         </div>
       </div>
       {/* Chart area fills all remaining space */}
-      <div className="flex-1 w-full" style={{ height: 'calc(100% - 56px)' }}>
-        <TradingViewWidget
-          symbol={symbol}
-          interval={interval}
-          theme="Dark"
-          locale="en"
-          autosize
-          width="100%"
-          height="100%"
-          hide_side_toolbar={false}
-          allow_symbol_change={false}
-          toolbar_bg="#141413"
-          enable_publishing={false}
-          hide_top_toolbar={false}
-          save_image={false}
-        />
+      <div className="flex-1" style={{ height: 'calc(100% - 56px)', width: '100%', position: 'relative' }}>
+        <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
+          <TradingViewWidget
+            symbol={symbol}
+            interval={interval}
+            theme="Dark"
+            locale="en"
+            autosize={true}
+            width={0}
+            height={0}
+            hide_side_toolbar={false}
+            allow_symbol_change={false}
+            toolbar_bg="#141413"
+            enable_publishing={false}
+            hide_top_toolbar={false}
+            save_image={false}
+            container_id="tv_chart_container"
+          />
+        </div>
       </div>
     </div>
   );
