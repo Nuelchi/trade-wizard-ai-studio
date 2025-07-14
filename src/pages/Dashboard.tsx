@@ -184,7 +184,7 @@ const Dashboard = () => {
           {/* Left Section - Strategy Name */}
           <div className="flex items-center space-x-2 min-w-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <MessageSquare className="w-4 h-4 text-primary-foreground" />
+              <BarChart3 className="w-4 h-4 text-primary-foreground" />
             </div>
             {isEditingName ? (
               <input
@@ -196,18 +196,22 @@ const Dashboard = () => {
                   if (e.key === 'Enter') {
                     setIsEditingName(false);
                   }
+                  if (e.key === 'Escape') {
+                    setIsEditingName(false);
+                  }
                 }}
-                className="text-xl font-bold text-foreground bg-transparent border-none outline-none focus:bg-muted px-2 py-1 rounded"
+                className="text-xl font-bold text-foreground bg-muted border border-primary rounded px-2 py-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
+                onFocus={(e) => e.target.select()}
               />
             ) : (
-              <h1 
-                className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted"
+              <button 
+                className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted text-left"
                 onClick={() => setIsEditingName(true)}
                 title="Click to edit strategy name"
               >
                 {strategyName}
-              </h1>
+              </button>
             )}
           </div>
 
