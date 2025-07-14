@@ -26,23 +26,23 @@ const Home = () => {
   const features = [
     {
       icon: Sparkles,
-      title: "Natural Language Processing",
-      description: "Describe your strategy in plain English, no coding required"
+      title: "AI-Powered Chat",
+      description: "Chat with AI just like in Lovable.dev - describe your strategy conversationally"
     },
     {
       icon: Code,
-      title: "Multi-Platform Export",
-      description: "Generate Pine Script, MQL4, and MQL5 code automatically"
+      title: "Live Code Preview",
+      description: "Watch your code generate in real-time as you chat, with instant downloads"
     },
     {
       icon: BarChart3,
-      title: "Advanced Backtesting",
-      description: "Test your strategies with historical data and live charts"
+      title: "No-Code Friendly",
+      description: "Perfect for traders who know nothing about coding - AI does all the work"
     },
     {
       icon: TrendingUp,
-      title: "Performance Analytics",
-      description: "Detailed metrics, equity curves, and risk analysis"
+      title: "Multi-Platform Ready",
+      description: "Get Pine Script, MQL4, and MQL5 versions of your strategy instantly"
     }
   ];
 
@@ -57,12 +57,12 @@ const Home = () => {
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-            Turn trading ideas into <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">automated strategies</span> in seconds
+            Build trading strategies with <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">AI conversations</span>
           </h1>
           
           <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto">
-            Describe your trading strategy in plain English and watch our AI convert it into 
-            executable Pine Script, MQL4, and MQL5 code. No programming experience required.
+            Just like Lovable.dev, but for traders. Chat with AI to describe your strategy and watch it 
+            generate live Pine Script, MQL4, and MQL5 code. No coding experience needed.
           </p>
         </div>
 
@@ -81,14 +81,13 @@ const Home = () => {
             />
             
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-              <Button 
-                onClick={handleBuildStrategy}
-                className="glow-button text-lg px-8 py-4 group"
-                disabled={!strategy.trim()}
-              >
-                Build My Strategy
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+            <Button 
+              onClick={() => navigate('/dashboard')}
+              className="glow-button text-lg px-8 py-4 group"
+            >
+              Start Building
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
               
               <span className="text-sm text-muted-foreground">
                 Or try an example below
@@ -99,20 +98,23 @@ const Home = () => {
 
         {/* Example Strategies */}
         <div className="max-w-4xl mx-auto mb-16">
-          <h3 className="text-lg font-medium text-foreground mb-4 text-center">
-            Try These Example Strategies
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {exampleStrategies.map((example, index) => (
-              <button
-                key={index}
-                onClick={() => setStrategy(example)}
-                className="text-left p-4 bg-muted/30 hover:bg-muted/50 border border-border rounded-lg transition-colors text-sm text-muted-foreground hover:text-foreground"
-              >
-                "{example}"
-              </button>
-            ))}
-          </div>
+            <h3 className="text-lg font-medium text-foreground mb-4 text-center">
+              Example Prompts to Try
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {exampleStrategies.map((example, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    localStorage.setItem('initialPrompt', example);
+                    navigate('/dashboard');
+                  }}
+                  className="text-left p-4 bg-muted/30 hover:bg-muted/50 border border-border rounded-lg transition-colors text-sm text-muted-foreground hover:text-foreground"
+                >
+                  "{example}"
+                </button>
+              ))}
+            </div>
         </div>
 
         {/* Features Grid */}

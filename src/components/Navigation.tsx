@@ -1,30 +1,38 @@
 import { NavLink } from "react-router-dom";
-import { Brain, TrendingUp, BarChart3, Download, Zap } from "lucide-react";
+import { Home, MessageSquare, User, Settings } from "lucide-react";
+import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
 
 const Navigation = () => {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  
   const navItems = [
-    { to: "/", label: "Home", icon: Brain },
-    { to: "/dashboard", label: "Dashboard", icon: Zap },
-    { to: "/build", label: "Build", icon: TrendingUp },
-    { to: "/test", label: "Test", icon: BarChart3 },
-    { to: "/export", label: "Export", icon: Download },
-    { to: "/mystrategies", label: "My Strategies", icon: BarChart3 },
+    { to: "/", label: "Home", icon: Home },
+    { to: "/dashboard", label: "Builder", icon: MessageSquare },
   ];
 
+  const handleAuthAction = () => {
+    if (user) {
+      localStorage.removeItem('user');
+      window.location.reload();
+    } else {
+      window.location.href = '/dashboard';
+    }
+  };
+
   return (
-    <nav className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+    <nav className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary-foreground" />
+          <NavLink to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">Trainflow</span>
-          </div>
+          </NavLink>
 
-          {/* Navigation Links & Theme Toggle */}
+          {/* Navigation Links & Actions */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               {navItems.map((item) => {
@@ -46,8 +54,24 @@ const Navigation = () => {
               })}
             </div>
             
-            {/* Theme Toggle */}
-            <ThemeToggle />
+            <div className="flex items-center space-x-2">
+              {user && (
+                <div className="flex items-center space-x-2 px-3 py-1 bg-muted/50 rounded-full">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">{user.name}</span>
+                </div>
+              )}
+              
+              <Button 
+                variant={user ? "outline" : "default"} 
+                size="sm" 
+                onClick={handleAuthAction}
+              >
+                {user ? 'Logout' : 'Get Started'}
+              </Button>
+              
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </div>
