@@ -221,7 +221,7 @@ const Dashboard = () => {
           </div>
 
           {/* Center Section - Navigation Dropdown as Select Field */}
-          <div className="ml-2">
+          <div className="ml-6">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 min-w-[160px] justify-between border border-border bg-background text-foreground font-medium shadow-none">
