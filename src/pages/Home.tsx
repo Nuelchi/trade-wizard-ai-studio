@@ -10,12 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const RotatingPlaceholder = () => {
   const placeholders = [
-    "Buy when RSI is oversold and price breaks above 20-day moving average...",
-    "Sell when Bitcoin price drops 5% from 24h high with high volume...",
-    "Long EUR/USD when it crosses above 50 EMA with bullish divergence on MACD...",
-    "Short SPY when VIX spikes above 30 and price breaks key support...",
-    "Buy breakout above resistance with volume confirmation and tight stop loss...",
-    "Scalp quick profits on 1-minute chart with momentum indicators..."
+    "Create a strategy that buys when the 50 EMA is above the 200 EMA and RSI is below 40, only during London session.",
+    "Build a strategy that avoids trades when price is ranging and only enters if ADX > 25 and MA crossover occurs.",
+    "Build a bot that enters trades only if volume on the entry candle is above average by 30%. Works with MA cross logic.",
+    "Buy when RSI is oversold and price breaks above 20-day moving average with high volume confirmation...",
+    "Long EUR/USD when it crosses above 50 EMA with bullish divergence on MACD during high volatility periods...",
+    "Short SPY when VIX spikes above 30 and price breaks key support with volume confirmation..."
   ];
   
   const [currentIndex, setCurrentIndex] = useState(0);
