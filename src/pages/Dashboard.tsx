@@ -179,7 +179,6 @@ const Dashboard = () => {
             <div className="text-sm text-muted-foreground hidden md:block">
               AI Strategy Builder - Just like Lovable, but for traders
             </div>
-            <Separator orientation="vertical" className="h-6 hidden md:block" />
             
             {/* Code/Chart Toggle */}
             <div className="flex items-center bg-muted rounded-lg p-1">
@@ -193,6 +192,8 @@ const Dashboard = () => {
               </Button>
             </div>
             
+            <Separator orientation="vertical" className="h-6 hidden md:block" />
+            
             {/* Publish Button */}
             <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
               <Upload className="w-4 h-4" />
@@ -205,7 +206,6 @@ const Dashboard = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8">
                   <Settings className="w-4 h-4" />
-                  <ChevronDown className="w-3 h-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-background border border-border shadow-lg z-50">
