@@ -6,6 +6,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3, Paperclip, Mic, Plus, ArrowUp, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
 
 interface Message {
   id: string;
@@ -20,46 +23,36 @@ interface Message {
 interface ChatInterfaceProps {
   onStrategyGenerated: (strategy: any) => void;
   onCodeGenerated: (code: any) => void;
-  initialChatHistory?: any[];
+  initialMessages?: Message[];
 }
 
-const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialChatHistory = [] }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: "Hi! I'm your AI trading strategy assistant. Describe the strategy you'd like to create in plain English, and I'll help you build it step by step. What kind of trading strategy are you thinking about?",
-      sender: 'ai',
-      timestamp: new Date(),
-      suggestions: [
-        "Create a moving average crossover strategy",
-        "Build an RSI mean reversion strategy", 
-        "Design a breakout strategy with Bollinger Bands",
-        "Make a scalping strategy for forex"
-      ]
-    }
-  ]);
+const WELCOME_MESSAGE: Message = {
+  id: '1',
+  content: "Hi! I'm your AI trading strategy assistant. Describe the strategy you'd like to create in plain English, and I'll help you build it step by step. What kind of trading strategy are you thinking about?",
+  sender: 'ai',
+  timestamp: new Date(),
+  suggestions: [
+    "Create a moving average crossover strategy",
+    "Build an RSI mean reversion strategy",
+    "Design a breakout strategy with Bollinger Bands"
+  ]
+};
+
+const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialMessages }: ChatInterfaceProps) => {
+  const [messages, setMessages] = useState<Message[]>(
+    initialMessages && initialMessages.length > 0
+      ? initialMessages
+      : []
+  );
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Voice input state and logic
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
-
-  // Initialize chat history when component mounts or initialChatHistory changes
-  useEffect(() => {
-    if (initialChatHistory && initialChatHistory.length > 0) {
-      setMessages(initialChatHistory);
-    }
-  }, [initialChatHistory]);
-
-  // Save chat history to localStorage whenever messages change
-  useEffect(() => {
-    if (messages.length > 1) { // Only save if there are messages beyond the initial greeting
-      localStorage.setItem('chatHistory', JSON.stringify(messages));
-    }
-  }, [messages]);
 
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -111,10 +104,15 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialChatHistor
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    if (initialMessages && initialMessages.length > 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
+
   const generateStrategy = (prompt: string) => {
     // Mock strategy generation based on prompt analysis
     const strategy = {
-      id: Math.random().toString(36).substr(2, 9),
       name: `AI Generated Strategy`,
       description: prompt,
       type: prompt.toLowerCase().includes('scalp') ? 'Scalping' : 
@@ -230,7 +228,7 @@ void OnTick()
     setIsTyping(true);
 
     // Simulate AI processing
-    setTimeout(() => {
+    setTimeout(async () => {
       const strategy = generateStrategy(input);
       const code = generateCode(strategy);
       
@@ -264,6 +262,42 @@ Would you like me to modify anything or run a backtest?`,
         title: 'Strategy Generated!',
         description: 'Your code is ready in the preview panel.',
       });
+      // --- Persist strategy to Supabase ---
+      if (user) {
+        const { error } = await supabase
+          .from('strategies')
+          .insert([
+            {
+              user_id: user.id,
+              title: strategy.name,
+              description: strategy.description,
+              summary: {
+                type: strategy.type,
+                confidence: strategy.confidence,
+                indicators: strategy.indicators,
+                riskManagement: strategy.riskManagement
+              },
+              code: code,
+              chat_history: [
+                ...messages,
+                userMessage,
+                aiResponse
+              ],
+              analytics: null,
+              tags: [],
+              is_public: false,
+              thumbnail: null,
+              likes: 0,
+              copies: 0,
+              price: null,
+            }
+          ]);
+        if (error) {
+          toast({ title: 'Failed to save strategy', description: error.message, variant: 'destructive' });
+        } else {
+          toast({ title: 'Strategy saved!', description: 'You can find it in My Strategies.' });
+        }
+      }
     }, 2000);
   };
 
@@ -282,6 +316,24 @@ Would you like me to modify anything or run a backtest?`,
     <div className="flex flex-col h-full bg-background">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {messages.length === 0 && (
+          <div className="max-w-[85%] bg-muted/50 text-foreground rounded-2xl px-4 py-3 mx-auto mb-6">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{WELCOME_MESSAGE.content}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {WELCOME_MESSAGE.suggestions!.map((suggestion, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs font-medium px-3 py-1.5 h-auto rounded-full border-border/50 hover:bg-muted/80 hover:border-border transition-colors"
+                  onClick={() => setInput(suggestion)}
+                >
+                  {suggestion}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
         {messages.map((message) => (
           <div
             key={message.id}
@@ -336,7 +388,7 @@ Would you like me to modify anything or run a backtest?`,
               )}
               
               <p className="text-xs text-muted-foreground mt-2 px-1">
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
             
