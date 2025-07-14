@@ -7,6 +7,7 @@ import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
 import Build from "./pages/Build";
 import Test from "./pages/Test";
+import EnhancedTest from "./pages/EnhancedTest";
 import Export from "./pages/Export";
 import NotFound from "./pages/NotFound";
 import MyStrategies from "./pages/MyStrategies";
@@ -21,7 +22,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/build" element={<Build />} />
-        <Route path="/test" element={<Test />} />
+        <Route path="/test" element={<EnhancedTest />} />
         <Route path="/export" element={<Export />} />
         <Route path="/mystrategies" element={<MyStrategies />} />
         <Route path="/dashboard" element={<Dashboard />} />

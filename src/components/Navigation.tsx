@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, MessageSquare, User, LogOut, TrendingUp, TestTube } from "lucide-react";
+import { Home, MessageSquare, User, LogOut, TrendingUp, TestTube, Download } from "lucide-react";
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ const Navigation = () => {
     { to: "/", label: "Home", icon: Home },
     { to: "/dashboard", label: "Builder", icon: MessageSquare },
     { to: "/test", label: "Strategy Tester", icon: TrendingUp },
+    { to: "/export", label: "Export", icon: Download },
   ];
 
   const handleAuthAction = async () => {
