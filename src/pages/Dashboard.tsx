@@ -84,7 +84,7 @@ const Dashboard = () => {
   const handleSaveStrategy = async () => {
     if (!currentStrategy || !user) return;
     const { error } = await supabase
-      .from<Strategy, StrategyUpdate>('strategies')
+      .from('strategies')
       .update({
         chat_history: currentStrategy.chat_history,
         code: generatedCode,
@@ -211,7 +211,7 @@ const Dashboard = () => {
     if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
     autosaveTimeout.current = setTimeout(async () => {
       const { error } = await supabase
-        .from<Strategy, StrategyUpdate>('strategies')
+        .from('strategies')
         .update({
           chat_history: currentStrategy.chat_history,
           code: generatedCode,

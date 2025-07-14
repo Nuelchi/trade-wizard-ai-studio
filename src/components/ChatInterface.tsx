@@ -262,40 +262,32 @@ Would you like me to modify anything or run a backtest?`,
         title: 'Strategy Generated!',
         description: 'Your code is ready in the preview panel.',
       });
-      // --- Persist strategy to Supabase ---
+      // Save strategy to database
       if (user) {
-        const { error } = await supabase
-          .from('strategies')
-          .insert([
-            {
-              user_id: user.id,
-              title: strategy.name,
-              description: strategy.description,
-              summary: {
-                type: strategy.type,
-                confidence: strategy.confidence,
-                indicators: strategy.indicators,
-                riskManagement: strategy.riskManagement
-              },
-              code: code,
-              chat_history: [
-                ...messages,
-                userMessage,
-                aiResponse
-              ],
-              analytics: null,
-              tags: [],
-              is_public: false,
-              thumbnail: null,
-              likes: 0,
-              copies: 0,
-              price: null,
-            }
-          ]);
-        if (error) {
-          toast({ title: 'Failed to save strategy', description: error.message, variant: 'destructive' });
-        } else {
-          toast({ title: 'Strategy saved!', description: 'You can find it in My Strategies.' });
+        try {
+          const newStrategy = {
+            user_id: user.id,
+            title: strategy.name,
+            description: strategy.description,
+            summary: JSON.stringify(strategy),
+            code: JSON.stringify(code),
+            chat_history: JSON.stringify([...messages, userMessage, aiResponse])
+          };
+          
+          const { error } = await supabase
+            .from('strategies')
+            .insert([newStrategy]);
+          
+          if (error) {
+            console.error('Failed to save strategy:', error);
+          } else {
+            toast({ 
+              title: 'Strategy saved!', 
+              description: 'You can find it in My Strategies.' 
+            });
+          }
+        } catch (err) {
+          console.error('Error saving strategy:', err);
         }
       }
     }, 2000);
