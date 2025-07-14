@@ -144,7 +144,7 @@ const EnhancedTest = () => {
 
   return (
     <AuthGuard requireAuth={true}>
-      <div className="min-h-screen h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
         <div className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
           <div className="max-w-full mx-auto px-6 py-4">
@@ -162,12 +162,11 @@ const EnhancedTest = () => {
           </div>
         </div>
 
-        {/* Main Content - Full Height Layout */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Removed strategy selection/upload/timeframe row here */}
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
           {/* Tabs Section */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
               <div className="border-b border-border bg-muted/20">
                 <TabsList className="ml-4">
                   <TabsTrigger value="chart" className="flex items-center gap-2">
@@ -189,214 +188,267 @@ const EnhancedTest = () => {
                 </TabsList>
               </div>
 
-              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                {/* Chart Tab - Full Height Layout */}
-                <TabsContent value="chart" className="flex-1 h-full w-full min-h-0 p-0 m-0 flex flex-col">
-                  <div className="flex-1 min-h-0 flex flex-col">
-                    {/* Trading Chart - Full Width */}
-                    <div className="flex-1 min-h-0 w-full">
-                      <TradingChart onStrategySelect={handleStrategySelect} onStrategyUpload={handleStrategyUpload} />
-                    </div>
-                    
-                    {/* Bottom Footer - Performance Metrics + AI Widget */}
-                    <div className="h-64 w-full flex flex-row border-t border-border bg-background relative">
-                      {/* Performance Metrics - Full width when AI widget is closed */}
-                      <div className={`${isAiWidgetOpen ? 'w-1/2' : 'w-full'} p-6 bg-gradient-to-br from-background to-muted/10 transition-all duration-300`}>
-                        <div className="h-full flex flex-col">
-                          <div className="font-semibold text-lg mb-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <BarChart3 className="w-5 h-5 text-primary" />
-                              <span>Live Performance Analytics</span>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
-                              className="flex items-center gap-2"
-                            >
-                              <Sparkles className="w-4 h-4" />
-                              {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
-                            </Button>
+              <div className="flex-1 flex flex-col">
+                {/* Chart Tab */}
+                <TabsContent value="chart" className="flex-1 flex flex-col p-0 m-0">
+                  {/* Trading Chart */}
+                  <div className="flex-1 min-h-[60vh]">
+                    <TradingChart onStrategySelect={handleStrategySelect} onStrategyUpload={handleStrategyUpload} />
+                  </div>
+                  
+                  {/* TradingView-style Strategy Tester Footer */}
+                  <div className="bg-card border-t border-border">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-border bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+                            <span className="text-sm font-medium">Strategy Tester</span>
                           </div>
-                          
-                          <div className="flex-1 bg-background/50 rounded-xl p-4 border border-border/30">
-                            <div className={`grid ${isAiWidgetOpen ? 'grid-cols-2' : 'grid-cols-4'} gap-4 h-full transition-all duration-300`}>
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-success/10 to-success/5 rounded-lg border border-success/20 p-3">
-                                <TrendingUp className="w-6 h-6 text-success mb-2" />
-                                <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
-                                <span className={`${isAiWidgetOpen ? 'text-lg' : 'text-xl'} font-bold text-success`}>${backtestResults.totalReturn}</span>
-                                {!isAiWidgetOpen && (
-                                  <span className="text-xs text-muted-foreground mt-1">+12.4% this month</span>
-                                )}
+                          <Separator orientation="vertical" className="h-4" />
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span>Last updated: {new Date().toLocaleTimeString()}</span>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
+                          className="h-7 text-xs"
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="flex">
+                      {/* Performance Overview */}
+                      <div className={`${isAiWidgetOpen ? 'w-2/3' : 'w-full'} transition-all duration-300`}>
+                        {/* Key Metrics Row */}
+                        <div className="p-4 border-b border-border bg-background/50">
+                          <div className="grid grid-cols-8 gap-4">
+                            {/* Net Profit */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Net Profit</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-lg font-bold text-success">${backtestResults.totalReturn}</span>
+                                <TrendingUp className="w-3 h-3 text-success" />
                               </div>
-                              
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-blue-500/10 to-blue-500/5 rounded-lg border border-blue-500/20 p-3">
-                                <Target className="w-6 h-6 text-blue-600 mb-2" />
-                                <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
-                                <span className={`${isAiWidgetOpen ? 'text-lg' : 'text-xl'} font-bold text-blue-600`}>{backtestResults.winRate}%</span>
-                                {!isAiWidgetOpen && (
-                                  <span className="text-xs text-muted-foreground mt-1">Above average</span>
-                                )}
+                              <span className="text-xs text-success">+12.4%</span>
+                            </div>
+
+                            {/* Win Rate */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
+                              <span className="text-lg font-bold text-primary">{backtestResults.winRate}%</span>
+                              <span className="text-xs text-muted-foreground">({Math.round(backtestResults.totalTrades * backtestResults.winRate / 100)} wins)</span>
+                            </div>
+
+                            {/* Profit Factor */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+                              <span className="text-lg font-bold text-primary">{backtestResults.profitFactor}</span>
+                              <span className="text-xs text-muted-foreground">Excellent</span>
+                            </div>
+
+                            {/* Max Drawdown */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-lg font-bold text-destructive">{backtestResults.maxDrawdown}%</span>
+                                <TrendingDown className="w-3 h-3 text-destructive" />
                               </div>
-                              
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-primary/10 to-primary/5 rounded-lg border border-primary/20 p-3">
-                                <BarChart3 className="w-6 h-6 text-primary mb-2" />
-                                <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-                                <span className={`${isAiWidgetOpen ? 'text-lg' : 'text-xl'} font-bold text-primary`}>{backtestResults.profitFactor}</span>
-                                {!isAiWidgetOpen && (
-                                  <span className="text-xs text-muted-foreground mt-1">Excellent ratio</span>
-                                )}
+                              <span className="text-xs text-destructive">Low risk</span>
+                            </div>
+
+                            {/* Total Trades */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+                              <span className="text-lg font-bold text-foreground">{backtestResults.totalTrades}</span>
+                              <span className="text-xs text-muted-foreground">Active</span>
+                            </div>
+
+                            {/* Sharpe Ratio */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Sharpe Ratio</span>
+                              <span className="text-lg font-bold text-orange-500">{backtestResults.sharpeRatio}</span>
+                              <span className="text-xs text-muted-foreground">Strong</span>
+                            </div>
+
+                            {/* Avg Win */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Avg Win</span>
+                              <span className="text-lg font-bold text-success">${backtestResults.avgWin}</span>
+                              <span className="text-xs text-muted-foreground">Per trade</span>
+                            </div>
+
+                            {/* Avg Loss */}
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground mb-1">Avg Loss</span>
+                              <span className="text-lg font-bold text-destructive">${Math.abs(backtestResults.avgLoss)}</span>
+                              <span className="text-xs text-muted-foreground">Per trade</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Detailed Stats Table */}
+                        <div className="p-4">
+                          <div className="grid grid-cols-2 gap-6">
+                            {/* Performance Stats */}
+                            <div>
+                              <h4 className="text-sm font-semibold mb-3 text-foreground">Performance</h4>
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Total Return</span>
+                                  <span className="font-medium text-success">+{((backtestResults.totalReturn / 10000) * 100).toFixed(2)}%</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Annual Return</span>
+                                  <span className="font-medium">+24.8%</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Monthly Return</span>
+                                  <span className="font-medium">+2.1%</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Best Trade</span>
+                                  <span className="font-medium text-success">+$450.23</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Worst Trade</span>
+                                  <span className="font-medium text-destructive">-$234.56</span>
+                                </div>
                               </div>
-                              
-                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20 p-3">
-                                <TrendingDown className="w-6 h-6 text-destructive mb-2" />
-                                <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                                <span className={`${isAiWidgetOpen ? 'text-lg' : 'text-xl'} font-bold text-destructive`}>{backtestResults.maxDrawdown}%</span>
-                                {!isAiWidgetOpen && (
-                                  <span className="text-xs text-muted-foreground mt-1">Low risk</span>
-                                )}
+                            </div>
+
+                            {/* Risk Stats */}
+                            <div>
+                              <h4 className="text-sm font-semibold mb-3 text-foreground">Risk Management</h4>
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Largest Winning Streak</span>
+                                  <span className="font-medium">8 trades</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Largest Losing Streak</span>
+                                  <span className="font-medium">3 trades</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Recovery Factor</span>
+                                  <span className="font-medium">6.89</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Calmar Ratio</span>
+                                  <span className="font-medium">2.01</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Sortino Ratio</span>
+                                  <span className="font-medium">2.34</span>
+                                </div>
                               </div>
-                              
-                              {!isAiWidgetOpen && (
-                                <>
-                                  <div className="flex flex-col items-center justify-center bg-gradient-to-b from-muted/20 to-muted/10 rounded-lg border border-border p-3">
-                                    <Clock className="w-6 h-6 text-foreground mb-2" />
-                                    <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-                                    <span className="text-xl font-bold text-foreground">{backtestResults.totalTrades}</span>
-                                    <span className="text-xs text-muted-foreground mt-1">Active trading</span>
-                                  </div>
-                                  
-                                  <div className="flex flex-col items-center justify-center bg-gradient-to-b from-orange-500/10 to-orange-500/5 rounded-lg border border-orange-500/20 p-3">
-                                    <Percent className="w-6 h-6 text-orange-600 mb-2" />
-                                    <span className="text-xs text-muted-foreground mb-1">Sharpe Ratio</span>
-                                    <span className="text-xl font-bold text-orange-600">{backtestResults.sharpeRatio}</span>
-                                    <span className="text-xs text-muted-foreground mt-1">Strong performance</span>
-                                  </div>
-                                  
-                                  <div className="flex flex-col items-center justify-center bg-gradient-to-b from-green-500/10 to-green-500/5 rounded-lg border border-green-500/20 p-3">
-                                    <DollarSign className="w-6 h-6 text-green-600 mb-2" />
-                                    <span className="text-xs text-muted-foreground mb-1">Avg Win</span>
-                                    <span className="text-xl font-bold text-green-600">${backtestResults.avgWin}</span>
-                                    <span className="text-xs text-muted-foreground mt-1">Per trade</span>
-                                  </div>
-                                  
-                                  <div className="flex flex-col items-center justify-center bg-gradient-to-b from-red-500/10 to-red-500/5 rounded-lg border border-red-500/20 p-3">
-                                    <TrendingDown className="w-6 h-6 text-red-600 mb-2" />
-                                    <span className="text-xs text-muted-foreground mb-1">Avg Loss</span>
-                                    <span className="text-xl font-bold text-red-600">${Math.abs(backtestResults.avgLoss)}</span>
-                                    <span className="text-xs text-muted-foreground mt-1">Per trade</span>
-                                  </div>
-                                </>
-                              )}
                             </div>
                           </div>
                         </div>
                       </div>
                       
-                      {/* AI Assistant Widget - Slides in from right */}
-                      <div className={`${isAiWidgetOpen ? 'w-1/2 opacity-100' : 'w-0 opacity-0'} transition-all duration-300 overflow-hidden border-l border-border bg-gradient-to-br from-background to-muted/20`}>
-                        {isAiWidgetOpen && (
-                          <div className="w-full h-full p-6">
-                            <div className="h-full flex flex-col">
-                              <div className="font-semibold text-lg mb-3 flex items-center justify-between">
+                      {/* AI Assistant Widget */}
+                      {isAiWidgetOpen && (
+                        <div className="w-1/3 border-l border-border bg-card">
+                          <div className="h-full flex flex-col">
+                            {/* Header */}
+                            <div className="p-3 border-b border-border bg-muted/30">
+                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                                    <Sparkles className="w-4 h-4 text-primary-foreground" />
+                                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                                    <Sparkles className="w-3 h-3 text-primary-foreground" />
                                   </div>
-                                  <span>AI Strategy Assistant</span>
+                                  <span className="text-sm font-medium">AI Assistant</span>
                                 </div>
                                 <Button
                                   size="icon"
                                   variant="ghost"
                                   onClick={() => setIsAiWidgetOpen(false)}
-                                  className="w-6 h-6"
+                                  className="h-6 w-6"
                                 >
-                                  <X className="w-4 h-4" />
+                                  <X className="w-3 h-3" />
                                 </Button>
                               </div>
-                              
-                              {/* Messages Area */}
-                              <div className="flex-1 overflow-y-auto bg-background/50 rounded-xl p-3 border border-border/50 mb-3 space-y-2">
-                                {miniChatMessages.length === 0 ? (
-                                  <div className="text-sm text-muted-foreground text-center py-4">
-                                    <Bot className="w-8 h-8 mx-auto mb-2 text-primary/60" />
-                                    <p className="font-medium mb-1">AI Assistant Ready</p>
-                                    <p className="text-xs">Ask me about strategy optimization, indicators, or market analysis.</p>
-                                  </div>
-                                ) : (
-                                  miniChatMessages.map((msg, idx) => (
-                                    <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                      {msg.role === 'ai' && (
-                                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                                          <Sparkles className="w-3 h-3 text-primary-foreground" />
-                                        </div>
-                                      )}
-                                      <div className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
-                                        msg.role === 'user' 
-                                          ? 'bg-primary text-primary-foreground' 
-                                          : 'bg-muted text-foreground border border-border/30'
-                                      }`}>
-                                        {msg.content}
+                            </div>
+                            
+                            {/* Messages */}
+                            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                              {miniChatMessages.length === 0 ? (
+                                <div className="text-center py-4">
+                                  <Bot className="w-8 h-8 mx-auto mb-2 text-primary/60" />
+                                  <p className="text-sm font-medium mb-1">AI Ready</p>
+                                  <p className="text-xs text-muted-foreground">Ask about strategy optimization</p>
+                                </div>
+                              ) : (
+                                miniChatMessages.map((msg, idx) => (
+                                  <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    {msg.role === 'ai' && (
+                                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <Sparkles className="w-2.5 h-2.5 text-primary-foreground" />
                                       </div>
-                                      {msg.role === 'user' && (
-                                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                          <User className="w-3 h-3 text-muted-foreground" />
-                                        </div>
-                                      )}
+                                    )}
+                                    <div className={`max-w-[80%] rounded-lg px-2.5 py-1.5 text-xs ${
+                                      msg.role === 'user' 
+                                        ? 'bg-primary text-primary-foreground' 
+                                        : 'bg-muted'
+                                    }`}>
+                                      {msg.content}
                                     </div>
-                                  ))
-                                )}
-                                {isAiTyping && (
-                                  <div className="flex gap-3 justify-start">
-                                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                                      <Sparkles className="w-3 h-3 text-primary-foreground animate-pulse" />
-                                    </div>
-                                    <div className="bg-muted rounded-xl px-3 py-2 text-sm">
-                                      <div className="flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse"></div>
-                                        <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                                        <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                    {msg.role === 'user' && (
+                                      <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <User className="w-2.5 h-2.5 text-muted-foreground" />
                                       </div>
-                                    </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                              
-                              {/* Enhanced Input */}
-                              <form className="flex gap-2" onSubmit={handleMiniChatSend}>
-                                <div className="flex-1 relative">
-                                  <input
-                                    type="text"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border/50 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
-                                    placeholder="Ask about indicators, strategy optimization..."
-                                    value={miniChatInput}
-                                    onChange={e => setMiniChatInput(e.target.value)}
-                                  />
-                                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                                    <Button 
-                                      type="button" 
-                                      size="icon" 
-                                      variant="ghost" 
-                                      className="w-6 h-6 hover:bg-muted/50"
-                                      title="Voice input"
-                                    >
-                                      <Mic className="w-3 h-3" />
-                                    </Button>
-                                    <Button 
-                                      type="submit" 
-                                      size="icon" 
-                                      disabled={!miniChatInput.trim() || isAiTyping}
-                                      className="w-6 h-6 bg-primary hover:bg-primary/90"
-                                    >
-                                      <ArrowUp className="w-3 h-3" />
-                                    </Button>
+                                ))
+                              )}
+                              {isAiTyping && (
+                                <div className="flex gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <Sparkles className="w-2.5 h-2.5 text-primary-foreground animate-pulse" />
+                                  </div>
+                                  <div className="bg-muted rounded-lg px-2.5 py-1.5 text-xs">
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"></div>
+                                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                    </div>
                                   </div>
                                 </div>
+                              )}
+                            </div>
+                            
+                            {/* Input */}
+                            <div className="p-3 border-t border-border">
+                              <form onSubmit={handleMiniChatSend} className="flex gap-2">
+                                <input
+                                  type="text"
+                                  className="flex-1 px-3 py-2 text-xs rounded-lg bg-background border border-border focus:border-primary/50 focus:outline-none"
+                                  placeholder="Ask about strategy optimization..."
+                                  value={miniChatInput}
+                                  onChange={e => setMiniChatInput(e.target.value)}
+                                />
+                                <Button 
+                                  type="submit" 
+                                  size="icon" 
+                                  disabled={!miniChatInput.trim() || isAiTyping}
+                                  className="h-8 w-8"
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </Button>
                               </form>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </TabsContent>
