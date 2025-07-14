@@ -474,41 +474,6 @@ void OnTick() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Strategy Summary */}
-        <Card className="trading-card">
-          <CardHeader>
-            <CardTitle>Strategy Summary</CardTitle>
-            <CardDescription>Ready for deployment</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {selectedStrategy ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-muted/20 rounded-lg">
-                    <div className="text-lg font-bold text-success">78%</div>
-                    <div className="text-sm text-muted-foreground">Win Rate</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/20 rounded-lg">
-                    <div className="text-lg font-bold text-foreground">2.4</div>
-                    <div className="text-sm text-muted-foreground">Profit Factor</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/20 rounded-lg">
-                    <div className="text-lg font-bold text-primary">$1,250</div>
-                    <div className="text-sm text-muted-foreground">Total Return</div>
-                  </div>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <b>Strategy:</b> {strategies.find(s => s.id === selectedStrategy)?.name}
-                  <br />
-                  <b>Description:</b> {strategies.find(s => s.id === selectedStrategy)?.description}
-                </div>
-              </div>
-            ) : (
-              <div className="text-muted-foreground">Select a strategy to view its summary.</div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
