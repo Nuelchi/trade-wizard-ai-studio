@@ -41,12 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      strategy_likes: {
+        Row: {
+          created_at: string
+          id: string
+          strategy_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          strategy_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          strategy_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_strategy_like_count: {
+        Args: { strategy_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

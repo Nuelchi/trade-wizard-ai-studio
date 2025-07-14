@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Brain, Code, TrendingUp, Zap, Star, Copy, Play, Eye, Users, Activity, DollarSign, Heart, Download, GitFork } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
   const [strategy, setStrategy] = useState("");
+  const [likedStrategies, setLikedStrategies] = useState<Set<number>>(new Set());
+  const [strategyLikes, setStrategyLikes] = useState<Record<number, number>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -152,6 +155,72 @@ const Home = () => {
     });
   };
 
+  const handleLikeStrategy = async (strategyId: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Login required",
+          description: "Please login to like strategies.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const isLiked = likedStrategies.has(strategyId);
+      
+      if (isLiked) {
+        // Unlike
+        await supabase
+          .from('strategy_likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('strategy_id', strategyId.toString());
+        
+        setLikedStrategies(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(strategyId);
+          return newSet;
+        });
+        
+        setStrategyLikes(prev => ({
+          ...prev,
+          [strategyId]: Math.max((prev[strategyId] || 0) - 1, 0)
+        }));
+      } else {
+        // Like
+        await supabase
+          .from('strategy_likes')
+          .insert({
+            user_id: user.id,
+            strategy_id: strategyId.toString()
+          });
+        
+        setLikedStrategies(prev => new Set([...prev, strategyId]));
+        setStrategyLikes(prev => ({
+          ...prev,
+          [strategyId]: (prev[strategyId] || 0) + 1
+        }));
+      }
+    } catch (error) {
+      console.error('Error handling like:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update like. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    // Initialize like counts
+    const initialLikes: Record<number, number> = {};
+    showcaseStrategies.forEach(strategy => {
+      initialLikes[strategy.id] = strategy.likes;
+    });
+    setStrategyLikes(initialLikes);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -159,47 +228,45 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-hero"></div>
         <div className="container mx-auto px-6 relative">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge variant="outline" className="mb-6 border-primary/20 text-primary">
+            <Badge variant="outline" className="mb-6 border-primary/20 text-primary bg-primary/10">
               <Zap className="w-3 h-3 mr-1" />
-              AI-Powered Trading Strategies
+              AI-Powered Strategy Builder
             </Badge>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
-              Transform Ideas into
-              <span className="bg-gradient-primary bg-clip-text text-transparent block">
-                Profitable Strategies
-              </span>
+            
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Turn trading ideas into{" "}
+              <span className="bg-gradient-primary bg-clip-text text-transparent">
+                automated strategies
+              </span>{" "}
+              in seconds
             </h1>
-            <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-              Turn your trading concepts into executable code with our advanced AI. 
-              No programming knowledge required. Just describe, deploy, and profit.
+            
+            <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+              Describe your trading strategy in plain English and watch our AI convert it into 
+              executable Pine Script, MQL4, and MQL5 code. No programming experience required.
             </p>
             
-            {/* Strategy Input */}
-            <div className="trading-card p-8 max-w-3xl mx-auto mb-12">
-              <h3 className="text-lg font-semibold mb-4 text-left">Describe your trading strategy:</h3>
+            {/* Strategy Input Card */}
+            <div className="trading-card p-8 max-w-4xl mx-auto mb-8">
+              <h3 className="text-xl font-semibold mb-4 text-left">Describe Your Trading Strategy</h3>
               <Textarea
-                placeholder="e.g., Buy when RSI is oversold and price breaks above 20-day moving average with high volume..."
+                placeholder="Describe your strategy... e.g. 'Buy when 50-day moving average crosses above 200-day moving average and RSI is below 30. Sell when RSI goes above 70 or stop loss at 2%'"
                 value={strategy}
                 onChange={(e) => setStrategy(e.target.value)}
-                className="strategy-input min-h-[120px] mb-6 text-base"
+                className="strategy-input min-h-[120px] mb-6 text-base resize-none"
               />
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={handleBuildStrategy} className="glow-button flex-1">
-                  <Brain className="w-4 h-4 mr-2" />
-                  Build Strategy with AI
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                <Button onClick={handleBuildStrategy} className="glow-button flex-1 text-base py-3">
+                  Build My Strategy →
                 </Button>
-                <Button variant="outline" className="flex-1">
-                  <Play className="w-4 h-4 mr-2" />
-                  See Examples
-                </Button>
+                <span className="text-sm text-muted-foreground self-center">Or try an example below</span>
               </div>
             </div>
 
-            {/* Example Strategies */}
+            {/* Example Strategy Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
               {exampleStrategies.map((example, index) => (
-                <Card key={index} className="trading-card hover:shadow-glow transition-all cursor-pointer group" onClick={() => setStrategy(example)}>
+                <Card key={index} className="trading-card hover:shadow-glow transition-all cursor-pointer group text-left" onClick={() => setStrategy(example)}>
                   <CardContent className="p-4">
                     <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                       {example}
@@ -245,10 +312,24 @@ const Home = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between mb-2">
                     <CardTitle className="text-lg">{strategy.title}</CardTitle>
-                    <div className="flex items-center space-x-1">
-                      <Heart className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">{strategy.likes}</span>
-                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLikeStrategy(strategy.id);
+                      }}
+                      className="flex items-center space-x-1 hover:scale-110 transition-transform"
+                    >
+                      <Heart 
+                        className={`w-4 h-4 ${
+                          likedStrategies.has(strategy.id) 
+                            ? 'fill-red-500 text-red-500' 
+                            : 'text-muted-foreground hover:text-red-500'
+                        }`} 
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {strategyLikes[strategy.id] || strategy.likes}
+                      </span>
+                    </button>
                   </div>
                   <CardDescription className="text-sm">{strategy.description}</CardDescription>
                   
@@ -303,13 +384,9 @@ const Home = () => {
                       </div>
                     ) : (
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <Eye className="w-3 h-3 mr-1" />
-                          Preview
-                        </Button>
                         <Button size="sm" className="flex-1 bg-gradient-primary" onClick={() => handleBuyStrategy(strategy.id, strategy.price)}>
                           <DollarSign className="w-3 h-3 mr-1" />
-                          {strategy.price}
+                          Buy {strategy.price}
                         </Button>
                       </div>
                     )}
