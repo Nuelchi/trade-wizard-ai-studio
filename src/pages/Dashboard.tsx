@@ -1,113 +1,50 @@
-
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Switch } from '@/components/ui/switch';
+import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import AuthGuard from '@/components/AuthGuard';
+import ChatInterface from '@/components/ChatInterface';
+import CodePreview from '@/components/CodePreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Download, Edit, User, MessageSquare, BarChart3, ChevronDown } from 'lucide-react';
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Separator } from "@/components/ui/separator"
-import { Slider } from "@/components/ui/slider"
-import { Badge } from "@/components/ui/badge"
-import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable"
-import { useTheme } from "@/components/theme-provider"
-import { cn } from "@/lib/utils"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import ChatInterface from '@/components/ChatInterface';
-import AuthGuard from '@/components/AuthGuard';
+import html2canvas from 'html2canvas';
+import { Link, useLocation } from 'react-router-dom';
+import ThemeToggle from '@/components/ThemeToggle';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Area, Bar } from 'recharts';
 
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'chat' | 'code'>('chat');
   const [strategyName, setStrategyName] = useState('Untitled Strategy');
   const [isEditingName, setIsEditingName] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'code' | 'chart'>('code');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedPair, setSelectedPair] = useState('EUR/USD');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
-  const [publishForm, setPublishForm] = useState({
-    title: '',
-    description: '',
-    tags: '',
-    price: ''
+  const [publishData, setPublishData] = useState({
+    title: "",
+    description: "",
+    tags: "",
+    pricingType: "free" as "free" | "paid",
+    price: ""
   });
-  const [chatHistory, setChatHistory] = useState<any[]>([]);
-
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
-  const [searchParams] = useSearchParams();
-
-  // Load strategy from URL params or localStorage
-  useEffect(() => {
-    const strategyId = searchParams.get('strategy');
-    
-    if (strategyId) {
-      // Load specific strategy from URL
-      const savedStrategies = localStorage.getItem('userStrategies');
-      if (savedStrategies) {
-        const strategies = JSON.parse(savedStrategies);
-        const strategy = strategies.find((s: any) => s.id === strategyId);
-        
-        if (strategy) {
-          setStrategyName(strategy.title);
-          setChatHistory(strategy.chatHistory || []);
-          setGeneratedCode(strategy.code || null);
-          setCurrentStrategy(strategy);
-        }
-      }
-    } else {
-      // Load from localStorage for backward compatibility
-      const savedStrategy = localStorage.getItem('currentStrategy');
-      const savedChatHistory = localStorage.getItem('chatHistory');
-      const savedCode = localStorage.getItem('exportPineScript');
-      
-      if (savedStrategy) {
-        setStrategyName(savedStrategy);
-      }
-      
-      if (savedChatHistory) {
-        try {
-          const parsedHistory = JSON.parse(savedChatHistory);
-          setChatHistory(parsedHistory);
-        } catch (error) {
-          console.error('Error parsing chat history:', error);
-        }
-      }
-      
-      if (savedCode) {
-        setGeneratedCode({
-          pineScript: savedCode,
-          mql4: localStorage.getItem('exportMQL4') || '',
-          mql5: localStorage.getItem('exportMQL5') || ''
-        });
-      }
-    }
-  }, [searchParams]);
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
 
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
@@ -121,99 +58,182 @@ const Dashboard = () => {
     await signOut();
     setCurrentStrategy(null);
     setGeneratedCode(null);
-    setChatHistory([]);
-    // Clear stored data
-    localStorage.removeItem('currentStrategy');
-    localStorage.removeItem('chatHistory');
-    localStorage.removeItem('exportPineScript');
-    localStorage.removeItem('exportMQL4');
-    localStorage.removeItem('exportMQL5');
-    localStorage.removeItem('exportSummary');
   };
 
   const handleNameChange = (newName: string) => {
-    setStrategyName(newName);
+    setStrategyName(newName || 'Untitled Strategy');
     setIsEditingName(false);
   };
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
+    // Here you would typically update your theme context
   };
 
   const handleSave = () => {
+    // Save strategy logic
+    console.log('Saving strategy...');
+  };
+
+  // Trading pairs and timeframes data
+  const tradingPairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'BTC/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD'];
+  const timeframes = [{
+    value: '1M',
+    label: '1 Minute'
+  }, {
+    value: '5M',
+    label: '5 Minutes'
+  }, {
+    value: '15M',
+    label: '15 Minutes'
+  }, {
+    value: '30M',
+    label: '30 Minutes'
+  }, {
+    value: '1H',
+    label: '1 Hour'
+  }, {
+    value: '4H',
+    label: '4 Hours'
+  }, {
+    value: '1D',
+    label: '1 Day'
+  }, {
+    value: '1W',
+    label: '1 Week'
+  }, {
+    value: '1MO',
+    label: '1 Month'
+  }];
+  const handleShare = () => {
+    // Share strategy logic
     toast({
-      title: 'Strategy Saved!',
-      description: 'Your strategy has been saved to your profile.',
+      title: "Strategy Shared",
+      description: "Share link copied to clipboard"
     });
   };
 
-  const formSchema = z.object({
-    title: z.string().min(2, {
-      message: "Title must be at least 2 characters.",
-    }),
-    description: z.string().min(10, {
-      message: "Description must be at least 10 characters.",
-    }),
-    tags: z.string(),
-    price: z.string().regex(/^(\d+(\.\d{1,2})?)$/, {
-      message: "Price must be a valid number with up to 2 decimal places.",
-    }),
-  })
+  const handleExport = () => {
+    // Export strategy logic
+    toast({
+      title: "Strategy Exported",
+      description: "Strategy code has been exported"
+    });
+  };
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  const handlePublishStrategy = () => {
+    setPublishDialogOpen(true);
+  };
+
+  const captureChartThumbnail = async () => {
+    const chartElement = document.getElementById('chart-preview');
+    if (chartElement) {
+      try {
+        const canvas = await html2canvas(chartElement, {
+          backgroundColor: null,
+          scale: 2,
+          logging: false
+        });
+        return canvas.toDataURL('image/png');
+      } catch (error) {
+        console.error('Error capturing chart:', error);
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const handlePublishSubmit = async () => {
+    const thumbnail = await captureChartThumbnail();
+
+    // Here you would normally save to your backend/database
+    console.log('Publishing strategy:', {
+      ...publishData,
+      thumbnail,
+      strategyCode: generatedCode,
+      performanceData: {
+        pair: selectedPair,
+        timeframe: selectedTimeframe
+        // Add actual performance metrics here
+      }
+    });
+    toast({
+      title: "Strategy Published!",
+      description: "Your strategy is now available in the showcase"
+    });
+    setPublishDialogOpen(false);
+    setPublishData({
       title: "",
       description: "",
       tags: "",
-      price: "",
-    },
-  })
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    toast({
-      title: "Strategy Published!",
-      description: "Your strategy is now live on the marketplace.",
-    })
-  }
+      pricingType: "free",
+      price: ""
+    });
+  };
 
   const location = useLocation();
   const sectionOptions = [
     { path: '/dashboard', label: 'Builder', icon: MessageSquare },
-    { path: '/test', label: 'Backtest', icon: BarChart3 },
+    { path: '/test', label: 'Strategy Tester', icon: TrendingUp },
     { path: '/export', label: 'Export', icon: Download },
     { path: '/mystrategies', label: 'My Strategies', icon: User },
   ];
   const currentSection = sectionOptions.find(opt => location.pathname.startsWith(opt.path)) || sectionOptions[0];
 
-  const mockAnalytics = [
-    { name: 'Win Rate', value: '65%' },
-    { name: 'Avg. Profit', value: '1.2%' },
-    { name: 'Max Drawdown', value: '8%' },
+  // Mock price data for chart
+  const priceData = [
+    { time: '2024-01-01', open: 100, high: 105, low: 98, close: 103 },
+    { time: '2024-01-02', open: 103, high: 108, low: 101, close: 106 },
+    { time: '2024-01-03', open: 106, high: 109, low: 104, close: 107 },
+    { time: '2024-01-04', open: 107, high: 112, low: 105, close: 110 },
+    { time: '2024-01-05', open: 110, high: 115, low: 108, close: 113 },
+    { time: '2024-01-06', open: 113, high: 116, low: 111, close: 114 },
+    { time: '2024-01-07', open: 114, high: 118, low: 112, close: 117 },
   ];
 
-  const mockBacktestResults = [
-    { time: '2024-01-01', profit: 100 },
-    { time: '2024-01-02', profit: 150 },
-    { time: '2024-01-03', profit: 130 },
-    { time: '2024-01-04', profit: 180 },
-    { time: '2024-01-05', profit: 200 },
+  // Add mock analytics data for advanced metrics and equity/drawdown curve
+  const analytics = {
+    totalPnL: 2450.75,
+    totalReturn: 24.5,
+    maxDrawdown: -8.2,
+    totalTrades: 145,
+    profitableTrades: 87,
+    losingTrades: 58,
+    profitFactor: 1.73,
+    winRate: 60.0,
+    sharpeRatio: 1.8,
+    largestWin: 520.5,
+    largestLoss: -310.2,
+    avgWin: 110.3,
+    avgLoss: -75.6,
+  };
+
+  const equityCurve = [
+    { time: '2024-01-01', equity: 10000, drawdown: 0 },
+    { time: '2024-01-02', equity: 10250, drawdown: 0 },
+    { time: '2024-01-03', equity: 10400, drawdown: 0 },
+    { time: '2024-01-04', equity: 10100, drawdown: 2.88 },
+    { time: '2024-01-05', equity: 10600, drawdown: 0 },
+    { time: '2024-01-06', equity: 10800, drawdown: 0 },
+    { time: '2024-01-07', equity: 11250, drawdown: 0 },
   ];
 
-  return (
-    <AuthGuard requireAuth={true}>
+  return <AuthGuard requireAuth={true}>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-          {/* Left Section - Logo */}
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-foreground">Trainflow</span>
-            </Link>
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">
+          {/* Left Section - Strategy Name */}
+          <div className="flex items-center space-x-2 min-w-0">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 text-primary-foreground" />
+            </div>
+            {isEditingName ? <input type="text" value={strategyName} onChange={e => setStrategyName(e.target.value)} onBlur={() => setIsEditingName(false)} onKeyDown={e => {
+            if (e.key === 'Enter') {
+              setIsEditingName(false);
+            }
+          }} className="text-xl font-bold text-foreground bg-transparent border-none outline-none focus:bg-muted px-2 py-1 rounded" autoFocus /> : <h1 className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted" onClick={() => setIsEditingName(true)} title="Click to edit strategy name">
+                {strategyName}
+              </h1>}
           </div>
 
           {/* Center Section - Navigation Dropdown as Select Field */}
@@ -221,19 +241,19 @@ const Dashboard = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 min-w-[160px] justify-between border border-border bg-background text-foreground font-medium shadow-none">
-                  <div className="flex items-center gap-2">
-                    <currentSection.icon className="w-4 h-4" />
-                    <span>{currentSection.label}</span>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <span className="flex items-center gap-2">
+                    {currentSection.icon && <currentSection.icon className="w-4 h-4" />}
+                    {currentSection.label}
+                  </span>
+                  <ChevronDown className="w-4 h-4 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-48">
-                {sectionOptions.map((option) => (
-                  <DropdownMenuItem key={option.path} asChild>
-                    <Link to={option.path} className="flex items-center gap-2 cursor-pointer">
-                      <option.icon className="w-4 h-4" />
-                      <span>{option.label}</span>
+              <DropdownMenuContent align="start" className="w-48">
+                {sectionOptions.map(opt => (
+                  <DropdownMenuItem asChild key={opt.path} className={opt.path === currentSection.path ? 'bg-muted font-semibold' : ''}>
+                    <Link to={opt.path} className="flex items-center gap-2">
+                      {opt.icon && <opt.icon className="w-4 h-4 mr-2" />}
+                      {opt.label}
                     </Link>
                   </DropdownMenuItem>
                 ))}
@@ -241,242 +261,284 @@ const Dashboard = () => {
             </DropdownMenu>
           </div>
 
-          {/* Right Section - User Menu */}
-          <div className="flex items-center gap-4">
-            {/* Theme Toggle */}
-            <div className="flex items-center space-x-2">
-              <Switch id="dark-mode" checked={isDarkMode} onCheckedChange={toggleTheme} />
-              <Label htmlFor="dark-mode" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Dark Mode
-              </Label>
+          {/* Right Section - Controls */}
+          <div className="flex items-center gap-2">
+            {/* Code/Chart Toggle */}
+            <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
+              <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
+                <FileCode className="w-4 h-4" />
+                Code
+              </Button>
+              <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
+                <BarChart3 className="w-4 h-4" />
+                Chart
+              </Button>
             </div>
-
-            {/* Publish Strategy Dialog */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="default">Publish Strategy</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Publish Your Strategy</DialogTitle>
-                  <DialogDescription>
-                    List your strategy on the marketplace for other users to discover and use.
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="My Awesome Strategy" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="A brief description of your strategy..."
-                              className="resize-none"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="tags"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tags</FormLabel>
-                          <FormControl>
-                            <Input placeholder="scalping, trend following, rsi" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price</FormLabel>
-                          <FormControl>
-                            <Input placeholder="49.99" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit">Publish Strategy</Button>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-
-            {/* User Dropdown */}
+            {/* Publish Button - now labeled and primary */}
+            <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary flex items-center gap-2 px-4">
+              <Upload className="w-4 h-4" />
+              Publish
+            </Button>
+            {/* Upgrade Button */}
+            <Button variant="outline" size="sm" className="h-8">
+              Upgrade
+            </Button>
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            {/* Settings/User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="rounded-full h-8 w-8 flex items-center justify-center">
-                  {user?.email?.charAt(0).toUpperCase()}
+                <Button variant="ghost" size="sm" className="h-8">
+                  <Settings className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  {user?.email}
+              <DropdownMenuContent align="end" className="w-56 bg-background border border-border shadow-lg z-50">
+                <DropdownMenuItem onClick={toggleTheme}>
+                  {isDarkMode ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  Logout
+                <DropdownMenuItem>
+                  <Bell className="mr-2 h-4 w-4" />
+                  <span>Notifications</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Preferences</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  <span>Help & Support</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>{user?.email}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden">
-          <ResizablePanelGroup 
-            direction="horizontal" 
-            className="h-full scrollbar-hide"
-          >
-            {/* Chat Panel */}
-            <ResizablePanel defaultSize={50} minSize={30} className="relative">
-              <div className="h-full flex flex-col">
-                {/* Strategy Name Header */}
-                <div className="flex-shrink-0 p-4 border-b border-border bg-muted/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {isEditingName ? (
-                        <input
-                          type="text"
-                          value={strategyName}
-                          onChange={(e) => setStrategyName(e.target.value)}
-                          onBlur={() => handleNameChange(strategyName)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleNameChange(strategyName)}
-                          className="text-lg font-semibold bg-transparent border-none outline-none text-foreground"
-                          autoFocus
-                        />
-                      ) : (
-                        <h2 
-                          className="text-lg font-semibold text-foreground cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => setIsEditingName(true)}
-                        >
-                          {strategyName}
-                        </h2>
-                      )}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setIsEditingName(!isEditingName)}
-                        className="w-6 h-6 text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button onClick={handleSave} size="sm" variant="outline">
-                        <Save className="w-4 h-4 mr-1" />
-                        Save
-                      </Button>
-                    </div>
+        {/* Main Content - Always show chat + preview layout */}
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0 scrollbar-hide">
+              {/* Left Panel - Chat Interface */}
+              <ResizablePanel defaultSize={30} minSize={25} maxSize={35} className="min-h-0">
+                <div className="h-full border-r border-border flex flex-col bg-background min-h-0">
+                  <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
+                    <ChatInterface onStrategyGenerated={handleStrategyGenerated} onCodeGenerated={handleCodeGenerated} />
                   </div>
                 </div>
+              </ResizablePanel>
 
-                {/* Chat Interface */}
-                <div className="flex-1 overflow-hidden">
-                  <ChatInterface 
-                    onStrategyGenerated={handleStrategyGenerated}
-                    onCodeGenerated={handleCodeGenerated}
-                    initialChatHistory={chatHistory}
-                  />
-                </div>
-              </div>
-            </ResizablePanel>
+              <ResizableHandle withHandle />
 
-            <ResizableHandle withHandle className="bg-border hover:bg-border/80 transition-colors" />
-
-            {/* Preview Panel */}
-            <ResizablePanel defaultSize={50} minSize={30} className="relative">
-              <div className="h-full flex flex-col">
-                {/* Preview Header */}
-                <div className="flex-shrink-0 p-4 border-b border-border bg-muted/30">
-                  <h2 className="text-lg font-semibold text-foreground">Code Preview</h2>
-                  <p className="text-sm text-muted-foreground">View and edit the generated code</p>
-                </div>
-
-                {/* Code Tabs */}
-                <div className="flex-shrink-0 flex items-center justify-start p-2 bg-muted/10 border-b border-border">
-                  <Badge variant="secondary" className="mr-2">Pine Script</Badge>
-                  <Badge variant="outline" className="mr-2">MQL4</Badge>
-                  <Badge variant="outline">MQL5</Badge>
-                </div>
-
-                {/* Code Editor */}
-                <div className="flex-1 overflow-auto p-4">
-                  <Textarea
-                    placeholder="Generated code will appear here..."
-                    className="w-full h-full resize-none bg-transparent border-none outline-none text-sm text-foreground"
-                    value={generatedCode?.pineScript || ''}
-                    readOnly
-                  />
-                </div>
-
-                {/* Analytics Section */}
-                <div className="flex-shrink-0 p-4 border-t border-border bg-muted/10">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Analytics</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {mockAnalytics.map((item) => (
-                      <div key={item.name} className="text-center">
-                        <div className="text-lg font-bold text-primary">{item.value}</div>
-                        <div className="text-xs text-muted-foreground">{item.name}</div>
+              {/* Right Panel - Live Preview */}
+              <ResizablePanel defaultSize={50} minSize={30} className="min-h-0">
+                <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
+                  
+                  
+                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> : <div className="h-full flex flex-col min-h-0 overflow-hidden">
+                      {/* Chart Controls */}
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/10 flex-shrink-0" style={{minHeight: '48px', maxHeight: '48px'}}>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-foreground">Pair:</span>
+                            <Select value={selectedPair} onValueChange={setSelectedPair}>
+                              <SelectTrigger className="w-32 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {tradingPairs.map(pair => <SelectItem key={pair} value={pair}>
+                                    {pair}
+                                  </SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-foreground">Timeframe:</span>
+                            <Select value={selectedTimeframe} onValueChange={setSelectedTimeframe}>
+                              <SelectTrigger className="w-32 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timeframes.map(tf => <SelectItem key={tf.value} value={tf.value}>
+                                    {tf.label}
+                                  </SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-muted-foreground">
+                          {selectedPair} • {timeframes.find(tf => tf.value === selectedTimeframe)?.label}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Backtest Results */}
-                <div className="flex-shrink-0 p-4 border-t border-border bg-muted/10">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Backtest Results</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr>
-                          <th className="py-2 text-xs font-semibold text-muted-foreground">Date</th>
-                          <th className="py-2 text-xs font-semibold text-muted-foreground">Profit</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mockBacktestResults.map((result) => (
-                          <tr key={result.time}>
-                            <td className="py-2 text-xs text-foreground">{result.time}</td>
-                            <td className="py-2 text-xs text-primary">{result.profit}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      {/* Chart + Performance Metrics */}
+                      <div className="flex-1 min-h-0 p-2 overflow-hidden flex flex-col gap-4">
+                        {/* Chart and Metrics Split */}
+                        <div className="flex-1 flex flex-col h-full min-h-0 gap-4">
+                          <div className="flex-1" style={{ flexBasis: '80%', minHeight: 0 }}>
+                            <div className="w-full h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center overflow-hidden">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={priceData} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
+                                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                  <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
+                                  <YAxis domain={['dataMin - 0.5', 'dataMax + 0.5']} className="text-xs" tick={{ fontSize: 10 }} />
+                                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} formatter={(value, name) => [typeof value === 'number' ? value.toFixed(4) : value, name]} />
+                                  <Legend />
+                                  <Line type="monotone" dataKey="close" stroke="hsl(var(--primary))" strokeWidth={3} name="Close Price" dot={false} />
+                                  <Line type="monotone" dataKey="high" stroke="hsl(var(--success))" strokeWidth={1.5} strokeDasharray="5 5" name="High" dot={false} />
+                                  <Line type="monotone" dataKey="low" stroke="hsl(var(--danger))" strokeWidth={1.5} strokeDasharray="5 5" name="Low" dot={false} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                          <div style={{ flexBasis: '20%' }} className="w-full mt-2">
+                            <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
+                              {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
+                              <div className="flex flex-row justify-between items-end w-full mb-4">
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
+                                  <span className="text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                                  <span className="text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+                                  <span className="text-lg font-bold text-foreground">{analytics.totalTrades}</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
+                                  <span className="text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+                                  <span className="text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
+                                </div>
+                              </div>
+                              {/* Equity/Drawdown Curve Chart */}
+                              <div className="w-full h-[220px] mt-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <ComposedChart data={equityCurve} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                    <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
+                                    <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Area yAxisId="left" type="monotone" dataKey="equity" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} name="Equity" />
+                                    <Bar yAxisId="right" dataKey="drawdown" fill="#ef4444" fillOpacity={0.3} name="Drawdown %" />
+                                  </ComposedChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>}
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+
+        {/* Publish Strategy Dialog */}
+        <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Publish Strategy</DialogTitle>
+              <DialogDescription>
+                Share your strategy with the community. Set pricing and visibility options.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Strategy Title</Label>
+                <Input id="title" value={publishData.title} onChange={e => setPublishData({
+                ...publishData,
+                title: e.target.value
+              })} placeholder="e.g., Momentum Breakout Pro" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" value={publishData.description} onChange={e => setPublishData({
+                ...publishData,
+                description: e.target.value
+              })} placeholder="Describe what makes your strategy unique..." />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="tags">Tags (comma-separated)</Label>
+                <Input id="tags" value={publishData.tags} onChange={e => setPublishData({
+                ...publishData,
+                tags: e.target.value
+              })} placeholder="e.g., Momentum, Breakout, AI" />
+              </div>
+              
+              {/* Pricing Selection */}
+              <div className="grid gap-3">
+                <Label>Strategy Pricing</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button type="button" variant={publishData.pricingType === "free" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
+                  ...publishData,
+                  pricingType: "free",
+                  price: ""
+                })}>
+                    <Globe className="w-4 h-4" />
+                    <div className="text-center">
+                      <div className="font-medium">Free</div>
+                      <div className="text-xs text-muted-foreground">Anyone can copy</div>
+                    </div>
+                  </Button>
+                  <Button type="button" variant={publishData.pricingType === "paid" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
+                  ...publishData,
+                  pricingType: "paid"
+                })}>
+                    <Lock className="w-4 h-4" />
+                    <div className="text-center">
+                      <div className="font-medium">Sell</div>
+                      <div className="text-xs text-muted-foreground">Set your price</div>
+                    </div>
+                  </Button>
                 </div>
               </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
+              
+              {/* Price Input - Only show when "Sell" is selected */}
+              {publishData.pricingType === "paid" && <div className="grid gap-2">
+                  <Label htmlFor="price">Price (USD)</Label>
+                  <Input id="price" type="number" value={publishData.price} onChange={e => setPublishData({
+                ...publishData,
+                price: e.target.value
+              })} placeholder="0" min="0" />
+                </div>}
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Camera className="w-4 h-4" />
+                  <span className="font-medium">Automatic Thumbnail</span>
+                </div>
+                <p>A screenshot of your chart preview will be automatically captured as the strategy thumbnail.</p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPublishDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handlePublishSubmit} className="bg-gradient-primary">
+                Publish Strategy
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-    </AuthGuard>
-  );
+    </AuthGuard>;
 };
 
 export default Dashboard;

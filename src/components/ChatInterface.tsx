@@ -20,10 +20,9 @@ interface Message {
 interface ChatInterfaceProps {
   onStrategyGenerated: (strategy: any) => void;
   onCodeGenerated: (code: any) => void;
-  initialChatHistory?: any[];
 }
 
-const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialChatHistory = [] }: ChatInterfaceProps) => {
+const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -46,20 +45,6 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated, initialChatHistor
   // Voice input state and logic
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
-
-  // Initialize chat history when component mounts or initialChatHistory changes
-  useEffect(() => {
-    if (initialChatHistory && initialChatHistory.length > 0) {
-      setMessages(initialChatHistory);
-    }
-  }, [initialChatHistory]);
-
-  // Save chat history to localStorage whenever messages change
-  useEffect(() => {
-    if (messages.length > 1) { // Only save if there are messages beyond the initial greeting
-      localStorage.setItem('chatHistory', JSON.stringify(messages));
-    }
-  }, [messages]);
 
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -336,7 +321,7 @@ Would you like me to modify anything or run a backtest?`,
               )}
               
               <p className="text-xs text-muted-foreground mt-2 px-1">
-                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
             
