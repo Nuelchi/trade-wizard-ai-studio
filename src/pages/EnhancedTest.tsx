@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import AuthGuard from "@/components/AuthGuard";
 import CodeCompiler from "@/components/CodeCompiler";
-import { Play, Pause, Square, Upload, BarChart3, TrendingUp, TrendingDown, Clock, DollarSign, Percent, Target, MessageSquare, Code, Download, Settings, FileText, Send, X } from 'lucide-react';
+import { Play, Pause, Square, Upload, BarChart3, TrendingUp, TrendingDown, Clock, DollarSign, Percent, Target, MessageSquare, Code, Download, Settings, FileText, Send, X, Sparkles, User, Bot, Mic, ArrowUp } from 'lucide-react';
 import { toast } from "sonner";
 import TradingChartRaw from '@/components/TradingChart';
 
@@ -71,17 +71,34 @@ const EnhancedTest = () => {
     'Support & Resistance'
   ];
 
-  // Minimal local chat send handler
+  // Enhanced AI chat functionality similar to the main ChatInterface
   const handleMiniChatSend = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!miniChatInput.trim()) return;
+    
     const userMsg: { role: 'user' | 'ai'; content: string } = { role: 'user', content: miniChatInput };
     setMiniChatMessages((msgs) => [...msgs, userMsg]);
+    const currentInput = miniChatInput;
     setMiniChatInput('');
-    // Simulate AI response
+    
+    // Enhanced AI response with strategy analysis
     setTimeout(() => {
-      setMiniChatMessages((msgs) => [...msgs, { role: 'ai', content: "I'm a mini AI. This is a test response." }]);
-    }, 800);
+      let aiResponse = "I'm analyzing your request...";
+      
+      if (currentInput.toLowerCase().includes('indicator')) {
+        aiResponse = "I can help you add indicators like RSI, MACD, or Bollinger Bands. Which specific indicator would you like to implement?";
+      } else if (currentInput.toLowerCase().includes('backtest')) {
+        aiResponse = "Great! I can run a backtest analysis. Based on current settings, your strategy shows promising signals. Would you like me to optimize the parameters?";
+      } else if (currentInput.toLowerCase().includes('optimize')) {
+        aiResponse = "I'll analyze your strategy parameters. Consider adjusting stop loss to 1.5% and take profit to 3% for better risk-reward ratio.";
+      } else if (currentInput.toLowerCase().includes('risk')) {
+        aiResponse = "Risk management is crucial. I recommend a maximum 2% risk per trade and position sizing based on volatility. Should I adjust these settings?";
+      } else {
+        aiResponse = "I understand you want to improve your strategy. I can help with indicator selection, parameter optimization, risk management, or backtesting. What specific area interests you?";
+      }
+      
+      setMiniChatMessages((msgs) => [...msgs, { role: 'ai', content: aiResponse }]);
+    }, 1200);
   };
 
   // In EnhancedTest, define handlers:
@@ -162,65 +179,129 @@ const EnhancedTest = () => {
                     </div>
                     
                     {/* Bottom Footer - Mini Chat + Metrics */}
-                    <div className="h-48 w-full flex flex-row border-t border-border bg-background">
-                      {/* Left: Mini Chat */}
-                      <div className="flex-1 p-4 border-r border-border">
-                        <div className="mb-4">
-                          <div className="font-semibold text-lg mb-2 flex items-center gap-2">
-                            <MessageSquare className="w-5 h-5 text-primary" />
-                            Mini Strategy Chat
+                    <div className="h-64 w-full flex flex-row border-t border-border bg-background">
+                      {/* Left: Enhanced AI Chat - 50% width */}
+                      <div className="w-1/2 p-6 border-r border-border bg-gradient-to-br from-background to-muted/20">
+                        <div className="h-full flex flex-col">
+                          <div className="font-semibold text-lg mb-3 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                              <Sparkles className="w-4 h-4 text-primary-foreground" />
+                            </div>
+                            <span>AI Strategy Assistant</span>
                           </div>
-                          <div className="flex flex-col h-24 overflow-y-auto bg-muted/10 rounded p-2 border border-border mb-2">
+                          
+                          {/* Messages Area */}
+                          <div className="flex-1 overflow-y-auto bg-background/50 rounded-xl p-3 border border-border/50 mb-3 space-y-2">
                             {miniChatMessages.length === 0 ? (
-                              <div className="text-xs text-muted-foreground text-center py-2">No messages yet. Try asking the mini AI something about your strategy.</div>
+                              <div className="text-sm text-muted-foreground text-center py-4">
+                                <Bot className="w-8 h-8 mx-auto mb-2 text-primary/60" />
+                                <p className="font-medium mb-1">AI Assistant Ready</p>
+                                <p className="text-xs">Ask me about strategy optimization, indicators, or market analysis.</p>
+                              </div>
                             ) : (
                               miniChatMessages.map((msg, idx) => (
-                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-1`}>
-                                  <div className={`rounded-lg px-3 py-2 max-w-[80%] text-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground border border-border'}`}>
+                                <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                  {msg.role === 'ai' && (
+                                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                      <Sparkles className="w-3 h-3 text-primary-foreground" />
+                                    </div>
+                                  )}
+                                  <div className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
+                                    msg.role === 'user' 
+                                      ? 'bg-primary text-primary-foreground' 
+                                      : 'bg-muted text-foreground border border-border/30'
+                                  }`}>
                                     {msg.content}
                                   </div>
+                                  {msg.role === 'user' && (
+                                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                      <User className="w-3 h-3 text-muted-foreground" />
+                                    </div>
+                                  )}
                                 </div>
                               ))
                             )}
                           </div>
+                          
+                          {/* Enhanced Input */}
                           <form className="flex gap-2" onSubmit={handleMiniChatSend}>
-                            <input
-                              type="text"
-                              className="flex-1 px-3 py-2 rounded bg-background text-base border border-border focus:outline-none"
-                              placeholder="Ask the mini AI..."
-                              value={miniChatInput}
-                              onChange={e => setMiniChatInput(e.target.value)}
-                            />
-                            <Button size="icon" type="submit" disabled={!miniChatInput.trim()}>
-                              <Send className="w-5 h-5" />
-                            </Button>
+                            <div className="flex-1 relative">
+                              <input
+                                type="text"
+                                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border/50 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+                                placeholder="Ask about indicators, strategy optimization..."
+                                value={miniChatInput}
+                                onChange={e => setMiniChatInput(e.target.value)}
+                              />
+                              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                                <Button 
+                                  type="button" 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="w-6 h-6 hover:bg-muted/50"
+                                  title="Voice input"
+                                >
+                                  <Mic className="w-3 h-3" />
+                                </Button>
+                                <Button 
+                                  type="submit" 
+                                  size="icon" 
+                                  disabled={!miniChatInput.trim()}
+                                  className="w-6 h-6 bg-primary hover:bg-primary/90"
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
                           </form>
                         </div>
                       </div>
                       
-                      {/* Right: Metrics */}
-                      <div className="w-96 p-4">
-                        <div className="font-semibold text-lg mb-2">Live Performance Metrics</div>
-                        <div className="flex flex-row gap-4 justify-between items-center flex-wrap">
-                          <div className="flex flex-col items-center">
-                            <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
-                            <span className="text-xl font-bold text-success">${backtestResults.totalReturn}</span>
+                      {/* Right: Enhanced Metrics - 50% width */}
+                      <div className="w-1/2 p-6 bg-gradient-to-br from-background to-muted/10">
+                        <div className="h-full flex flex-col">
+                          <div className="font-semibold text-lg mb-3 flex items-center gap-2">
+                            <BarChart3 className="w-5 h-5 text-primary" />
+                            <span>Live Performance Metrics</span>
                           </div>
-                          <div className="flex flex-col items-center">
-                            <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
-                            <span className="text-xl font-bold text-blue-600">{backtestResults.winRate}%</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-                            <span className="text-xl font-bold text-black">{backtestResults.profitFactor}</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                            <span className="text-xl font-bold text-danger">{backtestResults.maxDrawdown}%</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-                            <span className="text-xl font-bold">{backtestResults.totalTrades}</span>
+                          <div className="flex-1 bg-background/50 rounded-xl p-4 border border-border/30">
+                            <div className="grid grid-cols-3 gap-4 h-full">
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-success/10 to-success/5 rounded-lg border border-success/20 p-3">
+                                <TrendingUp className="w-5 h-5 text-success mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
+                                <span className="text-lg font-bold text-success">${backtestResults.totalReturn}</span>
+                              </div>
+                              
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-blue-500/10 to-blue-500/5 rounded-lg border border-blue-500/20 p-3">
+                                <Target className="w-5 h-5 text-blue-600 mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
+                                <span className="text-lg font-bold text-blue-600">{backtestResults.winRate}%</span>
+                              </div>
+                              
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-primary/10 to-primary/5 rounded-lg border border-primary/20 p-3">
+                                <BarChart3 className="w-5 h-5 text-primary mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+                                <span className="text-lg font-bold text-primary">{backtestResults.profitFactor}</span>
+                              </div>
+                              
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20 p-3">
+                                <TrendingDown className="w-5 h-5 text-destructive mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                                <span className="text-lg font-bold text-destructive">{backtestResults.maxDrawdown}%</span>
+                              </div>
+                              
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-muted/20 to-muted/10 rounded-lg border border-border p-3">
+                                <Clock className="w-5 h-5 text-foreground mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+                                <span className="text-lg font-bold text-foreground">{backtestResults.totalTrades}</span>
+                              </div>
+                              
+                              <div className="flex flex-col items-center justify-center bg-gradient-to-b from-orange-500/10 to-orange-500/5 rounded-lg border border-orange-500/20 p-3">
+                                <Percent className="w-5 h-5 text-orange-600 mb-1" />
+                                <span className="text-xs text-muted-foreground mb-1">Sharpe Ratio</span>
+                                <span className="text-lg font-bold text-orange-600">{backtestResults.sharpeRatio}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
