@@ -157,9 +157,9 @@ const Dashboard = () => {
     });
   };
   return <AuthGuard requireAuth={true}>
-      <div className="h-screen flex flex-col bg-background">
+      <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0">
           {/* Left Section - Strategy Name */}
           <div className="flex items-center space-x-2 min-w-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
