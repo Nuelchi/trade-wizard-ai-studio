@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import TradingViewWidget from 'react-tradingview-widget';
+import { ChevronDown, Upload, ListChecks } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
 
 const ASSET_CLASSES = [
   { key: 'stocks', label: 'Stocks', defaultSymbol: 'NASDAQ:AAPL' },
   { key: 'funds', label: 'Funds', defaultSymbol: 'AMEX:SPY' },
-  { key: 'futures', label: 'Futures', defaultSymbol: 'CME_MINI:ES1!' },
   { key: 'forex', label: 'Forex', defaultSymbol: 'FX:EURUSD' },
   { key: 'crypto', label: 'Crypto', defaultSymbol: 'BINANCE:BTCUSDT' },
-  { key: 'indices', label: 'Indices', defaultSymbol: 'INDEX:SPX' },
-  { key: 'bonds', label: 'Bonds', defaultSymbol: 'TVC:US10Y' },
-  { key: 'economy', label: 'Economy', defaultSymbol: 'ECONOMICS:USGDP' },
-  { key: 'options', label: 'Options', defaultSymbol: 'OPRA:AAPL230616C00150000' },
 ];
 
 const INTERVALS = [
@@ -65,7 +64,73 @@ function getPersisted(key, fallback) {
   }
 }
 
-const TradingChart = () => {
+const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
+  const { user } = useAuth();
+  const [strategies, setStrategies] = useState<Database['public']['Tables']['strategies']['Row'][]>([]);
+  const [selectedStrategy, setSelectedStrategy] = useState<Database['public']['Tables']['strategies']['Row'] | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('strategies')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => {
+        setStrategies(data || []);
+        if (data && data.length > 0 && !selectedStrategy) {
+          setSelectedStrategy(data[0]);
+          onStrategySelect && onStrategySelect(data[0]);
+        }
+      });
+  }, [user]);
+
+  const handleStrategySelect = (strategyId: string) => {
+    const strat = strategies.find(s => s.id === strategyId);
+    if (strat) {
+      setSelectedStrategy(strat);
+      onStrategySelect && onStrategySelect(strat);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/\.(pine|mq4|mq5)$/i.test(file.name)) {
+      alert('Only .pine, .mq4, or .mq5 files are allowed.');
+      return;
+    }
+    const content = await file.text();
+    const newStrategy = {
+      user_id: user.id,
+      title: file.name,
+      description: 'Uploaded strategy',
+      code: content,
+      chat_history: [],
+      analytics: null,
+      tags: [],
+      is_public: false,
+      thumbnail: null,
+      likes: 0,
+      copies: 0,
+      price: null,
+    };
+    const { data, error } = await supabase.from('strategies').insert(newStrategy).select('*').single();
+    if (error) {
+      alert('Failed to upload strategy: ' + error.message);
+      return;
+    }
+    setStrategies(prev => [data, ...prev]);
+    setSelectedStrategy(data);
+    onStrategyUpload && onStrategyUpload(data);
+    onStrategySelect && onStrategySelect(data);
+  };
+
   const [assetClass, setAssetClass] = useState(() => getPersisted('chartAssetClass', 'stocks'));
   const [symbol, setSymbol] = useState(() => getPersisted('chartSymbol', ASSET_CLASSES[0].defaultSymbol));
   const [interval, setInterval] = useState(() => getPersisted('chartInterval', 'D'));
@@ -89,54 +154,138 @@ const TradingChart = () => {
     // eslint-disable-next-line
   }, [assetClass]);
 
+  const handleAssetClassChange = (key: string) => {
+    setAssetClass(key);
+    setSymbol(ASSET_CLASSES.find(ac => ac.key === key)?.defaultSymbol || ASSET_CLASSES[0].defaultSymbol);
+  };
+
+  const handleSymbolInputBlur = () => {
+    const found = ASSET_CLASSES.find(ac => ac.key === assetClass);
+    if (found && !SYMBOLS_BY_CLASS[assetClass].includes(symbol)) {
+      setSymbol(found.defaultSymbol);
+    }
+  };
+
+  const handleSymbolInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSymbolInputBlur();
+    }
+  };
+
+  const handleIntervalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setInterval(e.target.value);
+  };
+
+  const [symbolInput, setSymbolInput] = useState(symbol);
+  const [customSymbol, setCustomSymbol] = useState(false);
+
+  useEffect(() => {
+    setSymbolInput(symbol);
+    setCustomSymbol(!SYMBOLS_BY_CLASS[assetClass].includes(symbol));
+  }, [symbol, assetClass]);
+
+  const handleSymbolSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSymbol(e.target.value);
+    setCustomSymbol(false);
+  };
+
+  const handleSymbolInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSymbolInput(e.target.value);
+    setSymbol(e.target.value);
+    setCustomSymbol(true);
+  };
+
   return (
-    <div className="flex flex-col gap-4 w-full h-full">
-      {/* Asset Class Selector */}
-      <div className="flex flex-row gap-2 overflow-x-auto pb-2">
-        {ASSET_CLASSES.map(a => (
-          <button
-            key={a.key}
-            className={`px-4 py-1 rounded-full text-sm font-medium transition-colors border border-border/40 focus:outline-none focus:ring-2 focus:ring-primary/50 ${assetClass === a.key ? 'bg-muted text-foreground' : 'bg-background text-muted-foreground hover:bg-muted/30'}`}
-            onClick={() => setAssetClass(a.key)}
+    <div className="flex flex-col h-full w-full p-0 m-0">
+      {/* Horizontal selector bar */}
+      <div className="flex flex-row items-center gap-2 px-4 py-2 border-b border-border bg-muted/30" style={{ minHeight: 48, maxHeight: 56 }}>
+        {/* Asset class pills */}
+        <div className="flex flex-row gap-1">
+          {ASSET_CLASSES.map((ac) => (
+            <button
+              key={ac.key}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${assetClass === ac.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+              onClick={() => handleAssetClassChange(ac.key)}
+            >
+              {ac.label}
+            </button>
+          ))}
+        </div>
+        {/* Symbol selector */}
+        <div className="ml-4 flex flex-row items-center gap-1">
+          <span className="text-xs text-muted-foreground">Symbol:</span>
+          {customSymbol ? (
+            <input
+              className="w-28 px-2 py-1 rounded border border-border bg-background text-xs"
+              value={symbolInput}
+              onChange={handleSymbolInputChange}
+              onBlur={handleSymbolInputBlur}
+              onKeyDown={handleSymbolInputKeyDown}
+              placeholder="e.g. AAPL"
+              spellCheck={false}
+            />
+          ) : (
+            <select
+              className="w-32 px-2 py-1 rounded border border-border bg-background text-xs"
+              value={symbol}
+              onChange={handleSymbolSelect}
+            >
+              {SYMBOLS_BY_CLASS[assetClass].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+              <option value="__custom__">Custom...</option>
+            </select>
+          )}
+        </div>
+        {/* Interval selector */}
+        <div className="ml-4 flex flex-row items-center gap-1">
+          <span className="text-xs text-muted-foreground">Interval:</span>
+          <select
+            className="px-2 py-1 rounded border border-border bg-background text-xs"
+            value={interval}
+            onChange={handleIntervalChange}
           >
-            {a.label}
+            {INTERVALS.map((iv) => (
+              <option key={iv.value} value={iv.value}>{iv.label}</option>
+            ))}
+          </select>
+        </div>
+        {/* Spacer */}
+        <div className="flex-1" />
+        {/* Strategy dropdown and upload icon */}
+        <div className="flex flex-row items-center gap-2">
+          {/* Strategy Dropdown */}
+          <select
+            className="px-2 py-1 rounded border border-border bg-background text-xs min-w-[180px]"
+            value={selectedStrategy?.id || ''}
+            onChange={e => handleStrategySelect(e.target.value)}
+          >
+            {strategies.map(s => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
+          {/* Upload Icon */}
+          <button className="p-2 rounded hover:bg-accent transition-colors border border-border" onClick={handleUploadClick} type="button">
+            <Upload className="w-4 h-4" />
           </button>
-        ))}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pine,.mq4,.mq5,.txt"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
       </div>
-      {/* Symbol Selector */}
-      <div className="flex flex-row gap-2 items-center">
-        <span className="text-xs text-muted-foreground">Symbol:</span>
-        <select
-          className="px-2 py-1 rounded border border-border bg-background text-foreground"
-          value={symbol}
-          onChange={e => setSymbol(e.target.value)}
-        >
-          {SYMBOLS_BY_CLASS[assetClass].map(s => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-      </div>
-      {/* Interval Selector */}
-      <div className="flex flex-row gap-2 items-center">
-        <span className="text-xs text-muted-foreground">Interval:</span>
-        <select
-          className="px-2 py-1 rounded border border-border bg-background text-foreground"
-          value={interval}
-          onChange={e => setInterval(e.target.value)}
-        >
-          {INTERVALS.map(i => (
-            <option key={i.value} value={i.value}>{i.label}</option>
-          ))}
-        </select>
-      </div>
-      {/* TradingView Chart */}
-      <div className="flex-1 min-h-[400px] w-full">
+      {/* Chart area fills all remaining space */}
+      <div className="flex-1 h-0 w-full">
         <TradingViewWidget
           symbol={symbol}
           interval={interval}
           theme="Dark"
           locale="en"
           autosize
+          style={{ height: '100%', width: '100%' }}
           hide_side_toolbar={false}
           allow_symbol_change={false}
           toolbar_bg="#141413"

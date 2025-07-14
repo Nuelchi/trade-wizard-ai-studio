@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import AuthGuard from "@/components/AuthGuard";
 import CodeCompiler from "@/components/CodeCompiler";
-import { Play, Pause, Square, Upload, BarChart3, TrendingUp, TrendingDown, Clock, DollarSign, Percent, Target, MessageSquare, Code, Download, Settings, FileText, Send } from 'lucide-react';
+import { Play, Pause, Square, Upload, BarChart3, TrendingUp, TrendingDown, Clock, DollarSign, Percent, Target, MessageSquare, Code, Download, Settings, FileText, Send, X } from 'lucide-react';
 import { toast } from "sonner";
-import TradingChart from '@/components/TradingChart';
+import TradingChartRaw from '@/components/TradingChart';
+
+const TradingChart = React.memo(TradingChartRaw);
 
 const EnhancedTest = () => {
   const [selectedStrategy, setSelectedStrategy] = useState<string>('');
@@ -23,7 +25,10 @@ const EnhancedTest = () => {
   const [pineScript, setPineScript] = useState('');
   const [mql4Code, setMql4Code] = useState('');
   const [mql5Code, setMql5Code] = useState('');
-  const [aiPrompt, setAiPrompt] = useState('');
+  // Restore local chat state
+  const [miniChatMessages, setMiniChatMessages] = useState<{ role: 'user' | 'ai'; content: string }[]>([]);
+  const [miniChatInput, setMiniChatInput] = useState('');
+
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
   
@@ -66,70 +71,43 @@ const EnhancedTest = () => {
     'Support & Resistance'
   ];
 
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setUploadedFile(file);
-      toast.success(`Uploaded ${file.name}`);
-      
-      // Read file content for strategy testing
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        setStrategyCode(content);
-        
-        // Parse different file types
-        if (file.name.endsWith('.pine')) {
-          setPineScript(content);
-        } else if (file.name.endsWith('.mq4')) {
-          setMql4Code(content);
-        } else if (file.name.endsWith('.mq5')) {
-          setMql5Code(content);
-        }
-      };
-      reader.readAsText(file);
-    }
+  // Minimal local chat send handler
+  const handleMiniChatSend = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!miniChatInput.trim()) return;
+    const userMsg: { role: 'user' | 'ai'; content: string } = { role: 'user', content: miniChatInput };
+    setMiniChatMessages((msgs) => [...msgs, userMsg]);
+    setMiniChatInput('');
+    // Simulate AI response
+    setTimeout(() => {
+      setMiniChatMessages((msgs) => [...msgs, { role: 'ai', content: "I'm a mini AI. This is a test response." }]);
+    }, 800);
   };
 
-  const runBacktest = () => {
-    if (!selectedStrategy && !uploadedFile) {
-      toast.error('Please select a strategy or upload a file');
-      return;
-    }
-    
-    setBacktestRunning(true);
-    toast.info('Starting backtest...');
-    
-    setTimeout(() => {
-      setBacktestRunning(false);
-      toast.success('Backtest completed!');
-      
-      // Simulate updating results
-      setBacktestResults(prev => ({
-        ...prev,
-        totalTrades: Math.floor(Math.random() * 300) + 100,
-        winRate: Math.floor(Math.random() * 30) + 55,
-        profitFactor: +(Math.random() * 2 + 0.5).toFixed(2),
-        totalReturn: +(Math.random() * 1000 + 200).toFixed(2),
-      }));
-    }, 3000);
+  // In EnhancedTest, define handlers:
+  const handleStrategySelect = (strategy: any) => {
+    setSelectedStrategy(strategy);
+    setStrategyCode(strategy.code || '');
+    setBacktestResults(strategy.analytics || {
+      totalTrades: 0,
+      winRate: 0,
+      profitFactor: 0,
+      maxDrawdown: 0,
+      totalReturn: 0,
+      avgWin: 0,
+      avgLoss: 0,
+      sharpeRatio: 0
+    });
   };
-
-  const handleAiPrompt = () => {
-    if (!aiPrompt.trim()) return;
-    
-    toast.info('Processing AI prompt...');
-    // Simulate AI processing
-    setTimeout(() => {
-      toast.success('Strategy updated based on your prompt!');
-      setAiPrompt('');
-    }, 2000);
+  const handleStrategyUpload = (strategy) => {
+    // Same as select, but can show a toast or highlight
+    handleStrategySelect(strategy);
+    toast.success('Strategy uploaded and loaded!');
   };
 
   return (
     <AuthGuard requireAuth={true}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen h-screen bg-background flex flex-col">
         {/* Header */}
         <div className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
           <div className="max-w-full mx-auto px-6 py-4">
@@ -147,112 +125,12 @@ const EnhancedTest = () => {
           </div>
         </div>
 
-        {/* Main Content - Full Width Layout */}
-        <div className="min-h-[calc(100vh-73px)] flex flex-col">{/* Main Content Panel */}
-          {/* Strategy Selection */}
-          <div className="border-b border-border p-4 bg-muted/20">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select Strategy</label>
-                <Select value={selectedStrategy} onValueChange={setSelectedStrategy}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a strategy" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableStrategies.map((strategy) => (
-                      <SelectItem key={strategy} value={strategy}>
-                        {strategy}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Upload Strategy File</label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept=".pine,.mq4,.mq5,.txt"
-                    onChange={handleFileUpload}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                  />
-                  <Upload className="w-4 h-4 text-muted-foreground" />
-                </div>
-                {uploadedFile && (
-                  <Badge variant="outline" className="text-xs">
-                    {uploadedFile.name}
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Backtest Controls</label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={runBacktest}
-                    disabled={backtestRunning}
-                    size="sm"
-                    className="glow-button flex-1"
-                  >
-                    {backtestRunning ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
-                        Running...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 mr-2" />
-                        Run
-                      </>
-                    )}
-                  </Button>
-                  
-                  <Button variant="outline" size="sm" disabled={!backtestRunning}>
-                    <Pause className="w-4 h-4" />
-                  </Button>
-                  
-                  <Button variant="outline" size="sm" disabled={!backtestRunning}>
-                    <Square className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Symbol & Timeframe</label>
-                <div className="flex items-center gap-2">
-                  <Select defaultValue="EURUSD">
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EURUSD">EUR/USD</SelectItem>
-                      <SelectItem value="GBPUSD">GBP/USD</SelectItem>
-                      <SelectItem value="USDJPY">USD/JPY</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select defaultValue="1H">
-                    <SelectTrigger className="w-16">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1M">1M</SelectItem>
-                      <SelectItem value="5M">5M</SelectItem>
-                      <SelectItem value="15M">15M</SelectItem>
-                      <SelectItem value="1H">1H</SelectItem>
-                      <SelectItem value="4H">4H</SelectItem>
-                      <SelectItem value="1D">1D</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        {/* Main Content - Full Height Layout */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Removed strategy selection/upload/timeframe row here */}
           {/* Tabs Section */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
               <div className="border-b border-border bg-muted/20">
                 <TabsList className="ml-4">
                   <TabsTrigger value="chart" className="flex items-center gap-2">
@@ -274,95 +152,74 @@ const EnhancedTest = () => {
                 </TabsList>
               </div>
 
-              <div className="flex-1 overflow-auto">
-                {/* Chart Tab - Full Width Layout */}
-                <TabsContent value="chart" className="h-full m-0 p-0">
-                  <div className="flex-1 w-full h-full min-h-[500px]">
-                    <TradingChart />
-                  </div>
-                  {/* Bottom Section: AI Prompt (Left) + Live Metrics (Right) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* AI Prompt Box - Left Side */}
-                    <Card className="trading-card lg:col-span-1">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                {/* Chart Tab - Full Height Layout */}
+                <TabsContent value="chart" className="flex-1 h-full w-full min-h-0 p-0 m-0 flex flex-col">
+                  <div className="flex-1 min-h-0 flex flex-row">
+                    {/* Left: Trading Chart */}
+                    <div className="flex-1 min-w-0">
+                      <TradingChart onStrategySelect={handleStrategySelect} onStrategyUpload={handleStrategyUpload} />
+                    </div>
+                    {/* Right: Mini Chat + Metrics */}
+                    <div className="w-[400px] max-w-full flex flex-col border-l border-border bg-background p-4">
+                      <div className="mb-4">
+                        <div className="font-semibold text-lg mb-2 flex items-center gap-2">
                           <MessageSquare className="w-5 h-5 text-primary" />
-                          AI Strategy Refiner
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Refine Strategy</label>
-                            <Textarea
-                              placeholder="Type your request to modify the current strategy... (e.g., 'Add RSI filter', 'Adjust stop loss to 2%')"
-                              value={aiPrompt}
-                              onChange={(e) => setAiPrompt(e.target.value)}
-                              className="min-h-[120px] resize-none"
-                            />
-                          </div>
-                          <Button 
-                            onClick={handleAiPrompt} 
-                            disabled={!aiPrompt.trim()}
-                            className="w-full glow-button"
-                          >
-                            <Send className="w-4 h-4 mr-2" />
-                            Apply Changes
+                          Mini Strategy Chat
+                        </div>
+                        <div className="flex flex-col h-48 overflow-y-auto bg-muted/10 rounded p-2 border border-border mb-2">
+                          {miniChatMessages.length === 0 ? (
+                            <div className="text-xs text-muted-foreground text-center py-6">No messages yet. Try asking the mini AI something about your strategy.</div>
+                          ) : (
+                            miniChatMessages.map((msg, idx) => (
+                              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-1`}>
+                                <div className={`rounded-lg px-3 py-2 max-w-[80%] text-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground border border-border'}`}>
+                                  {msg.content}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <form className="flex gap-2" onSubmit={handleMiniChatSend}>
+                          <input
+                            type="text"
+                            className="flex-1 px-3 py-2 rounded bg-background text-base border border-border focus:outline-none"
+                            placeholder="Ask the mini AI..."
+                            value={miniChatInput}
+                            onChange={e => setMiniChatInput(e.target.value)}
+                          />
+                          <Button size="icon" type="submit" disabled={!miniChatInput.trim()}>
+                            <Send className="w-5 h-5" />
                           </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Live Metrics - Right Side */}
-                    <Card className="trading-card lg:col-span-2">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-success" />
-                          Live Performance Metrics
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="text-center p-4 bg-success/10 rounded-lg">
-                            <div className="text-2xl font-bold text-success">{backtestResults.winRate}%</div>
-                            <div className="text-sm text-muted-foreground">Win Rate</div>
+                        </form>
+                      </div>
+                      {/* Metrics Card */}
+                      <div className="flex-1 flex flex-col justify-end">
+                        <div className="font-semibold text-lg mb-2">Live Performance Metrics</div>
+                        <div className="flex flex-row gap-8 justify-between items-center flex-wrap mb-2">
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
+                            <span className="text-2xl font-bold text-success">${backtestResults.totalReturn}</span>
                           </div>
-                          <div className="text-center p-4 bg-primary/10 rounded-lg">
-                            <div className="text-2xl font-bold text-primary">${backtestResults.totalReturn}</div>
-                            <div className="text-sm text-muted-foreground">Total Return</div>
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
+                            <span className="text-2xl font-bold text-blue-600">{backtestResults.winRate}%</span>
                           </div>
-                          <div className="text-center p-4 bg-warning/10 rounded-lg">
-                            <div className="text-2xl font-bold text-warning">{backtestResults.profitFactor}</div>
-                            <div className="text-sm text-muted-foreground">Profit Factor</div>
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+                            <span className="text-2xl font-bold text-black">{backtestResults.profitFactor}</span>
                           </div>
-                          <div className="text-center p-4 bg-danger/10 rounded-lg">
-                            <div className="text-2xl font-bold text-danger">{backtestResults.maxDrawdown}%</div>
-                            <div className="text-sm text-muted-foreground">Max Drawdown</div>
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                            <span className="text-2xl font-bold text-danger">{backtestResults.maxDrawdown}%</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+                            <span className="text-2xl font-bold">{backtestResults.totalTrades}</span>
                           </div>
                         </div>
-                        
-                        <Separator className="my-4" />
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total Trades</span>
-                            <span className="font-medium">{backtestResults.totalTrades}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Avg Win</span>
-                            <span className="font-medium text-success">${backtestResults.avgWin}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Avg Loss</span>
-                            <span className="font-medium text-danger">${backtestResults.avgLoss}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Sharpe Ratio</span>
-                            <span className="font-medium">{backtestResults.sharpeRatio}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </div>
                 </TabsContent>
 
