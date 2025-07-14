@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Download, Edit, User, MessageSquare, BarChart3, ChevronDown } from 'lucide-react';
 import { Switch } from "@/components/ui/switch"
@@ -59,34 +60,54 @@ const Dashboard = () => {
 
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
-  // Load strategy data and chat history on mount
+  // Load strategy from URL params or localStorage
   useEffect(() => {
-    const savedStrategy = localStorage.getItem('currentStrategy');
-    const savedChatHistory = localStorage.getItem('chatHistory');
-    const savedCode = localStorage.getItem('exportPineScript');
+    const strategyId = searchParams.get('strategy');
     
-    if (savedStrategy) {
-      setStrategyName(savedStrategy);
-    }
-    
-    if (savedChatHistory) {
-      try {
-        const parsedHistory = JSON.parse(savedChatHistory);
-        setChatHistory(parsedHistory);
-      } catch (error) {
-        console.error('Error parsing chat history:', error);
+    if (strategyId) {
+      // Load specific strategy from URL
+      const savedStrategies = localStorage.getItem('userStrategies');
+      if (savedStrategies) {
+        const strategies = JSON.parse(savedStrategies);
+        const strategy = strategies.find((s: any) => s.id === strategyId);
+        
+        if (strategy) {
+          setStrategyName(strategy.title);
+          setChatHistory(strategy.chatHistory || []);
+          setGeneratedCode(strategy.code || null);
+          setCurrentStrategy(strategy);
+        }
+      }
+    } else {
+      // Load from localStorage for backward compatibility
+      const savedStrategy = localStorage.getItem('currentStrategy');
+      const savedChatHistory = localStorage.getItem('chatHistory');
+      const savedCode = localStorage.getItem('exportPineScript');
+      
+      if (savedStrategy) {
+        setStrategyName(savedStrategy);
+      }
+      
+      if (savedChatHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedChatHistory);
+          setChatHistory(parsedHistory);
+        } catch (error) {
+          console.error('Error parsing chat history:', error);
+        }
+      }
+      
+      if (savedCode) {
+        setGeneratedCode({
+          pineScript: savedCode,
+          mql4: localStorage.getItem('exportMQL4') || '',
+          mql5: localStorage.getItem('exportMQL5') || ''
+        });
       }
     }
-    
-    if (savedCode) {
-      setGeneratedCode({
-        pineScript: savedCode,
-        mql4: localStorage.getItem('exportMQL4') || '',
-        mql5: localStorage.getItem('exportMQL5') || ''
-      });
-    }
-  }, []);
+  }, [searchParams]);
 
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
@@ -224,7 +245,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-4">
             {/* Theme Toggle */}
             <div className="flex items-center space-x-2">
-              <Switch id="dark-mode" onChecked={isDarkMode} onCheckedChange={toggleTheme} />
+              <Switch id="dark-mode" checked={isDarkMode} onCheckedChange={toggleTheme} />
               <Label htmlFor="dark-mode" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Dark Mode
               </Label>
