@@ -274,12 +274,9 @@ const Home = () => {
               AI-Powered Strategy Builder
             </Badge>
             
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Turn trading ideas into{" "}
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
-                automated strategies
-              </span>{" "}
-              in seconds
+            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+              Turn trading ideas into<br />
+              <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">automated strategies in seconds</span>
             </h1>
             
             <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
