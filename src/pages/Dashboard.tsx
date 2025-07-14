@@ -175,12 +175,12 @@ const Dashboard = () => {
           </div>
 
           {/* Center Section - Strategy Info & Controls */}
-          <div className="flex items-center justify-between flex-1 max-w-2xl px-8">
-            <div className="text-sm text-muted-foreground hidden md:block">
+          <div className="flex items-center justify-between flex-1 max-w-4xl">
+            <div className="text-sm text-muted-foreground hidden md:block pl-4">
               AI Strategy Builder - Just like Lovable, but for traders
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               {/* Code/Chart Toggle */}
               <div className="flex items-center bg-muted rounded-lg p-1">
                 <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
@@ -193,11 +193,16 @@ const Dashboard = () => {
                 </Button>
               </div>
               
-              <Separator orientation="vertical" className="h-6 hidden md:block" />
-              
               {/* Publish Button */}
               <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
                 <Upload className="w-4 h-4" />
+              </Button>
+              
+              <Separator orientation="vertical" className="h-6 hidden md:block" />
+              
+              {/* Upgrade Button */}
+              <Button variant="outline" size="sm" className="h-8">
+                Upgrade
               </Button>
             </div>
           </div>
