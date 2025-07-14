@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
-import Build from "./pages/Build";
 import Test from "./pages/Test";
 import EnhancedTest from "./pages/EnhancedTest";
 import Export from "./pages/Export";
@@ -21,7 +20,6 @@ const App = () => (
       <Navigation />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/build" element={<Build />} />
         <Route path="/test" element={<EnhancedTest />} />
         <Route path="/export" element={<Export />} />
         <Route path="/mystrategies" element={<MyStrategies />} />

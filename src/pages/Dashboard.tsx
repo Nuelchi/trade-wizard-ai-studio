@@ -12,6 +12,8 @@ const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'chat' | 'code'>('chat');
+  const [strategyName, setStrategyName] = useState('Untitled Strategy');
+  const [isEditingName, setIsEditingName] = useState(false);
   const { user, signOut } = useAuth();
 
   const handleStrategyGenerated = (strategy: any) => {
@@ -26,6 +28,11 @@ const Dashboard = () => {
     await signOut();
     setCurrentStrategy(null);
     setGeneratedCode(null);
+  };
+
+  const handleNameChange = (newName: string) => {
+    setStrategyName(newName || 'Untitled Strategy');
+    setIsEditingName(false);
   };
 
   return (
@@ -94,8 +101,30 @@ const Dashboard = () => {
                       <MessageSquare className="w-4 h-4 text-primary" />
                       <span className="text-sm font-medium">AI Assistant</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Describe your strategy in plain English
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        {isEditingName ? (
+                          <input
+                            type="text"
+                            value={strategyName}
+                            onChange={(e) => setStrategyName(e.target.value)}
+                            onBlur={(e) => handleNameChange(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleNameChange(strategyName)}
+                            className="text-sm font-medium bg-transparent border border-border rounded px-2 py-1 min-w-[120px]"
+                            autoFocus
+                          />
+                        ) : (
+                          <button
+                            onClick={() => setIsEditingName(true)}
+                            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                          >
+                            {strategyName}
+                          </button>
+                        )}
+                        <button className="text-xs text-muted-foreground hover:text-foreground">
+                          Settings
+                        </button>
+                      </div>
                     </div>
                   </div>
                   

@@ -1,7 +1,8 @@
-import { Download, ExternalLink, Cloud, Code, FileText, Zap, CheckCircle, Copy } from "lucide-react";
+import { Download, ExternalLink, Cloud, Code, FileText, Zap, CheckCircle, Copy, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +13,8 @@ const Export = () => {
   const [mql4, setMQL4] = useState('');
   const [mql5, setMQL5] = useState('');
   const [summary, setSummary] = useState<any>(null);
+  const [selectedCode, setSelectedCode] = useState('pinescript');
+  const [isConverting, setIsConverting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +31,37 @@ const Export = () => {
 
   const handleExport = (type: string) => {
     toast(`${type} export started! Download will begin shortly.`);
+  };
+
+  const handleAIConvert = async (targetPlatform: string) => {
+    setIsConverting(true);
+    
+    // Simulate AI conversion process
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const sourceCode = selectedCode === 'pinescript' ? pineScript : 
+                      selectedCode === 'mql4' ? mql4 : mql5;
+    
+    // Mock AI conversion - in real app, this would call an AI service
+    const convertedCode = `// AI-Generated ${targetPlatform.toUpperCase()} Code
+// Converted from ${selectedCode.toUpperCase()}
+// Original strategy: ${strategy}
+
+${sourceCode}
+
+// Additional ${targetPlatform} optimizations added by AI
+// Enhanced error handling and platform-specific features`;
+
+    if (targetPlatform === 'mql4') {
+      setMQL4(convertedCode);
+    } else if (targetPlatform === 'mql5') {
+      setMQL5(convertedCode);
+    } else if (targetPlatform === 'pinescript') {
+      setPineScript(convertedCode);
+    }
+    
+    setIsConverting(false);
+    toast(`Successfully converted to ${targetPlatform.toUpperCase()}!`);
   };
 
   const handleCopyLink = (platform: string) => {
@@ -129,8 +163,8 @@ const Export = () => {
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="mb-4">
-        <Button variant="outline" onClick={() => navigate('/build')}>
-          ← Back to Build
+        <Button variant="outline" onClick={() => navigate('/dashboard')}>
+          ← Back to Builder
         </Button>
       </div>
       <div className="mb-8">
@@ -143,7 +177,34 @@ const Export = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Export Options */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-semibold text-foreground">Export Code</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-foreground">Export Code</h2>
+            <div className="flex items-center space-x-4">
+              <Select value={selectedCode} onValueChange={setSelectedCode}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Select code" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pinescript">Pine Script</SelectItem>
+                  <SelectItem value="mql4">MQL4</SelectItem>
+                  <SelectItem value="mql5">MQL5</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                onClick={() => handleAIConvert(selectedCode === 'pinescript' ? 'mql4' : 'pinescript')}
+                disabled={isConverting}
+                className="flex items-center space-x-2"
+              >
+                {isConverting ? (
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                <span>AI Convert</span>
+              </Button>
+            </div>
+          </div>
           
           {exportOptions.map((option, index) => {
             const Icon = option.icon;
