@@ -55,7 +55,7 @@ const Dashboard = () => {
     title: "",
     description: "",
     tags: "",
-    isPublic: true,
+    pricingType: "free" as "free" | "paid",
     price: ""
   });
   const { user, signOut } = useAuth();
@@ -171,7 +171,7 @@ const Dashboard = () => {
       title: "",
       description: "",
       tags: "",
-      isPublic: true,
+      pricingType: "free",
       price: ""
     });
   };
@@ -504,18 +504,40 @@ const Dashboard = () => {
                   placeholder="e.g., Momentum, Breakout, AI"
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-4 h-4 text-muted-foreground" />
-                  <Label htmlFor="public">Public Strategy</Label>
+              
+              {/* Pricing Selection */}
+              <div className="grid gap-3">
+                <Label>Strategy Pricing</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={publishData.pricingType === "free" ? "default" : "outline"}
+                    className="h-auto p-3 flex flex-col items-center gap-2"
+                    onClick={() => setPublishData({...publishData, pricingType: "free", price: ""})}
+                  >
+                    <Globe className="w-4 h-4" />
+                    <div className="text-center">
+                      <div className="font-medium">Free</div>
+                      <div className="text-xs text-muted-foreground">Anyone can copy</div>
+                    </div>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={publishData.pricingType === "paid" ? "default" : "outline"}
+                    className="h-auto p-3 flex flex-col items-center gap-2"
+                    onClick={() => setPublishData({...publishData, pricingType: "paid"})}
+                  >
+                    <Lock className="w-4 h-4" />
+                    <div className="text-center">
+                      <div className="font-medium">Sell</div>
+                      <div className="text-xs text-muted-foreground">Set your price</div>
+                    </div>
+                  </Button>
                 </div>
-                <Switch
-                  id="public"
-                  checked={publishData.isPublic}
-                  onCheckedChange={(checked) => setPublishData({...publishData, isPublic: checked})}
-                />
               </div>
-              {!publishData.isPublic && (
+              
+              {/* Price Input - Only show when "Sell" is selected */}
+              {publishData.pricingType === "paid" && (
                 <div className="grid gap-2">
                   <Label htmlFor="price">Price (USD)</Label>
                   <Input
