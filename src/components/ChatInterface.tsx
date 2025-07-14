@@ -336,7 +336,7 @@ Would you like me to modify anything or run a backtest?`,
               )}
               
               <p className="text-xs text-muted-foreground mt-2 px-1">
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
             
