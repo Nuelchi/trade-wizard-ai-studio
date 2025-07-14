@@ -1,4 +1,4 @@
-import { Download, Code, FileText, Sparkles, ChevronDown } from "lucide-react";
+import { Download, Code, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -359,6 +359,156 @@ void OnTick() {
             </Card>
           )}
         </div>
+      </div>
+
+      {/* Deploy & Share Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-semibold text-foreground mb-6">Deploy & Share</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* VPS Deployment */}
+          <Card className="trading-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-primary/20 border-2 border-primary"></div>
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg flex items-center space-x-2">
+                      <span>VPS Deployment</span>
+                      <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
+                        Coming Soon
+                      </span>
+                    </CardTitle>
+                    <CardDescription>Deploy your strategy to a Virtual Private Server for 24/7 trading</CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>24/7 uptime</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Low latency</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Multiple brokers</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Real-time monitoring</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Starting at $29/month</span>
+                  <Button 
+                    onClick={() => toast('We\'ll notify you when VPS deployment is available!')}
+                    variant="outline"
+                  >
+                    Notify Me
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Algorithm Hub */}
+          <Card className="trading-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg flex items-center space-x-2">
+                      <span>Algorithm Hub</span>
+                      <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
+                        Coming Soon
+                      </span>
+                    </CardTitle>
+                    <CardDescription>Share your strategy with the Trainflow community</CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Strategy marketplace</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Performance tracking</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Copy trading</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Revenue sharing</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Free to publish</span>
+                  <Button 
+                    onClick={() => toast('We\'ll notify you when Algorithm Hub launches!')}
+                    variant="outline"
+                  >
+                    Notify Me
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Strategy Summary */}
+        <Card className="trading-card">
+          <CardHeader>
+            <CardTitle>Strategy Summary</CardTitle>
+            <CardDescription>Ready for deployment</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedStrategy ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-muted/20 rounded-lg">
+                    <div className="text-lg font-bold text-success">78%</div>
+                    <div className="text-sm text-muted-foreground">Win Rate</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted/20 rounded-lg">
+                    <div className="text-lg font-bold text-foreground">2.4</div>
+                    <div className="text-sm text-muted-foreground">Profit Factor</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted/20 rounded-lg">
+                    <div className="text-lg font-bold text-primary">$1,250</div>
+                    <div className="text-sm text-muted-foreground">Total Return</div>
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <b>Strategy:</b> {strategies.find(s => s.id === selectedStrategy)?.name}
+                  <br />
+                  <b>Description:</b> {strategies.find(s => s.id === selectedStrategy)?.description}
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground">Select a strategy to view its summary.</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
