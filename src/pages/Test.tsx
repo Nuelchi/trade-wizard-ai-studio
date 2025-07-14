@@ -309,8 +309,22 @@ const Test = () => {
 
               <TabsContent value="tester" className="h-full m-0">
                 <div className="flex flex-col h-full w-full">
-                  <div className="flex-1 w-full">
-                    <TradingChart />
+                  {/* Chart container */}
+                  <div className="flex-1 bg-background border-b border-border">
+                    <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
+                  </div>
+                  
+                  {/* Bottom sidebar/panel */}
+                  <div className="h-64 bg-muted/20 border-t border-border p-4">
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium mb-2">Strategy Analytics</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Analytics and performance metrics will appear here
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
