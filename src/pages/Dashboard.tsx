@@ -175,29 +175,31 @@ const Dashboard = () => {
           </div>
 
           {/* Center Section - Strategy Info & Controls */}
-          <div className="flex items-center space-x-4 flex-1 justify-center max-w-2xl">
+          <div className="flex items-center justify-between flex-1 max-w-2xl px-8">
             <div className="text-sm text-muted-foreground hidden md:block">
               AI Strategy Builder - Just like Lovable, but for traders
             </div>
             
-            {/* Code/Chart Toggle */}
-            <div className="flex items-center bg-muted rounded-lg p-1">
-              <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
-                <FileCode className="w-4 h-4" />
-                Code
-              </Button>
-              <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
-                <BarChart3 className="w-4 h-4" />
-                Chart
+            <div className="flex items-center space-x-4">
+              {/* Code/Chart Toggle */}
+              <div className="flex items-center bg-muted rounded-lg p-1">
+                <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
+                  <FileCode className="w-4 h-4" />
+                  Code
+                </Button>
+                <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
+                  <BarChart3 className="w-4 h-4" />
+                  Chart
+                </Button>
+              </div>
+              
+              <Separator orientation="vertical" className="h-6 hidden md:block" />
+              
+              {/* Publish Button */}
+              <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
+                <Upload className="w-4 h-4" />
               </Button>
             </div>
-            
-            <Separator orientation="vertical" className="h-6 hidden md:block" />
-            
-            {/* Publish Button */}
-            <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary">
-              <Upload className="w-4 h-4" />
-            </Button>
           </div>
 
           {/* Right Section - User Menu */}
