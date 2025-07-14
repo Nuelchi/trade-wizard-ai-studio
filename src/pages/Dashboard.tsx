@@ -181,12 +181,34 @@ const Dashboard = () => {
       <div className="h-screen flex flex-col bg-background">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
-          {/* Left Section - Logo */}
+          {/* Left Section - Strategy Name */}
           <div className="flex items-center space-x-2 min-w-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <MessageSquare className="w-4 h-4 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold text-foreground">Trainflow</h1>
+            {isEditingName ? (
+              <input
+                type="text"
+                value={strategyName}
+                onChange={(e) => setStrategyName(e.target.value)}
+                onBlur={() => setIsEditingName(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditingName(false);
+                  }
+                }}
+                className="text-xl font-bold text-foreground bg-transparent border-none outline-none focus:bg-muted px-2 py-1 rounded"
+                autoFocus
+              />
+            ) : (
+              <h1 
+                className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted"
+                onClick={() => setIsEditingName(true)}
+                title="Click to edit strategy name"
+              >
+                {strategyName}
+              </h1>
+            )}
           </div>
 
           {/* Center Section - Strategy Info & Controls */}
