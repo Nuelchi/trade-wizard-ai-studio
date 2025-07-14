@@ -1,7 +1,27 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Code, User, LogOut, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { 
+  MessageSquare, 
+  Code, 
+  User, 
+  LogOut, 
+  Eye, 
+  Settings, 
+  ChevronDown, 
+  Save, 
+  Share2, 
+  Download, 
+  Moon, 
+  Sun, 
+  Bell, 
+  HelpCircle,
+  BarChart3,
+  FileCode,
+  ToggleLeft,
+  ToggleRight
+} from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
@@ -14,6 +34,8 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'chat' | 'code'>('chat');
   const [strategyName, setStrategyName] = useState('Untitled Strategy');
   const [isEditingName, setIsEditingName] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'code' | 'chart'>('code');
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { user, signOut } = useAuth();
 
   const handleStrategyGenerated = (strategy: any) => {
@@ -35,6 +57,26 @@ const Dashboard = () => {
     setIsEditingName(false);
   };
 
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    // Here you would typically update your theme context
+  };
+
+  const handleSave = () => {
+    // Save strategy logic
+    console.log('Saving strategy...');
+  };
+
+  const handleShare = () => {
+    // Share strategy logic
+    console.log('Sharing strategy...');
+  };
+
+  const handleExport = () => {
+    // Export strategy logic
+    console.log('Exporting strategy...');
+  };
+
   return (
     <AuthGuard requireAuth={true}>
       <div className="h-screen flex flex-col bg-background">
@@ -52,25 +94,73 @@ const Dashboard = () => {
               AI Strategy Builder - Just like Lovable, but for traders
             </div>
             <Separator orientation="vertical" className="h-6" />
-            <div className="flex items-center bg-muted rounded-lg p-1">
-              <Button
-                variant={viewMode === 'chat' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('chat')}
-                className="flex items-center gap-2 h-8"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Chat
-              </Button>
-              <Button
-                variant={viewMode === 'code' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('code')}
-                className="flex items-center gap-2 h-8"
-              >
-                <Code className="w-4 h-4" />
-                Code
-              </Button>
+            
+            {/* Functional Toolbar */}
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center bg-muted rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'chat' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('chat')}
+                  className="flex items-center gap-2 h-8"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Chat
+                </Button>
+                <Button
+                  variant={viewMode === 'code' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('code')}
+                  className="flex items-center gap-2 h-8"
+                >
+                  <Code className="w-4 h-4" />
+                  Code
+                </Button>
+              </div>
+              
+              <Separator orientation="vertical" className="h-6" />
+              
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-1">
+                <Button variant="ghost" size="sm" onClick={handleSave} className="h-8">
+                  <Save className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleShare} className="h-8">
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleExport} className="h-8">
+                  <Download className="w-4 h-4" />
+                </Button>
+                
+                {/* Settings Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8">
+                      <Settings className="w-4 h-4" />
+                      <ChevronDown className="w-3 h-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={toggleTheme}>
+                      {isDarkMode ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Bell className="mr-2 h-4 w-4" />
+                      <span>Notifications</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Preferences</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Help & Support</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
           
@@ -145,15 +235,71 @@ const Dashboard = () => {
                       <Eye className="w-4 h-4 text-primary" />
                       <span className="text-sm font-medium">Live Preview</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Your strategy appears here in real-time
+                    
+                    {/* Preview Mode Toggle */}
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center bg-muted rounded-lg p-1">
+                        <Button
+                          variant={previewMode === 'code' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => setPreviewMode('code')}
+                          className="flex items-center gap-2 h-7 text-xs"
+                        >
+                          <FileCode className="w-3 h-3" />
+                          Code
+                        </Button>
+                        <Button
+                          variant={previewMode === 'chart' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => setPreviewMode('chart')}
+                          className="flex items-center gap-2 h-7 text-xs"
+                        >
+                          <BarChart3 className="w-3 h-3" />
+                          Chart
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   
-                  <CodePreview 
-                    strategy={currentStrategy}
-                    code={generatedCode}
-                  />
+                  {previewMode === 'code' ? (
+                    <CodePreview 
+                      strategy={currentStrategy}
+                      code={generatedCode}
+                    />
+                  ) : (
+                    <div className="h-full flex flex-col">
+                      {/* Performance Chart View */}
+                      <div className="flex-1 p-4">
+                        <div className="h-full border border-border rounded-lg bg-muted/10 flex items-center justify-center">
+                          <div className="text-center">
+                            <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-foreground mb-2">
+                              Performance Chart
+                            </h3>
+                            <p className="text-sm text-muted-foreground max-w-md">
+                              Real-time backtested performance data will appear here once your strategy is ready.
+                            </p>
+                            {currentStrategy && (
+                              <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+                                <div className="p-3 bg-background rounded-lg">
+                                  <div className="text-2xl font-bold text-green-500">+24.5%</div>
+                                  <div className="text-xs text-muted-foreground">Total Return</div>
+                                </div>
+                                <div className="p-3 bg-background rounded-lg">
+                                  <div className="text-2xl font-bold text-blue-500">1.8</div>
+                                  <div className="text-xs text-muted-foreground">Sharpe Ratio</div>
+                                </div>
+                                <div className="p-3 bg-background rounded-lg">
+                                  <div className="text-2xl font-bold text-purple-500">-8.2%</div>
+                                  <div className="text-xs text-muted-foreground">Max Drawdown</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
