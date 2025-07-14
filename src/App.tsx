@@ -15,6 +15,7 @@ import Marketplace from './pages/Marketplace';
 import Pricing from './pages/Pricing';
 import Community from './pages/Community';
 import Learn from './pages/Learn';
+import Login from './pages/Login';
 
 const App = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const App = () => {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/community" element={<Community />} />
           <Route path="/learn" element={<Learn />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
