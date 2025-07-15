@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { OpenAI } from 'openai';
+import fsSync from 'fs';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -9,22 +10,42 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
-  const { prompt } = req.body;
+  const { prompt, imageBase64, imageFile } = req.body;
   if (!prompt) {
     res.status(400).json({ error: 'Missing prompt' });
     return;
+  }
+  let finalImageBase64 = imageBase64;
+  // If imageFile is present and not base64, convert it
+  if (!finalImageBase64 && imageFile) {
+    // imageFile should be a path or a Buffer
+    if (typeof imageFile === 'string' && fsSync.existsSync(imageFile)) {
+      const imgBuffer = fsSync.readFileSync(imageFile);
+      finalImageBase64 = imgBuffer.toString('base64');
+    } else if (Buffer.isBuffer(imageFile)) {
+      finalImageBase64 = imageFile.toString('base64');
+    }
   }
   try {
     const systemPromptPath = path.join(process.cwd(), 'prompts', 'systemPrompt.txt');
     const systemPrompt = await fs.readFile(systemPromptPath, 'utf8');
     const messages = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt }
+      {
+        role: 'user',
+        content: finalImageBase64
+          ? [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${finalImageBase64}` } }
+            ]
+          : prompt
+      }
     ];
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-1106-preview',
+      model: finalImageBase64 ? 'gpt-4-vision-preview' : 'gpt-4-1106-preview',
       messages,
       temperature: 0.4,
+      max_tokens: 1024
     });
     const output = response.choices[0].message.content;
     // Try to extract the JSON block at the end
