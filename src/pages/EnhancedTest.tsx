@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import CodeCompiler from "@/components/CodeCompiler";
 import { Sparkles, X, Bot, User, ArrowUp, TrendingDown, Clock, TrendingUp, BarChart3, Code, Download, Play, Pause, Upload, FileText } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import TradingViewWidget from 'react-tradingview-widget';
+import { AdvancedChart } from 'react-tradingview-embed';
+// import TradingViewWidget from 'react-tradingview-widget'; // Removed, missing dependency
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,21 +27,8 @@ interface MemoTradingViewChartProps {
   interval: string;
 }
 const MemoTradingViewChart = memo(({ symbol, interval }: MemoTradingViewChartProps) => (
-  <div className="w-full h-[900px] bg-background rounded-lg overflow-hidden">
-    <TradingViewWidget
-      symbol={symbol}
-      interval={interval === '1H' ? '60' : interval}
-      theme="Dark"
-      locale="en"
-      autosize
-      style="1" // Use valid style code for dark
-      hide_side_toolbar={false}
-      allow_symbol_change={true}
-      toolbar_bg="#141413"
-      enable_publishing={false}
-      container_id="tradingview_chart"
-      save_image={false}
-    />
+  <div className="w-full bg-background rounded-lg overflow-hidden">
+    <AdvancedChart widgetProps={{ symbol: "BINANCE:BTCUSDT", theme: "dark", interval: "D", height: 1000, width: "100%" }} />
   </div>
 ));
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import TradingViewWidget from 'react-tradingview-widget';
 import { ChevronDown, Upload, ListChecks, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
+import { AdvancedChart } from 'react-tradingview-embed';
 
 const ASSET_CLASSES = [
   { key: 'stocks', label: 'Stocks', defaultSymbol: 'NASDAQ:AAPL' },
@@ -292,20 +292,12 @@ const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
       </div>
       {/* Chart area fills all remaining space */}
       <div className="flex-1 h-0 w-full">
-        <TradingViewWidget
-          symbol={symbol}
-          interval={interval}
-          theme="Dark"
-          locale="en"
-          autosize
-          style={{ height: '100%', width: '100%' }}
-          hide_side_toolbar={false}
-          allow_symbol_change={false}
-          toolbar_bg="#141413"
-          enable_publishing={false}
-          hide_top_toolbar={false}
-          save_image={false}
-        />
+        <div className="glass-card p-6 rounded-lg mb-8 animate-fade-in">
+          {/* Removed header for more space */}
+          <div className="w-full">
+            <AdvancedChart widgetProps={{ symbol: "BINANCE:BTCUSDT", theme: "dark", interval: "D", height: 700, width: "100%" }} />
+          </div>
+        </div>
       </div>
     </div>
   );
