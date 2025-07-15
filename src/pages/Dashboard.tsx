@@ -256,7 +256,6 @@ const Dashboard = () => {
   const sectionOptions = [
     { path: '/dashboard', label: 'Builder', icon: MessageSquare },
     { path: '/test', label: 'Strategy Tester', icon: TrendingUp },
-    { path: '/export', label: 'Export', icon: Download },
     { path: '/mystrategies', label: 'My Strategies', icon: User },
   ];
   const currentSection = sectionOptions.find(opt => location.pathname.startsWith(opt.path)) || sectionOptions[0];

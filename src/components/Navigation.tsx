@@ -30,7 +30,6 @@ const Navigation = () => {
   const appNavItems = [
     { to: '/dashboard', label: 'Builder', icon: MessageSquare },
     { to: '/test', label: 'Strategy Tester', icon: TrendingUp },
-    { to: '/export', label: 'Export', icon: Download },
     { to: '/mystrategies', label: 'My Strategies', icon: User },
   ];
 

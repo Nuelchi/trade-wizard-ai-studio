@@ -14,8 +14,9 @@ export interface Strategy {
   id?: string;
   title?: string;
   description?: string;
-  code?: string;
+  code?: string | any;
   analytics?: any;
+  equityCurve?: any[];
   // Add more fields as needed
 }
 

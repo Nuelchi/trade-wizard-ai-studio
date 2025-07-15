@@ -39,6 +39,8 @@ const MyStrategies = () => {
   }, [user]);
 
   const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('Are you sure you want to delete this strategy? This action cannot be undone.');
+    if (!confirmed) return;
     const { error } = await supabase.from('strategies').delete().eq('id', id);
     if (error) {
       toast('Failed to delete strategy');

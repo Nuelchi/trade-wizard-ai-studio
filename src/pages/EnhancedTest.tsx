@@ -1,39 +1,232 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import AuthGuard from "@/components/AuthGuard";
 import CodeCompiler from "@/components/CodeCompiler";
-import { Play, Pause, Square, Upload, BarChart3, TrendingUp, TrendingDown, Clock, DollarSign, Percent, Target, MessageSquare, Code, Download, Settings, FileText, Send, X, Sparkles, User, Bot, Mic, ArrowUp } from 'lucide-react';
-import { toast } from "sonner";
-import TradingChartRaw from '@/components/TradingChart';
+import { Sparkles, X, Bot, User, ArrowUp, TrendingDown, Clock, TrendingUp, BarChart3, Code, Download, Play, Pause, Upload, FileText } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import TradingViewWidget from 'react-tradingview-widget';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
+import StrategyTesterFooter from '../../../src/components/StrategyTesterFooter/StrategyTesterFooter';
+import OverviewTab from '../../../src/components/StrategyTesterFooter/OverviewTab';
+import PerformanceTab from '../../../src/components/StrategyTesterFooter/PerformanceTab';
+import TradeAnalysisTab from '../../../src/components/StrategyTesterFooter/TradeAnalysisTab';
 
-const TradingChart = React.memo(TradingChartRaw);
+// Memoized TradingView chart
+interface MemoTradingViewChartProps {
+  symbol: string;
+  interval: string;
+}
+const MemoTradingViewChart = memo(({ symbol, interval }: MemoTradingViewChartProps) => (
+  <div className="w-full h-[900px] bg-background rounded-lg overflow-hidden">
+    <TradingViewWidget
+      symbol={symbol}
+      interval={interval}
+      theme="Dark"
+      locale="en"
+      autosize
+      style={{ height: '100%', width: '100%' }}
+      hide_side_toolbar={false}
+      allow_symbol_change={true}
+      toolbar_bg="#141413"
+      enable_publishing={false}
+      container_id="tradingview_chart"
+      save_image={false}
+    />
+  </div>
+));
+
+// Memoized Chat Widget
+interface MemoMiniChatProps {
+  miniChatMessages: { role: 'user' | 'ai'; content: string }[];
+  miniChatInput: string;
+  isAiWidgetOpen: boolean;
+  isAiTyping: boolean;
+  setMiniChatInput: React.Dispatch<React.SetStateAction<string>>;
+  setMiniChatMessages: React.Dispatch<React.SetStateAction<{ role: 'user' | 'ai'; content: string }[]>>;
+  setIsAiWidgetOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsAiTyping: React.Dispatch<React.SetStateAction<boolean>>;
+  handleMiniChatSend: (e?: React.FormEvent) => void;
+  metrics: {
+    winRate: number;
+    totalReturn: number;
+    profitFactor: number;
+    maxDrawdown: number;
+    totalTrades: number;
+    avgWin: number;
+    avgLoss: number;
+    sharpeRatio: number;
+  };
+}
+const MemoMiniChat = memo(function MemoMiniChat({
+  miniChatMessages,
+  miniChatInput,
+  isAiWidgetOpen,
+  isAiTyping,
+  setMiniChatInput,
+  setMiniChatMessages,
+  setIsAiWidgetOpen,
+  setIsAiTyping,
+  handleMiniChatSend,
+  metrics
+}: MemoMiniChatProps) {
+  const [activeFooterTab, setActiveFooterTab] = useState('overview');
+  return (
+    <div className="bg-card border-t border-border mt-6">
+      {/* Header with Tabs and AI Assistant Button */}
+      <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+            <span className="text-sm font-medium">Strategy Tester</span>
+          </div>
+          <Separator orientation="vertical" className="h-4" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="w-3 h-3" />
+            <span>Last updated: {new Date().toLocaleTimeString()}</span>
+          </div>
+          {/* Tabs in header */}
+          <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="ml-6">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="trade_analysis">Trade Analysis</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
+          className="h-7 text-xs"
+        >
+          <Sparkles className="w-3 h-3 mr-1" />
+          {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
+        </Button>
+      </div>
+      {/* Main Content Area: Tab Content and AI Chat */}
+      <div className="flex">
+        {/* Tab Content */}
+        <div className={`${isAiWidgetOpen ? 'w-2/3' : 'w-full'} transition-all duration-300 p-4`}> 
+          <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="w-full">
+            <TabsContent value="overview">
+              <OverviewTab metrics={metrics} />
+            </TabsContent>
+            <TabsContent value="performance">
+              <PerformanceTab metrics={metrics} />
+            </TabsContent>
+            <TabsContent value="trade_analysis">
+              <TradeAnalysisTab metrics={metrics} />
+            </TabsContent>
+          </Tabs>
+        </div>
+        {/* AI Chat (if open) */}
+        {isAiWidgetOpen && (
+          <div className="w-1/3 border-l border-border flex flex-col">
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {miniChatMessages.length === 0 ? (
+                <div className="text-center py-4">
+                  <Bot className="w-8 h-8 mx-auto mb-2 text-primary/60" />
+                  <p className="text-sm font-medium mb-1">AI Ready</p>
+                  <p className="text-xs text-muted-foreground">Ask about strategy optimization</p>
+                </div>
+              ) : (
+                miniChatMessages.map((msg, idx) => (
+                  <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.role === 'ai' && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Sparkles className="w-2.5 h-2.5 text-primary-foreground" />
+                      </div>
+                    )}
+                    <div className={`max-w-[80%] rounded-lg px-2.5 py-1.5 text-xs ${
+                      msg.role === 'user' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted'
+                    }`}>
+                      {msg.content}
+                    </div>
+                    {msg.role === 'user' && (
+                      <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <User className="w-2.5 h-2.5 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+              {isAiTyping && (
+                <div className="flex gap-2">
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Sparkles className="w-2.5 h-2.5 text-primary-foreground animate-pulse" />
+                  </div>
+                  <div className="bg-muted rounded-lg px-2.5 py-1.5 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"></div>
+                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Input */}
+            <div className="p-3 border-t border-border">
+              <form onSubmit={handleMiniChatSend} className="flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 px-3 py-2 text-xs rounded-lg bg-background border border-border focus:border-primary/50 focus:outline-none"
+                  placeholder="Ask about strategy optimization..."
+                  value={miniChatInput}
+                  onChange={e => setMiniChatInput(e.target.value)}
+                />
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  disabled={!miniChatInput.trim() || isAiTyping}
+                  className="h-8 w-8"
+                >
+                  <ArrowUp className="w-3 h-3" />
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 const EnhancedTest = () => {
-  const [selectedStrategy, setSelectedStrategy] = useState<string>('');
-  const [backtestRunning, setBacktestRunning] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState('chart');
-  const [strategyCode, setStrategyCode] = useState('');
-  const [pineScript, setPineScript] = useState('');
-  const [mql4Code, setMql4Code] = useState('');
-  const [mql5Code, setMql5Code] = useState('');
-  // Restore local chat state
-  const [miniChatMessages, setMiniChatMessages] = useState<{ role: 'user' | 'ai'; content: string }[]>([]);
-  const [miniChatInput, setMiniChatInput] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [selectedStrategy, setSelectedStrategy] = useState('none');
+  const [symbol, setSymbol] = useState('EUR/USD');
+  const [interval, setInterval] = useState('1H');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [miniChatMessages, setMiniChatMessages] = useState<{ role: 'user' | 'ai'; content: string }[]>(() => {
+    try {
+      const saved = localStorage.getItem('enhancedTestMiniChatMessages');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [miniChatInput, setMiniChatInput] = useState(() => {
+    try {
+      return localStorage.getItem('enhancedTestMiniChatInput') || '';
+    } catch {
+      return '';
+    }
+  });
   const [isAiWidgetOpen, setIsAiWidgetOpen] = useState(false);
   const [isAiTyping, setIsAiTyping] = useState(false);
-
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<any>(null);
-  
   const [backtestResults, setBacktestResults] = useState({
     totalTrades: 234,
     winRate: 67.5,
@@ -44,48 +237,116 @@ const EnhancedTest = () => {
     avgLoss: -89.12,
     sharpeRatio: 1.67
   });
+  const [strategyCode, setStrategyCode] = useState('');
+  const [pineScript, setPineScript] = useState('');
+  const [mql4Code, setMql4Code] = useState('');
+  const [mql5Code, setMql5Code] = useState('');
+  const { user } = useAuth();
+  const [strategies, setStrategies] = useState<Database['public']['Tables']['strategies']['Row'][]>([]);
+  const [loadingStrategies, setLoadingStrategies] = useState(false);
+  const autosaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const [performanceData, setPerformanceData] = useState([
-    { date: '2024-01', value: 10000, trades: 12 },
-    { date: '2024-02', value: 10500, trades: 15 },
-    { date: '2024-03', value: 11200, trades: 18 },
-    { date: '2024-04', value: 10800, trades: 14 },
-    { date: '2024-05', value: 12100, trades: 22 },
-    { date: '2024-06', value: 11900, trades: 19 },
-    { date: '2024-07', value: 13200, trades: 25 },
-  ]);
+  useEffect(() => {
+    if (!user) return;
+    setLoadingStrategies(true);
+    supabase
+      .from('strategies')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error) setStrategies(data || []);
+        setLoadingStrategies(false);
+      });
+  }, [user]);
 
-  const [priceData, setPriceData] = useState([
-    { time: '2024-01-01', open: 100, high: 105, low: 98, close: 103 },
-    { time: '2024-01-02', open: 103, high: 108, low: 101, close: 106 },
-    { time: '2024-01-03', open: 106, high: 109, low: 104, close: 107 },
-    { time: '2024-01-04', open: 107, high: 112, low: 105, close: 110 },
-    { time: '2024-01-05', open: 110, high: 115, low: 108, close: 113 },
-    { time: '2024-01-06', open: 113, high: 116, low: 111, close: 114 },
-    { time: '2024-01-07', open: 114, high: 118, low: 112, close: 117 },
-  ]);
+  // When a user selects a strategy, load its chat_history and code fields into state for AI context and code tabs
+  useEffect(() => {
+    if (selectedStrategy === 'none') {
+      setMiniChatMessages([]);
+      setStrategyCode('');
+      setPineScript('');
+      setMql4Code('');
+      setMql5Code('');
+      return;
+    }
+    const strat = strategies.find((s) => s.id === selectedStrategy);
+    if (strat) {
+      if (Array.isArray(strat.chat_history)) {
+        setMiniChatMessages(strat.chat_history as any[]);
+      }
+      if (typeof strat.code === 'object' && strat.code !== null && !Array.isArray(strat.code)) {
+        setStrategyCode((strat.code as any).main || '');
+        setPineScript((strat.code as any).pineScript || '');
+        setMql4Code((strat.code as any).mql4 || '');
+        setMql5Code((strat.code as any).mql5 || '');
+      } else {
+        setStrategyCode('');
+        setPineScript('');
+        setMql4Code('');
+        setMql5Code('');
+      }
+    }
+  }, [selectedStrategy, strategies]);
 
-  const availableStrategies = [
-    'Moving Average Crossover',
-    'RSI Reversal',
-    'Bollinger Bands Breakout',
-    'MACD Momentum',
-    'Support & Resistance'
-  ];
+  // Mock metrics
+  const metrics = {
+    winRate: 67.5,
+    totalReturn: 847.56,
+    profitFactor: 1.84,
+    maxDrawdown: 12.3,
+    totalTrades: 234,
+    avgWin: 156.34,
+    avgLoss: -89.12,
+    sharpeRatio: 1.67,
+  };
 
-  // Enhanced AI chat functionality similar to the main ChatInterface
+  // Persist chat messages and input on change
+  useEffect(() => {
+    localStorage.setItem('enhancedTestMiniChatMessages', JSON.stringify(miniChatMessages));
+  }, [miniChatMessages]);
+  useEffect(() => {
+    localStorage.setItem('enhancedTestMiniChatInput', miniChatInput);
+  }, [miniChatInput]);
+
+  // Autosave strategy chat/code changes in real time
+  useEffect(() => {
+    if (!user || selectedStrategy === 'none') return;
+    const strat = strategies.find((s) => s.id === selectedStrategy);
+    if (!strat) return;
+    if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
+    autosaveTimeout.current = setTimeout(async () => {
+      const { error } = await supabase
+        .from('strategies')
+        .update({
+          chat_history: miniChatMessages,
+          code: {
+            main: strategyCode,
+            pineScript,
+            mql4: mql4Code,
+            mql5: mql5Code,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedStrategy);
+      if (error) {
+        toast(`Autosave failed: ${error.message}`);
+      }
+    }, 2000);
+    return () => {
+      if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
+    };
+  }, [miniChatMessages, strategyCode, pineScript, mql4Code, mql5Code, selectedStrategy, user, strategies]);
+
   const handleMiniChatSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!miniChatInput.trim()) return;
-    
-    const userMsg: { role: 'user' | 'ai'; content: string } = { role: 'user', content: miniChatInput };
+    const userMsg = { role: 'user' as const, content: miniChatInput };
     setMiniChatMessages((msgs) => [...msgs, userMsg]);
     const currentInput = miniChatInput;
     setMiniChatInput('');
     setIsAiTyping(true);
-    
     try {
-      // Call our edge function for AI response
       const response = await fetch('/api/chat-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,15 +355,11 @@ const EnhancedTest = () => {
           context: "You are an AI trading strategy assistant. Provide helpful advice about trading strategies, indicators, risk management, and market analysis. Keep responses concise and actionable."
         }),
       });
-      
       const data = await response.json();
       const aiResponse = data.response || "I'm here to help with your trading strategy. Could you please rephrase your question?";
-      
-      setMiniChatMessages((msgs) => [...msgs, { role: 'ai', content: aiResponse }]);
+      setMiniChatMessages((msgs) => [...msgs, { role: 'ai' as const, content: aiResponse }]);
     } catch (error) {
-      // Fallback to local responses
       let aiResponse = "I'm analyzing your request...";
-      
       if (currentInput.toLowerCase().includes('indicator')) {
         aiResponse = "I can help you add indicators like RSI, MACD, or Bollinger Bands. Which specific indicator would you like to implement for better signal accuracy?";
       } else if (currentInput.toLowerCase().includes('backtest')) {
@@ -114,396 +371,165 @@ const EnhancedTest = () => {
       } else {
         aiResponse = "I understand you want to improve your strategy. I can help with indicator selection, parameter optimization, risk management, or backtesting. What specific area interests you most?";
       }
-      
-      setMiniChatMessages((msgs) => [...msgs, { role: 'ai', content: aiResponse }]);
+      setMiniChatMessages((msgs) => [...msgs, { role: 'ai' as const, content: aiResponse }]);
     }
-    
     setIsAiTyping(false);
   };
 
-  // In EnhancedTest, define handlers:
-  const handleStrategySelect = (strategy: any) => {
-    setSelectedStrategy(strategy);
-    setStrategyCode(strategy.code || '');
-    setBacktestResults(strategy.analytics || {
-      totalTrades: 0,
-      winRate: 0,
-      profitFactor: 0,
-      maxDrawdown: 0,
-      totalReturn: 0,
-      avgWin: 0,
-      avgLoss: 0,
-      sharpeRatio: 0
-    });
-  };
-  const handleStrategyUpload = (strategy) => {
-    // Same as select, but can show a toast or highlight
-    handleStrategySelect(strategy);
-    toast.success('Strategy uploaded and loaded!');
-  };
-
   return (
-    <AuthGuard requireAuth={true}>
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
-        <div className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
-          <div className="max-w-full mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Strategy Tester</h1>
-                  <p className="text-sm text-muted-foreground">Professional trading strategy backtesting platform</p>
-                </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Tab Header with Select Strategy and Upload Icon on the left */}
+      <div className="border-b border-border bg-muted/20 flex items-center px-6 pt-4 pb-2">
+        {/* Tab Buttons */}
+        <button
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium text-sm ${activeTab === 'chart' ? 'bg-white shadow text-primary' : 'text-muted-foreground hover:bg-muted/40'}`}
+          onClick={() => setActiveTab('chart')}
+        >
+          <BarChart3 className="w-4 h-4" /> Chart & Signals
+        </button>
+        <button
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium text-sm ${activeTab === 'performance' ? 'bg-white shadow text-primary' : 'text-muted-foreground hover:bg-muted/40'}`}
+          onClick={() => setActiveTab('performance')}
+        >
+          <TrendingUp className="w-4 h-4" /> Performance
+        </button>
+        <button
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium text-sm ${activeTab === 'code' ? 'bg-white shadow text-primary' : 'text-muted-foreground hover:bg-muted/40'}`}
+          onClick={() => setActiveTab('code')}
+        >
+          <Code className="w-4 h-4" /> Strategy Code
+        </button>
+        <button
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium text-sm ${activeTab === 'export' ? 'bg-white shadow text-primary' : 'text-muted-foreground hover:bg-muted/40'}`}
+          onClick={() => setActiveTab('export')}
+        >
+          <Download className="w-4 h-4" /> Export
+        </button>
+        <div className="flex-1" />
+        {activeTab === 'chart' && (
+          <>
+            <Button size="sm" variant="default" className="ml-auto" onClick={() => setIsRunning(!isRunning)}>
+              {isRunning ? <><Pause className="w-4 h-4 mr-1" />Stop</> : <><Play className="w-4 h-4 mr-1" />Run</>}
+            </Button>
+            <Select value={selectedStrategy} onValueChange={setSelectedStrategy} disabled={loadingStrategies || !user}>
+              <SelectTrigger className="w-48 ml-4">
+                <SelectValue placeholder={loadingStrategies ? 'Loading...' : 'Choose a strategy'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {strategies.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    <span className="font-medium">{s.title}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+            <label className="flex items-center gap-2 cursor-pointer ml-2">
+              <Button size="icon" variant="outline" asChild>
+                <Upload className="w-5 h-5" />
+              </Button>
+              <input type="file" className="hidden" accept=".mq4,.mq5" onChange={e => {
+                const file = e.target.files?.[0] || null;
+                if (file && !/\.(mq4|mq5)$/i.test(file.name)) {
+                  alert('Only .mq4 or .mq5 files are allowed.');
+                  return;
+                }
+                setUploadedFile(file);
+              }} />
+            </label>
+          </>
+                )}
               </div>
+              
+      {/* Tabs Content */}
+      {activeTab === 'chart' && (
+        <div className="flex-1 flex flex-col px-6 py-4">
+          <Card className="w-full h-full p-6 flex flex-col gap-6">
+            {/* Chart Preview */}
+            <div className="flex flex-col gap-2">
+              {/* Real TradingView Chart - no default studies */}
+              <MemoTradingViewChart symbol={symbol} interval={interval} />
             </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Tabs Section */}
-          <div className="flex-1 flex flex-col">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-              <div className="border-b border-border bg-muted/20">
-                <TabsList className="ml-4">
-                  <TabsTrigger value="chart" className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    Chart & Signals
-                  </TabsTrigger>
-                  <TabsTrigger value="performance" className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Performance
-                  </TabsTrigger>
-                  <TabsTrigger value="code" className="flex items-center gap-2">
-                    <Code className="w-4 h-4" />
-                    Strategy Code
-                  </TabsTrigger>
-                  <TabsTrigger value="export" className="flex items-center gap-2">
-                    <Download className="w-4 h-4" />
-                    Export
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <div className="flex-1 flex flex-col">
-                {/* Chart Tab */}
-                <TabsContent value="chart" className="flex-1 flex flex-col p-0 m-0">
-                  {/* Trading Chart */}
-                  <div className="flex-1 min-h-[60vh]">
-                    <TradingChart onStrategySelect={handleStrategySelect} onStrategyUpload={handleStrategyUpload} />
+            {/* Strategy Tester Footer Tabs (Overview, Performance, Trade Analysis) */}
+            <MemoMiniChat
+              miniChatMessages={miniChatMessages}
+              miniChatInput={miniChatInput}
+              isAiWidgetOpen={isAiWidgetOpen}
+              isAiTyping={isAiTyping}
+              setMiniChatInput={setMiniChatInput}
+              setMiniChatMessages={setMiniChatMessages}
+              setIsAiWidgetOpen={setIsAiWidgetOpen}
+              setIsAiTyping={setIsAiTyping}
+              handleMiniChatSend={handleMiniChatSend}
+              metrics={metrics}
+            />
+                    </Card>
                   </div>
-                  
-                  {/* TradingView-style Strategy Tester Footer */}
-                  <div className="bg-card border-t border-border">
-                    {/* Header */}
-                    <div className="px-4 py-3 border-b border-border bg-muted/30">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-                            <span className="text-sm font-medium">Strategy Tester</span>
-                          </div>
-                          <Separator orientation="vertical" className="h-4" />
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="w-3 h-3" />
-                            <span>Last updated: {new Date().toLocaleTimeString()}</span>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
-                          className="h-7 text-xs"
-                        >
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Main Content Area */}
-                    <div className="flex">
-                      {/* Performance Overview */}
-                      <div className={`${isAiWidgetOpen ? 'w-2/3' : 'w-full'} transition-all duration-300`}>
-                        {/* Key Metrics Row */}
-                        <div className="p-4 border-b border-border bg-background/50">
-                          <div className="grid grid-cols-8 gap-4">
-                            {/* Net Profit */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Net Profit</span>
-                              <div className="flex items-center gap-1">
-                                <span className="text-lg font-bold text-success">${backtestResults.totalReturn}</span>
-                                <TrendingUp className="w-3 h-3 text-success" />
-                              </div>
-                              <span className="text-xs text-success">+12.4%</span>
-                            </div>
-
-                            {/* Win Rate */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Win Rate</span>
-                              <span className="text-lg font-bold text-primary">{backtestResults.winRate}%</span>
-                              <span className="text-xs text-muted-foreground">({Math.round(backtestResults.totalTrades * backtestResults.winRate / 100)} wins)</span>
-                            </div>
-
-                            {/* Profit Factor */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-                              <span className="text-lg font-bold text-primary">{backtestResults.profitFactor}</span>
-                              <span className="text-xs text-muted-foreground">Excellent</span>
-                            </div>
-
-                            {/* Max Drawdown */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                              <div className="flex items-center gap-1">
-                                <span className="text-lg font-bold text-destructive">{backtestResults.maxDrawdown}%</span>
-                                <TrendingDown className="w-3 h-3 text-destructive" />
-                              </div>
-                              <span className="text-xs text-destructive">Low risk</span>
-                            </div>
-
-                            {/* Total Trades */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-                              <span className="text-lg font-bold text-foreground">{backtestResults.totalTrades}</span>
-                              <span className="text-xs text-muted-foreground">Active</span>
-                            </div>
-
-                            {/* Sharpe Ratio */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Sharpe Ratio</span>
-                              <span className="text-lg font-bold text-orange-500">{backtestResults.sharpeRatio}</span>
-                              <span className="text-xs text-muted-foreground">Strong</span>
-                            </div>
-
-                            {/* Avg Win */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Avg Win</span>
-                              <span className="text-lg font-bold text-success">${backtestResults.avgWin}</span>
-                              <span className="text-xs text-muted-foreground">Per trade</span>
-                            </div>
-
-                            {/* Avg Loss */}
-                            <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground mb-1">Avg Loss</span>
-                              <span className="text-lg font-bold text-destructive">${Math.abs(backtestResults.avgLoss)}</span>
-                              <span className="text-xs text-muted-foreground">Per trade</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Detailed Stats Table */}
-                        <div className="p-4">
-                          <div className="grid grid-cols-2 gap-6">
-                            {/* Performance Stats */}
-                            <div>
-                              <h4 className="text-sm font-semibold mb-3 text-foreground">Performance</h4>
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Total Return</span>
-                                  <span className="font-medium text-success">+{((backtestResults.totalReturn / 10000) * 100).toFixed(2)}%</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Annual Return</span>
-                                  <span className="font-medium">+24.8%</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Monthly Return</span>
-                                  <span className="font-medium">+2.1%</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Best Trade</span>
-                                  <span className="font-medium text-success">+$450.23</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Worst Trade</span>
-                                  <span className="font-medium text-destructive">-$234.56</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Risk Stats */}
-                            <div>
-                              <h4 className="text-sm font-semibold mb-3 text-foreground">Risk Management</h4>
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Largest Winning Streak</span>
-                                  <span className="font-medium">8 trades</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Largest Losing Streak</span>
-                                  <span className="font-medium">3 trades</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Recovery Factor</span>
-                                  <span className="font-medium">6.89</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Calmar Ratio</span>
-                                  <span className="font-medium">2.01</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Sortino Ratio</span>
-                                  <span className="font-medium">2.34</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* AI Assistant Widget */}
-                      {isAiWidgetOpen && (
-                        <div className="w-1/3 border-l border-border bg-card">
-                          <div className="h-full flex flex-col">
-                            {/* Header */}
-                            <div className="p-3 border-b border-border bg-muted/30">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                                    <Sparkles className="w-3 h-3 text-primary-foreground" />
-                                  </div>
-                                  <span className="text-sm font-medium">AI Assistant</span>
-                                </div>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => setIsAiWidgetOpen(false)}
-                                  className="h-6 w-6"
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            </div>
-                            
-                            {/* Messages */}
-                            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                              {miniChatMessages.length === 0 ? (
-                                <div className="text-center py-4">
-                                  <Bot className="w-8 h-8 mx-auto mb-2 text-primary/60" />
-                                  <p className="text-sm font-medium mb-1">AI Ready</p>
-                                  <p className="text-xs text-muted-foreground">Ask about strategy optimization</p>
-                                </div>
-                              ) : (
-                                miniChatMessages.map((msg, idx) => (
-                                  <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    {msg.role === 'ai' && (
-                                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Sparkles className="w-2.5 h-2.5 text-primary-foreground" />
-                                      </div>
-                                    )}
-                                    <div className={`max-w-[80%] rounded-lg px-2.5 py-1.5 text-xs ${
-                                      msg.role === 'user' 
-                                        ? 'bg-primary text-primary-foreground' 
-                                        : 'bg-muted'
-                                    }`}>
-                                      {msg.content}
-                                    </div>
-                                    {msg.role === 'user' && (
-                                      <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <User className="w-2.5 h-2.5 text-muted-foreground" />
-                                      </div>
-                                    )}
-                                  </div>
-                                ))
-                              )}
-                              {isAiTyping && (
-                                <div className="flex gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <Sparkles className="w-2.5 h-2.5 text-primary-foreground animate-pulse" />
-                                  </div>
-                                  <div className="bg-muted rounded-lg px-2.5 py-1.5 text-xs">
-                                    <div className="flex items-center gap-1">
-                                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"></div>
-                                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Input */}
-                            <div className="p-3 border-t border-border">
-                              <form onSubmit={handleMiniChatSend} className="flex gap-2">
-                                <input
-                                  type="text"
-                                  className="flex-1 px-3 py-2 text-xs rounded-lg bg-background border border-border focus:border-primary/50 focus:outline-none"
-                                  placeholder="Ask about strategy optimization..."
-                                  value={miniChatInput}
-                                  onChange={e => setMiniChatInput(e.target.value)}
-                                />
-                                <Button 
-                                  type="submit" 
-                                  size="icon" 
-                                  disabled={!miniChatInput.trim() || isAiTyping}
-                                  className="h-8 w-8"
-                                >
-                                  <ArrowUp className="w-3 h-3" />
-                                </Button>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* Performance Tab */}
-                <TabsContent value="performance" className="h-full m-0 p-6">
-                  <Card className="trading-card">
+      )}
+      {activeTab === 'performance' && (
+        <Card className="trading-card m-6">
                     <CardHeader>
                       <CardTitle>Strategy Performance Analysis</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center p-4 bg-muted/20 rounded-lg">
-                          <div className="text-2xl font-bold text-success">{backtestResults.winRate}%</div>
+                <div className="text-2xl font-bold text-success">{metrics.winRate}%</div>
                           <div className="text-sm text-muted-foreground">Win Rate</div>
                         </div>
                         <div className="text-center p-4 bg-muted/20 rounded-lg">
-                          <div className="text-2xl font-bold text-primary">{backtestResults.totalTrades}</div>
+                <div className="text-2xl font-bold text-primary">{metrics.totalTrades}</div>
                           <div className="text-sm text-muted-foreground">Total Trades</div>
                         </div>
                         <div className="text-center p-4 bg-muted/20 rounded-lg">
-                          <div className="text-2xl font-bold text-warning">{backtestResults.profitFactor}</div>
+                <div className="text-2xl font-bold text-warning">{metrics.profitFactor}</div>
                           <div className="text-sm text-muted-foreground">Profit Factor</div>
                         </div>
                         <div className="text-center p-4 bg-muted/20 rounded-lg">
-                          <div className="text-2xl font-bold text-danger">{backtestResults.maxDrawdown}%</div>
+                <div className="text-2xl font-bold text-danger">{metrics.maxDrawdown}%</div>
                           <div className="text-sm text-muted-foreground">Max Drawdown</div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                </TabsContent>
-
-                {/* Code Tab */}
-                <TabsContent value="code" className="h-full m-0 p-6">
-                  <Card className="trading-card">
+      )}
+      {activeTab === 'code' && (
+        <Card className="trading-card m-6">
                     <CardHeader>
                       <CardTitle>Strategy Code Editor</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Tabs defaultValue="edit">
+                      <Tabs defaultValue="pineScript">
                         <TabsList>
-                          <TabsTrigger value="edit">Edit Code</TabsTrigger>
+                          <TabsTrigger value="pineScript">Pine Script</TabsTrigger>
+                          <TabsTrigger value="mql4">MQL4</TabsTrigger>
+                          <TabsTrigger value="mql5">MQL5</TabsTrigger>
                           <TabsTrigger value="view">View Generated</TabsTrigger>
                         </TabsList>
-                        
-                        <TabsContent value="edit" className="space-y-4">
+                        <TabsContent value="pineScript" className="space-y-4">
                           <Textarea
-                            placeholder="Paste your strategy code here or edit the uploaded file..."
-                            value={strategyCode}
-                            onChange={(e) => setStrategyCode(e.target.value)}
+                            placeholder="Edit Pine Script code..."
+                            value={pineScript}
+                            onChange={(e) => setPineScript(e.target.value)}
                             className="min-h-[400px] font-mono text-sm"
                           />
                         </TabsContent>
-                        
+                        <TabsContent value="mql4" className="space-y-4">
+                          <Textarea
+                            placeholder="Edit MQL4 code..."
+                            value={mql4Code}
+                            onChange={(e) => setMql4Code(e.target.value)}
+                            className="min-h-[400px] font-mono text-sm"
+                          />
+                        </TabsContent>
+                        <TabsContent value="mql5" className="space-y-4">
+                          <Textarea
+                            placeholder="Edit MQL5 code..."
+                            value={mql5Code}
+                            onChange={(e) => setMql5Code(e.target.value)}
+                            className="min-h-[400px] font-mono text-sm"
+                          />
+                        </TabsContent>
                         <TabsContent value="view" className="space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
@@ -529,23 +555,318 @@ const EnhancedTest = () => {
                       </Tabs>
                     </CardContent>
                   </Card>
-                </TabsContent>
-
-                {/* Export Tab */}
-                <TabsContent value="export" className="h-full m-0 p-6">
-                  <CodeCompiler 
-                    pineScript={pineScript || strategyCode}
-                    mql4Code={mql4Code || strategyCode}
-                    mql5Code={mql5Code || strategyCode}
-                  />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
+      )}
+      {activeTab === 'export' && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Export Tab Content: Full Export Page UI/Logic (minus back button and duplicate title/desc) */}
+          <ExportTabFull />
         </div>
-      </div>
-    </AuthGuard>
+      )}
+    </div>
   );
 };
+
+function ExportTabFull() {
+  const [selectedStrategy, setSelectedStrategy] = useState('');
+  const [selectedFormat, setSelectedFormat] = useState('');
+  const [convertedCode, setConvertedCode] = useState('');
+  const [isConverting, setIsConverting] = useState(false);
+  // Mock strategies - in real app, this would come from your database
+  const strategies = [
+    { id: '1', name: 'RSI + MACD Strategy', description: 'Uses RSI and MACD indicators for trend following' },
+    { id: '2', name: 'Moving Average Crossover', description: 'Simple MA crossover strategy for trend detection' },
+    { id: '3', name: 'Bollinger Bands Strategy', description: 'Mean reversion strategy using Bollinger Bands' },
+    { id: '4', name: 'Breakout Strategy', description: 'Support/resistance breakout trading system' },
+    { id: '5', name: 'Scalping Strategy', description: 'High-frequency trading for small profits' },
+  ];
+  const formats = [
+    { id: 'pinescript', name: 'Pine Script', description: 'For TradingView platform', extension: '.pine' },
+    { id: 'mql4', name: 'MQL4', description: 'For MetaTrader 4 platform', extension: '.mq4' },
+    { id: 'mql5', name: 'MQL5', description: 'For MetaTrader 5 platform', extension: '.mq5' },
+  ];
+  const handleAIConvert = async () => {
+    if (!selectedStrategy || !selectedFormat) {
+      toast('Please select both a strategy and format to convert');
+      return;
+    }
+    setIsConverting(true);
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    const strategy = strategies.find(s => s.id === selectedStrategy);
+    const format = formats.find(f => f.id === selectedFormat);
+    const mockCode = `// AI-Generated ${format?.name} Code\n// Strategy: ${strategy?.name}\n// Generated on: ${new Date().toLocaleDateString()}\n\n${selectedFormat === 'pinescript' ? `//@version=5\nstrategy(\"${strategy?.name}\", overlay=true)\n\n// Strategy Parameters\nrsi_length = input.int(14, \"RSI Length\")\nma_length = input.int(20, \"MA Length\")\n\n// Calculations\nrsi = ta.rsi(close, rsi_length)\nma = ta.sma(close, ma_length)\n\n// Entry Conditions\nlong_condition = ta.crossover(rsi, 30) and close > ma\nshort_condition = ta.crossunder(rsi, 70) and close < ma\n\n// Strategy Execution\nif long_condition\n    strategy.entry(\"Long\", strategy.long)\nif short_condition\n    strategy.entry(\"Short\", strategy.short)\n\n// Plot indicators\nplot(ma, color=color.blue, title=\"Moving Average\")\nhline(70, \"Overbought\", color=color.red)\nhline(30, \"Oversold\", color=color.green)\n` : selectedFormat === 'mql4' ? `//+------------------------------------------------------------------+\n//| ${strategy?.name} Expert Advisor for MT4                         |\n//+------------------------------------------------------------------+\n\n#property strict\n\n// Input Parameters\ninput int RSI_Period = 14;\ninput int MA_Period = 20;\ninput double LotSize = 0.1;\n\n// Global Variables\nint magic = 12345;\n\n//+------------------------------------------------------------------+\n//| Expert initialization function                                   |\n//+------------------------------------------------------------------+\nint OnInit() {\n    return(INIT_SUCCEEDED);\n}\n\n//+------------------------------------------------------------------+\n//| Expert tick function                                             |\n//+------------------------------------------------------------------+\nvoid OnTick() {\n    double rsi = iRSI(Symbol(), 0, RSI_Period, PRICE_CLOSE, 0);\n    double ma = iMA(Symbol(), 0, MA_Period, 0, MODE_SMA, PRICE_CLOSE, 0);\n    \n    // Long Entry\n    if(rsi < 30 && Close[0] > ma && OrdersTotal() == 0) {\n        OrderSend(Symbol(), OP_BUY, LotSize, Ask, 3, 0, 0, \n                 \"${strategy?.name} Long\", magic, 0, clrGreen);\n    }\n    \n    // Short Entry\n    if(rsi > 70 && Close[0] < ma && OrdersTotal() == 0) {\n        OrderSend(Symbol(), OP_SELL, LotSize, Bid, 3, 0, 0, \n                 \"${strategy?.name} Short\", magic, 0, clrRed);\n    }\n}\n` : `//+------------------------------------------------------------------+\n//| ${strategy?.name} Expert Advisor for MT5                         |\n//+------------------------------------------------------------------+\n\n#include <Trade\\Trade.mqh>\n\n// Input Parameters\ninput int RSI_Period = 14;\ninput int MA_Period = 20;\ninput double LotSize = 0.1;\n\n// Global Variables\nCTrade trade;\nint rsi_handle, ma_handle;\n\n//+------------------------------------------------------------------+\n//| Expert initialization function                                   |\n//+------------------------------------------------------------------+\nint OnInit() {\n    rsi_handle = iRSI(_Symbol, PERIOD_CURRENT, RSI_Period, PRICE_CLOSE);\n    ma_handle = iMA(_Symbol, PERIOD_CURRENT, MA_Period, 0, MODE_SMA, PRICE_CLOSE, 0);\n    \n    if(rsi_handle == INVALID_HANDLE || ma_handle == INVALID_HANDLE) {\n        Print(\"Error creating indicators\");\n        return(INIT_FAILED);\n    }\n    \n    return(INIT_SUCCEEDED);\n}\n\n//+------------------------------------------------------------------+\n//| Expert tick function                                             |\n//+------------------------------------------------------------------+\nvoid OnTick() {\n    double rsi[], ma[];\n    ArraySetAsSeries(rsi, true);\n    ArraySetAsSeries(ma, true);\n    \n    if(CopyBuffer(rsi_handle, 0, 0, 1, rsi) != 1 ||\n       CopyBuffer(ma_handle, 0, 0, 1, ma) != 1) return;\n    \n    // Long Entry\n    if(rsi[0] < 30 && SymbolInfoDouble(_Symbol, SYMBOL_BID) > ma[0] && \n       PositionsTotal() == 0) {\n        trade.Buy(LotSize, _Symbol, 0, 0, 0, \"${strategy?.name} Long\");\n    }\n    \n    // Short Entry\n    if(rsi[0] > 70 && SymbolInfoDouble(_Symbol, SYMBOL_BID) < ma[0] && \n       PositionsTotal() == 0) {\n        trade.Sell(LotSize, _Symbol, 0, 0, 0, \"${strategy?.name} Short\");\n    }\n}\n`}`;
+    setConvertedCode(mockCode);
+    setIsConverting(false);
+    toast(`Successfully converted ${strategy?.name} to ${format?.name}!`);
+  };
+  const handleDownload = () => {
+    if (!convertedCode) {
+      toast('No code to download. Please convert a strategy first.');
+      return;
+    }
+    const format = formats.find(f => f.id === selectedFormat);
+    const strategy = strategies.find(s => s.id === selectedStrategy);
+    const filename = `${strategy?.name.replace(/\s+/g, '_')}_${selectedFormat}${format?.extension}`;
+    const blob = new Blob([convertedCode], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast('Download started!');
+  };
+  const handleCopy = () => {
+    if (!convertedCode) {
+      toast('No code to copy. Please convert a strategy first.');
+      return;
+    }
+    navigator.clipboard.writeText(convertedCode);
+    toast('Code copied to clipboard!');
+  };
+  return (
+    <div className="space-y-8">
+      {/* Strategy and Format Selection - Side by Side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Strategy Selection */}
+        <Card className="trading-card">
+          <CardHeader>
+            <CardTitle>Select Strategy</CardTitle>
+            <CardDescription>Choose which strategy you want to export</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Select value={selectedStrategy} onValueChange={setSelectedStrategy}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a strategy to export" />
+              </SelectTrigger>
+              <SelectContent>
+                {strategies.map((strategy) => (
+                  <SelectItem key={strategy.id} value={strategy.id}>
+                    <span className="font-medium">{strategy.name}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedStrategy && (
+              <div className="p-4 bg-muted/20 rounded-lg">
+                <h4 className="font-medium mb-2">Selected Strategy</h4>
+                <p className="text-sm text-muted-foreground">
+                  {strategies.find(s => s.id === selectedStrategy)?.description}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {/* Format Selection */}
+        <Card className="trading-card">
+          <CardHeader>
+            <CardTitle>Select Format</CardTitle>
+            <CardDescription>Choose the platform format for your strategy</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose export format" />
+              </SelectTrigger>
+              <SelectContent>
+                {formats.map((format) => (
+                  <SelectItem key={format.id} value={format.id}>
+                    <div className="flex items-center space-x-3">
+                      {format.id === 'pinescript' ? (
+                        <Code className="w-4 h-4" />
+                      ) : (
+                        <FileText className="w-4 h-4" />
+                      )}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{format.name}</span>
+                        <span className="text-xs text-muted-foreground">{format.description}</span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleAIConvert}
+              disabled={!selectedStrategy || !selectedFormat || isConverting}
+              className="w-full glow-button"
+            >
+              {isConverting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                  Converting...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Convert Strategy
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+      {/* Conversion Results - Full Width Below */}
+      {convertedCode ? (
+        <div className="space-y-6">
+          <Card className="trading-card">
+            <CardHeader>
+              <CardTitle>Conversion Complete!</CardTitle>
+              <CardDescription>
+                Your strategy has been converted to {formats.find(f => f.id === selectedFormat)?.name}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3">
+                <Button onClick={handleDownload} className="glow-button">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download {formats.find(f => f.id === selectedFormat)?.extension}
+                </Button>
+                <Button onClick={handleCopy} variant="outline">
+                  Copy Code
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="trading-card">
+            <CardHeader>
+              <CardTitle>Code Preview</CardTitle>
+              <CardDescription>Review your converted strategy code</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-96 overflow-y-auto">
+                <pre className="bg-muted/30 rounded p-4 text-xs font-mono overflow-x-auto">
+                  {convertedCode}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <Card className="trading-card">
+          <CardHeader>
+            <CardTitle>Ready to Convert</CardTitle>
+            <CardDescription>Select a strategy and format to get started</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8 text-muted-foreground">
+              <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Choose your strategy and target platform, then click "AI Convert Strategy" to generate optimized code.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {/* Deploy & Share Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-semibold text-foreground mb-6">Deploy & Share</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* VPS Deployment */}
+          <Card className="trading-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-primary/20 border-2 border-primary"></div>
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg flex items-center space-x-2">
+                      <span>VPS Deployment</span>
+                      <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
+                        Coming Soon
+                      </span>
+                    </CardTitle>
+                    <CardDescription>Deploy your strategy to a Virtual Private Server for 24/7 trading</CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>24/7 uptime</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Low latency</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Multiple brokers</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Real-time monitoring</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Starting at $29/month</span>
+                  <Button 
+                    onClick={() => toast('We\'ll notify you when VPS deployment is available!')}
+                    variant="outline"
+                  >
+                    Notify Me
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          {/* Algorithm Hub */}
+          <Card className="trading-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg flex items-center space-x-2">
+                      <span>Algorithm Hub</span>
+                      <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
+                        Coming Soon
+                      </span>
+                    </CardTitle>
+                    <CardDescription>Share your strategy with the Trainflow community</CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Strategy marketplace</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Performance tracking</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Copy trading</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-success"></div>
+                    <span>Revenue sharing</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Free to publish</span>
+                  <Button 
+                    onClick={() => toast('We\'ll notify you when Algorithm Hub launches!')}
+                    variant="outline"
+                  >
+                    Notify Me
+                  </Button>
+                </div>
+          </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default EnhancedTest;

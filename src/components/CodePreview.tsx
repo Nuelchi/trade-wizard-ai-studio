@@ -1,10 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Copy, Download, Play, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import TradingViewWidget from 'react-tradingview-widget';
+
+const ASSET_CLASSES = [
+  { key: 'stocks', label: 'Stocks', defaultSymbol: 'NASDAQ:AAPL' },
+  { key: 'funds', label: 'Funds', defaultSymbol: 'AMEX:SPY' },
+  { key: 'forex', label: 'Forex', defaultSymbol: 'FX:EURUSD' },
+  { key: 'crypto', label: 'Crypto', defaultSymbol: 'BINANCE:BTCUSDT' },
+];
+const INTERVALS = [
+  { value: '1', label: '1m' },
+  { value: '5', label: '5m' },
+  { value: '15', label: '15m' },
+  { value: '30', label: '30m' },
+  { value: '60', label: '1H' },
+  { value: '240', label: '4H' },
+  { value: 'D', label: '1D' },
+  { value: 'W', label: '1W' },
+  { value: 'M', label: '1M' },
+];
+const SYMBOLS_BY_CLASS = {
+  stocks: [
+    'NASDAQ:AAPL', 'NASDAQ:MSFT', 'NYSE:TSLA', 'NASDAQ:GOOGL', 'NYSE:BRK.A', 'NASDAQ:NVDA', 'NYSE:JNJ', 'NASDAQ:AMZN', 'NYSE:V', 'NYSE:UNH'
+  ],
+  funds: [
+    'AMEX:SPY', 'NASDAQ:QQQ', 'AMEX:IVV', 'AMEX:VTI', 'AMEX:VOO', 'AMEX:ARKK', 'AMEX:XLK', 'AMEX:XLF', 'AMEX:VYM', 'AMEX:VUG'
+  ],
+  forex: [
+    'FX:EURUSD', 'FX:USDJPY', 'FX:GBPUSD', 'FX:USDCHF', 'FX:AUDUSD', 'FX:USDCAD', 'FX:NZDUSD', 'FX:EURGBP', 'FX:EURJPY', 'FX:GBPJPY'
+  ],
+  crypto: [
+    'BINANCE:BTCUSDT', 'BINANCE:ETHUSDT', 'BINANCE:BNBUSDT', 'BINANCE:XRPUSDT', 'BINANCE:ADAUSDT', 'BINANCE:DOGEUSDT', 'BINANCE:SOLUSDT', 'BINANCE:MATICUSDT', 'BINANCE:DOTUSDT', 'BINANCE:SHIBUSDT'
+  ]
+};
 
 interface CodePreviewProps {
   strategy?: any;
@@ -14,6 +47,51 @@ interface CodePreviewProps {
 const CodePreview = ({ strategy, code }: CodePreviewProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
+
+  // Chart preview state (local to preview only)
+  const [assetClass, setAssetClass] = useState('forex');
+  const [symbol, setSymbol] = useState('FX:EURUSD');
+  const [interval, setInterval] = useState('D');
+  const [symbolInput, setSymbolInput] = useState(symbol);
+  const [customSymbol, setCustomSymbol] = useState(false);
+
+  // Sync symbol input and custom state
+  useEffect(() => {
+    setSymbolInput(symbol);
+    setCustomSymbol(!SYMBOLS_BY_CLASS[assetClass].includes(symbol));
+  }, [symbol, assetClass]);
+
+  const handleAssetClassChange = (key: string) => {
+    setAssetClass(key);
+    setSymbol(SYMBOLS_BY_CLASS[key][0]);
+  };
+  const handleSymbolSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value === '__custom__') {
+      setCustomSymbol(true);
+      setSymbolInput('');
+      setSymbol('');
+    } else {
+      setSymbol(e.target.value);
+      setCustomSymbol(false);
+    }
+  };
+  const handleSymbolInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSymbolInput(e.target.value);
+    setSymbol(e.target.value);
+    setCustomSymbol(true);
+  };
+  const handleSymbolInputBlur = () => {
+    if (!symbolInput || !symbolInput.trim()) {
+      setSymbol(SYMBOLS_BY_CLASS[assetClass][0]);
+      setCustomSymbol(false);
+    }
+  };
+  const handleSymbolInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSymbolInputBlur();
+  };
+  const handleIntervalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setInterval(e.target.value);
+  };
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -61,21 +139,15 @@ const CodePreview = ({ strategy, code }: CodePreviewProps) => {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Chart Preview Bar and Chart removed: no chart in any tab */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="pinescript">Pine Script</TabsTrigger>
             <TabsTrigger value="mql4">MQL4</TabsTrigger>
-            <TabsTrigger value="backtest">Backtest</TabsTrigger>
+            <TabsTrigger value="mql5">MQL5</TabsTrigger>
           </TabsList>
-          
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-1" />
-              Settings
-            </Button>
-          </div>
         </div>
 
         <div className="flex-1 overflow-hidden">
@@ -182,29 +254,13 @@ const CodePreview = ({ strategy, code }: CodePreviewProps) => {
             )}
           </TabsContent>
 
-          <TabsContent value="backtest" className="h-full m-0">
-            <div className="p-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Backtest Results</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Play className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">
-                      Ready to Backtest
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Run a backtest to see how your strategy would have performed.
-                    </p>
-                    <Button>
-                      <Play className="w-4 h-4 mr-2" />
-                      Run Backtest
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="mql5" className="h-full m-0">
+            <CodeEditor
+              code={code?.mql5 || `// AI Generated Strategy – MQL5 Expert Advisor\n#property copyright \"Trainflow AI\"\n#property version   \"1.00\"\n\n// Input Parameters\n\nvoid OnTick()\n{\n    // Strategy Implementation\n}\n`}
+              language="mql5"
+              onCopy={() => handleCopy(code?.mql5 || `// AI Generated Strategy – MQL5 Expert Advisor\n#property copyright \"Trainflow AI\"\n#property version   \"1.00\"\n\n// Input Parameters\n\nvoid OnTick()\n{\n    // Strategy Implementation\n}\n`)}
+              onDownload={() => handleDownload(code?.mql5 || `// AI Generated Strategy – MQL5 Expert Advisor\n#property copyright \"Trainflow AI\"\n#property version   \"1.00\"\n\n// Input Parameters\n\nvoid OnTick()\n{\n    // Strategy Implementation\n}\n`, `${strategy?.name || 'strategy'}.mq5`)}
+            />
           </TabsContent>
         </div>
       </Tabs>
