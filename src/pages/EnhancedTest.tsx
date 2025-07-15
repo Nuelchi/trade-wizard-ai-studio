@@ -18,6 +18,7 @@ import StrategyTesterFooter from '../../../src/components/StrategyTesterFooter/S
 import OverviewTab from '../../../src/components/StrategyTesterFooter/OverviewTab';
 import PerformanceTab from '../../../src/components/StrategyTesterFooter/PerformanceTab';
 import TradeAnalysisTab from '../../../src/components/StrategyTesterFooter/TradeAnalysisTab';
+import { generateStrategyWithAI } from '@/lib/utils';
 
 // Memoized TradingView chart
 interface MemoTradingViewChartProps {
@@ -28,11 +29,11 @@ const MemoTradingViewChart = memo(({ symbol, interval }: MemoTradingViewChartPro
   <div className="w-full h-[900px] bg-background rounded-lg overflow-hidden">
     <TradingViewWidget
       symbol={symbol}
-      interval={interval}
+      interval={interval === '1H' ? '60' : interval}
       theme="Dark"
       locale="en"
       autosize
-      style={{ height: '100%', width: '100%' }}
+      style="1" // Use valid style code for dark
       hide_side_toolbar={false}
       allow_symbol_change={true}
       toolbar_bg="#141413"
@@ -347,31 +348,12 @@ const EnhancedTest = () => {
     setMiniChatInput('');
     setIsAiTyping(true);
     try {
-      const response = await fetch('/api/chat-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: currentInput,
-          context: "You are an AI trading strategy assistant. Provide helpful advice about trading strategies, indicators, risk management, and market analysis. Keep responses concise and actionable."
-        }),
-      });
-      const data = await response.json();
-      const aiResponse = data.response || "I'm here to help with your trading strategy. Could you please rephrase your question?";
+      // Use the same AI API as the main app
+      const aiResult = await generateStrategyWithAI(currentInput);
+      const aiResponse = aiResult.summary || "I'm here to help with your trading strategy. Could you please rephrase your question?";
       setMiniChatMessages((msgs) => [...msgs, { role: 'ai' as const, content: aiResponse }]);
-    } catch (error) {
-      let aiResponse = "I'm analyzing your request...";
-      if (currentInput.toLowerCase().includes('indicator')) {
-        aiResponse = "I can help you add indicators like RSI, MACD, or Bollinger Bands. Which specific indicator would you like to implement for better signal accuracy?";
-      } else if (currentInput.toLowerCase().includes('backtest')) {
-        aiResponse = "Great! I can run a backtest analysis. Based on current settings, your strategy shows promising signals. Would you like me to optimize the parameters for better performance?";
-      } else if (currentInput.toLowerCase().includes('optimize')) {
-        aiResponse = "I'll analyze your strategy parameters. Consider adjusting stop loss to 1.5% and take profit to 3% for better risk-reward ratio. Should I apply these changes?";
-      } else if (currentInput.toLowerCase().includes('risk')) {
-        aiResponse = "Risk management is crucial. I recommend a maximum 2% risk per trade and position sizing based on volatility. Should I adjust these settings for your strategy?";
-      } else {
-        aiResponse = "I understand you want to improve your strategy. I can help with indicator selection, parameter optimization, risk management, or backtesting. What specific area interests you most?";
-      }
-      setMiniChatMessages((msgs) => [...msgs, { role: 'ai' as const, content: aiResponse }]);
+    } catch (err) {
+      setMiniChatMessages((msgs) => [...msgs, { role: 'ai' as const, content: 'AI error: ' + (err.message || String(err)) }]);
     }
     setIsAiTyping(false);
   };
@@ -387,12 +369,7 @@ const EnhancedTest = () => {
         >
           <BarChart3 className="w-4 h-4" /> Chart & Signals
         </button>
-        <button
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium text-sm ${activeTab === 'performance' ? 'bg-white shadow text-primary' : 'text-muted-foreground hover:bg-muted/40'}`}
-          onClick={() => setActiveTab('performance')}
-        >
-          <TrendingUp className="w-4 h-4" /> Performance
-        </button>
+        {/* Removed Performance tab button */}
         <button
           className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-medium text-sm ${activeTab === 'code' ? 'bg-white shadow text-primary' : 'text-muted-foreground hover:bg-muted/40'}`}
           onClick={() => setActiveTab('code')}
@@ -559,26 +536,19 @@ const EnhancedTest = () => {
       {activeTab === 'export' && (
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* Export Tab Content: Full Export Page UI/Logic (minus back button and duplicate title/desc) */}
-          <ExportTabFull />
+          <ExportTabFull strategies={strategies} loadingStrategies={loadingStrategies} />
         </div>
       )}
     </div>
   );
 };
 
-function ExportTabFull() {
+function ExportTabFull({ strategies, loadingStrategies }) {
   const [selectedStrategy, setSelectedStrategy] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('');
   const [convertedCode, setConvertedCode] = useState('');
+  const [compiledFile, setCompiledFile] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
-  // Mock strategies - in real app, this would come from your database
-  const strategies = [
-    { id: '1', name: 'RSI + MACD Strategy', description: 'Uses RSI and MACD indicators for trend following' },
-    { id: '2', name: 'Moving Average Crossover', description: 'Simple MA crossover strategy for trend detection' },
-    { id: '3', name: 'Bollinger Bands Strategy', description: 'Mean reversion strategy using Bollinger Bands' },
-    { id: '4', name: 'Breakout Strategy', description: 'Support/resistance breakout trading system' },
-    { id: '5', name: 'Scalping Strategy', description: 'High-frequency trading for small profits' },
-  ];
   const formats = [
     { id: 'pinescript', name: 'Pine Script', description: 'For TradingView platform', extension: '.pine' },
     { id: 'mql4', name: 'MQL4', description: 'For MetaTrader 4 platform', extension: '.mq4' },
@@ -590,38 +560,77 @@ function ExportTabFull() {
       return;
     }
     setIsConverting(true);
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    const strategy = strategies.find(s => s.id === selectedStrategy);
-    const format = formats.find(f => f.id === selectedFormat);
-    const mockCode = `// AI-Generated ${format?.name} Code\n// Strategy: ${strategy?.name}\n// Generated on: ${new Date().toLocaleDateString()}\n\n${selectedFormat === 'pinescript' ? `//@version=5\nstrategy(\"${strategy?.name}\", overlay=true)\n\n// Strategy Parameters\nrsi_length = input.int(14, \"RSI Length\")\nma_length = input.int(20, \"MA Length\")\n\n// Calculations\nrsi = ta.rsi(close, rsi_length)\nma = ta.sma(close, ma_length)\n\n// Entry Conditions\nlong_condition = ta.crossover(rsi, 30) and close > ma\nshort_condition = ta.crossunder(rsi, 70) and close < ma\n\n// Strategy Execution\nif long_condition\n    strategy.entry(\"Long\", strategy.long)\nif short_condition\n    strategy.entry(\"Short\", strategy.short)\n\n// Plot indicators\nplot(ma, color=color.blue, title=\"Moving Average\")\nhline(70, \"Overbought\", color=color.red)\nhline(30, \"Oversold\", color=color.green)\n` : selectedFormat === 'mql4' ? `//+------------------------------------------------------------------+\n//| ${strategy?.name} Expert Advisor for MT4                         |\n//+------------------------------------------------------------------+\n\n#property strict\n\n// Input Parameters\ninput int RSI_Period = 14;\ninput int MA_Period = 20;\ninput double LotSize = 0.1;\n\n// Global Variables\nint magic = 12345;\n\n//+------------------------------------------------------------------+\n//| Expert initialization function                                   |\n//+------------------------------------------------------------------+\nint OnInit() {\n    return(INIT_SUCCEEDED);\n}\n\n//+------------------------------------------------------------------+\n//| Expert tick function                                             |\n//+------------------------------------------------------------------+\nvoid OnTick() {\n    double rsi = iRSI(Symbol(), 0, RSI_Period, PRICE_CLOSE, 0);\n    double ma = iMA(Symbol(), 0, MA_Period, 0, MODE_SMA, PRICE_CLOSE, 0);\n    \n    // Long Entry\n    if(rsi < 30 && Close[0] > ma && OrdersTotal() == 0) {\n        OrderSend(Symbol(), OP_BUY, LotSize, Ask, 3, 0, 0, \n                 \"${strategy?.name} Long\", magic, 0, clrGreen);\n    }\n    \n    // Short Entry\n    if(rsi > 70 && Close[0] < ma && OrdersTotal() == 0) {\n        OrderSend(Symbol(), OP_SELL, LotSize, Bid, 3, 0, 0, \n                 \"${strategy?.name} Short\", magic, 0, clrRed);\n    }\n}\n` : `//+------------------------------------------------------------------+\n//| ${strategy?.name} Expert Advisor for MT5                         |\n//+------------------------------------------------------------------+\n\n#include <Trade\\Trade.mqh>\n\n// Input Parameters\ninput int RSI_Period = 14;\ninput int MA_Period = 20;\ninput double LotSize = 0.1;\n\n// Global Variables\nCTrade trade;\nint rsi_handle, ma_handle;\n\n//+------------------------------------------------------------------+\n//| Expert initialization function                                   |\n//+------------------------------------------------------------------+\nint OnInit() {\n    rsi_handle = iRSI(_Symbol, PERIOD_CURRENT, RSI_Period, PRICE_CLOSE);\n    ma_handle = iMA(_Symbol, PERIOD_CURRENT, MA_Period, 0, MODE_SMA, PRICE_CLOSE, 0);\n    \n    if(rsi_handle == INVALID_HANDLE || ma_handle == INVALID_HANDLE) {\n        Print(\"Error creating indicators\");\n        return(INIT_FAILED);\n    }\n    \n    return(INIT_SUCCEEDED);\n}\n\n//+------------------------------------------------------------------+\n//| Expert tick function                                             |\n//+------------------------------------------------------------------+\nvoid OnTick() {\n    double rsi[], ma[];\n    ArraySetAsSeries(rsi, true);\n    ArraySetAsSeries(ma, true);\n    \n    if(CopyBuffer(rsi_handle, 0, 0, 1, rsi) != 1 ||\n       CopyBuffer(ma_handle, 0, 0, 1, ma) != 1) return;\n    \n    // Long Entry\n    if(rsi[0] < 30 && SymbolInfoDouble(_Symbol, SYMBOL_BID) > ma[0] && \n       PositionsTotal() == 0) {\n        trade.Buy(LotSize, _Symbol, 0, 0, 0, \"${strategy?.name} Long\");\n    }\n    \n    // Short Entry\n    if(rsi[0] > 70 && SymbolInfoDouble(_Symbol, SYMBOL_BID) < ma[0] && \n       PositionsTotal() == 0) {\n        trade.Sell(LotSize, _Symbol, 0, 0, 0, \"${strategy?.name} Short\");\n    }\n}\n`}`;
-    setConvertedCode(mockCode);
+    setCompiledFile(null);
+    setConvertedCode('');
+    try {
+      const res = await fetch('/api/compile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ strategyId: selectedStrategy, format: selectedFormat.toUpperCase() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setConvertedCode(data.code);
+        if (data.compiledFileName && data.compiledContent) {
+          setCompiledFile({
+            name: data.compiledFileName,
+            content: data.compiledContent,
+            extension: formats.find(f => f.id === selectedFormat)?.extension || ''
+          });
+          toast('Compiled successfully!');
+        } else {
+          setCompiledFile(null);
+          toast('Code ready!');
+        }
+      } else {
+        toast('Conversion failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      toast('Conversion error: ' + err.message);
+    }
     setIsConverting(false);
-    toast(`Successfully converted ${strategy?.name} to ${format?.name}!`);
   };
   const handleDownload = () => {
-    if (!convertedCode) {
+    if (compiledFile) {
+      // Download compiled file (base64 decode)
+      const byteCharacters = atob(compiledFile.content);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/octet-stream' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = compiledFile.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast('Download started!');
+    } else if (convertedCode) {
+      // Download plain code
+      const format = formats.find(f => f.id === selectedFormat);
+      const strategy = strategies.find(s => s.id === selectedStrategy);
+      const filename = `${strategy?.title?.replace(/\s+/g, '_') || 'strategy'}_${selectedFormat}${format?.extension}`;
+      const blob = new Blob([convertedCode], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast('Download started!');
+    } else {
       toast('No code to download. Please convert a strategy first.');
-      return;
     }
-    const format = formats.find(f => f.id === selectedFormat);
-    const strategy = strategies.find(s => s.id === selectedStrategy);
-    const filename = `${strategy?.name.replace(/\s+/g, '_')}_${selectedFormat}${format?.extension}`;
-    const blob = new Blob([convertedCode], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast('Download started!');
   };
   const handleCopy = () => {
-    if (!convertedCode) {
+    if (convertedCode) {
+      navigator.clipboard.writeText(convertedCode);
+      toast('Code copied to clipboard!');
+    } else {
       toast('No code to copy. Please convert a strategy first.');
-      return;
     }
-    navigator.clipboard.writeText(convertedCode);
-    toast('Code copied to clipboard!');
   };
   return (
     <div className="space-y-8">
@@ -634,14 +643,14 @@ function ExportTabFull() {
             <CardDescription>Choose which strategy you want to export</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select value={selectedStrategy} onValueChange={setSelectedStrategy}>
+            <Select value={selectedStrategy} onValueChange={setSelectedStrategy} disabled={loadingStrategies}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose a strategy to export" />
+                <SelectValue placeholder={loadingStrategies ? 'Loading...' : 'Choose a strategy to export'} />
               </SelectTrigger>
               <SelectContent>
                 {strategies.map((strategy) => (
                   <SelectItem key={strategy.id} value={strategy.id}>
-                    <span className="font-medium">{strategy.name}</span>
+                    <span className="font-medium">{strategy.title || strategy.name}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -650,7 +659,7 @@ function ExportTabFull() {
               <div className="p-4 bg-muted/20 rounded-lg">
                 <h4 className="font-medium mb-2">Selected Strategy</h4>
                 <p className="text-sm text-muted-foreground">
-                  {strategies.find(s => s.id === selectedStrategy)?.description}
+                  {strategies.find(s => s.id === selectedStrategy)?.description || strategies.find(s => s.id === selectedStrategy)?.desc}
                 </p>
               </div>
             )}
@@ -712,15 +721,19 @@ function ExportTabFull() {
             <CardHeader>
               <CardTitle>Conversion Complete!</CardTitle>
               <CardDescription>
-                Your strategy has been converted to {formats.find(f => f.id === selectedFormat)?.name}
+                {compiledFile
+                  ? `Your strategy has been compiled to ${compiledFile.name}`
+                  : `Your strategy has been converted to ${formats.find(f => f.id === selectedFormat)?.name}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex gap-3">
-                <Button onClick={handleDownload} className="glow-button">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download {formats.find(f => f.id === selectedFormat)?.extension}
-                </Button>
+                {compiledFile && (
+                  <Button onClick={handleDownload} className="glow-button">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download {compiledFile.extension}
+                  </Button>
+                )}
                 <Button onClick={handleCopy} variant="outline">
                   Copy Code
                 </Button>

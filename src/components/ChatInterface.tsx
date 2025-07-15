@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChatContext } from '@/contexts/ChatContext';
 import type { Database, TablesInsert } from '@/integrations/supabase/types';
+import { generateStrategyWithAI } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -189,15 +190,28 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
     setImagePreview(null);
     setIsTyping(true);
 
-    // Simulate AI processing
-    setTimeout(async () => {
-      const strategy = generateStrategy(input);
-      const code = generateCode(strategy);
-      
-      // Only show MQL5 in the chat by default, but note all codes are in the preview tab
+    try {
+      // Call real AI API
+      const aiResult = await generateStrategyWithAI(input);
+      const strategy = {
+        name: 'AI Generated Strategy',
+        description: aiResult.summary,
+        type: aiResult.jsonLogic?.type || 'Custom',
+        confidence: aiResult.jsonLogic?.confidence || 90,
+        indicators: aiResult.jsonLogic?.indicators || [],
+        conditions: aiResult.jsonLogic?.conditions || { entry: [], exit: [] },
+        riskManagement: aiResult.risk || {},
+      };
+      const code = {
+        pineScript: aiResult.pineScript,
+        mql4: aiResult.mql4,
+        mql5: aiResult.mql5,
+      };
+      onStrategyGenerated(strategy);
+      onCodeGenerated(code);
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Great! I've analyzed your strategy and created a ${strategy.type} strategy with ${strategy.confidence}% confidence.\n\nHere is your MQL5 code:\n\n\`\`\`mql5\n${code.mql5}\n\`\`\`\n\nAll code formats (Pine Script, MQL4, MQL5) are available in the preview tab. If you want to see another format here, just ask!\n\nHere's what I found in your strategy:\n• ${strategy.indicators.length} technical indicators\n• Entry conditions: ${strategy.conditions.entry.length} rules\n• Exit conditions: ${strategy.conditions.exit.length} rules\n${strategy.riskManagement.stopLoss ? `• Stop Loss: ${strategy.riskManagement.stopLoss}` : ''}\n${strategy.riskManagement.takeProfit ? `• Take Profit: ${strategy.riskManagement.takeProfit}` : ''}\n\nWould you like me to modify anything or run a backtest?`,
+        content: `Great! Here is your strategy summary and code.\n\n${aiResult.summary}\n\nPine Script, MQL4, and MQL5 code are available in the preview tabs.`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: [
@@ -208,15 +222,9 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         ],
         codeGenerated: true
       };
-
       setMessages([...messages, userMessage, aiResponse]);
       setIsTyping(false);
-
-      // toast({
-      //   title: 'Strategy Generated!',
-      //   description: 'Your code is ready in the preview panel.',
-      // });
-      // --- Persist strategy to Supabase ---
+      // Persist strategy to Supabase and run backtest as before...
       if (user) {
         const chatHistoryJson = [
           ...messages,
@@ -261,7 +269,10 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
           await runBacktestAndSync(code, ohlcv);
         }
       }
-    }, 2000);
+    } catch (err: any) {
+      setIsTyping(false);
+      toast({ title: 'AI Error', description: err.message || String(err), variant: 'destructive' });
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {

@@ -13,32 +13,33 @@ import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import AuthGuard from '@/components/AuthGuard';
 import TradingChart from '@/components/TradingChart';
+import { ChatProvider } from '@/contexts/ChatContext';
 
-// Mock chart data
-const mockTrades = [
-  { id: 1, type: "buy", price: 1.2520, time: "2024-01-15 09:30", profit: 45.20, status: "closed" },
-  { id: 2, type: "sell", price: 1.2580, time: "2024-01-15 14:20", profit: -22.50, status: "closed" },
-  { id: 3, type: "buy", price: 1.2535, time: "2024-01-16 10:15", profit: 67.80, status: "open" },
-];
+  // Mock chart data
+  const mockTrades = [
+    { id: 1, type: "buy", price: 1.2520, time: "2024-01-15 09:30", profit: 45.20, status: "closed" },
+    { id: 2, type: "sell", price: 1.2580, time: "2024-01-15 14:20", profit: -22.50, status: "closed" },
+    { id: 3, type: "buy", price: 1.2535, time: "2024-01-16 10:15", profit: 67.80, status: "open" },
+  ];
 
-const performanceMetrics = {
-  totalPnL: 89.50,
-  winRate: 66.7,
-  totalTrades: 3,
-  openTrades: 1,
-  equity: 10089.50,
-  drawdown: 2.3
-};
+  const performanceMetrics = {
+    totalPnL: 89.50,
+    winRate: 66.7,
+    totalTrades: 3,
+    openTrades: 1,
+    equity: 10089.50,
+    drawdown: 2.3
+  };
 
-const timeframes = [
-  { value: "1m", label: "1 Minute" },
-  { value: "5m", label: "5 Minutes" },
-  { value: "15m", label: "15 Minutes" },
-  { value: "1h", label: "1 Hour" },
-  { value: "4h", label: "4 Hours" },
-  { value: "1D", label: "1 Day" },
-  { value: "1W", label: "1 Week" }
-];
+  const timeframes = [
+    { value: "1m", label: "1 Minute" },
+    { value: "5m", label: "5 Minutes" },
+    { value: "15m", label: "15 Minutes" },
+    { value: "1h", label: "1 Hour" },
+    { value: "4h", label: "4 Hours" },
+    { value: "1D", label: "1 Day" },
+    { value: "1W", label: "1 Week" }
+  ];
 
 const mockOHLCV = [
   { time: '2024-01-15 09:00', open: 1.2500, high: 1.2550, low: 1.2490, close: 1.2520 },
@@ -166,173 +167,175 @@ const Test = () => {
   const visibleTrades = mockTrades.filter((t, i) => i < step);
 
   return (
-    <AuthGuard requireAuth={true}>
-      <div className="h-screen flex flex-col bg-background">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Strategy Tester</h1>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Test your strategies with live charts and detailed analytics
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={toggleBacktest}
-              className={isRunning ? "bg-red-600 hover:bg-red-700" : ""}
-              variant={isRunning ? "destructive" : "default"}
-            >
-              {isRunning ? (
-                <>
-                  <Pause className="w-4 h-4 mr-2" />
-                  Stop Test
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Backtest
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <div className="border-b border-border bg-muted/20">
-              <TabsList className="ml-4">
-                <TabsTrigger value="builder">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Strategy Builder
-                </TabsTrigger>
-                <TabsTrigger value="tester">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Strategy Tester
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className="flex-1 overflow-hidden">
-              <TabsContent value="builder" className="h-full m-0">
-                <ResizablePanelGroup direction="horizontal" className="h-full">
-                  <ResizablePanel defaultSize={50} minSize={30}>
-                    <div className="h-full border-r border-border flex flex-col bg-background">
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                        <div className="flex items-center space-x-2">
-                          <MessageSquare className="w-4 h-4 text-primary" />
-                          <span className="text-sm font-medium">AI Strategy Builder</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Create or modify strategies
-                        </div>
-                      </div>
-                      
-                      <ChatInterface 
-                        onStrategyGenerated={handleStrategyGenerated}
-                        onCodeGenerated={handleCodeGenerated}
-                      />
-                    </div>
-                  </ResizablePanel>
-
-                  <ResizableHandle withHandle />
-
-                  <ResizablePanel defaultSize={50} minSize={30}>
-                    <div className="h-full flex flex-col bg-background">
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                        <div className="flex items-center space-x-2">
-                          <TrendingUp className="w-4 h-4 text-primary" />
-                          <span className="text-sm font-medium">Strategy Preview</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Strategy details and code
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 p-4">
-                        {selectedStrategy ? (
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="flex items-center justify-between">
-                                {selectedStrategy.name}
-                                <Button 
-                                  onClick={() => setActiveTab("tester")}
-                                  size="sm"
-                                >
-                                  Test Strategy
-                                </Button>
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div>
-                                <h4 className="font-medium mb-2">Type</h4>
-                                <p className="text-sm text-muted-foreground">{selectedStrategy.type}</p>
-                              </div>
-                              <div>
-                                <h4 className="font-medium mb-2">Description</h4>
-                                <p className="text-sm text-muted-foreground">{selectedStrategy.description}</p>
-                              </div>
-                              <div>
-                                <h4 className="font-medium mb-2">Indicators</h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {selectedStrategy.indicators?.map((ind: any, idx: number) => (
-                                    <span key={idx} className="px-2 py-1 bg-muted rounded text-xs">
-                                      {ind.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ) : (
-                          <div className="h-full flex items-center justify-center">
-                            <div className="text-center">
-                              <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                              <h3 className="text-lg font-medium mb-2">No Strategy Selected</h3>
-                              <p className="text-sm text-muted-foreground">
-                                Use the AI builder to create a strategy
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </ResizablePanel>
-                </ResizablePanelGroup>
-              </TabsContent>
-
-              <TabsContent value="tester" className="h-full m-0">
-                <div className="flex flex-col h-full w-full">
-                  {/* Chart container */}
-                  <div className="flex-1 bg-background border-b border-border">
-                    <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
-                  </div>
-                  
-                  {/* Bottom sidebar/panel */}
-                  <div className="h-64 bg-muted/20 border-t border-border p-4">
-                    <div className="h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-medium mb-2">Strategy Analytics</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Analytics and performance metrics will appear here
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+    <ChatProvider>
+      <AuthGuard requireAuth={true}>
+        <div className="h-screen flex flex-col bg-background">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-primary-foreground" />
                 </div>
-              </TabsContent>
-            </div>
-          </Tabs>
+                <h1 className="text-xl font-bold text-foreground">Strategy Tester</h1>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Test your strategies with live charts and detailed analytics
+              </div>
+      </div>
+
+            <div className="flex items-center space-x-4">
+          <Button
+            onClick={toggleBacktest}
+                className={isRunning ? "bg-red-600 hover:bg-red-700" : ""}
+                variant={isRunning ? "destructive" : "default"}
+          >
+            {isRunning ? (
+              <>
+                <Pause className="w-4 h-4 mr-2" />
+                Stop Test
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 mr-2" />
+                Start Backtest
+              </>
+            )}
+          </Button>
         </div>
       </div>
-    </AuthGuard>
+
+          {/* Main Content */}
+          <div className="flex-1 flex overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+              <div className="border-b border-border bg-muted/20">
+                <TabsList className="ml-4">
+                  <TabsTrigger value="builder">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Strategy Builder
+                  </TabsTrigger>
+                  <TabsTrigger value="tester">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Strategy Tester
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <div className="flex-1 overflow-hidden">
+                <TabsContent value="builder" className="h-full m-0">
+                  <ResizablePanelGroup direction="horizontal" className="h-full">
+                    <ResizablePanel defaultSize={50} minSize={30}>
+                      <div className="h-full border-r border-border flex flex-col bg-background">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
+                          <div className="flex items-center space-x-2">
+                            <MessageSquare className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium">AI Strategy Builder</span>
+            </div>
+                          <div className="text-xs text-muted-foreground">
+                            Create or modify strategies
+              </div>
+            </div>
+
+                        <ChatInterface 
+                          onStrategyGenerated={handleStrategyGenerated}
+                          onCodeGenerated={handleCodeGenerated}
+                        />
+              </div>
+                    </ResizablePanel>
+
+                    <ResizableHandle withHandle />
+
+                    <ResizablePanel defaultSize={50} minSize={30}>
+                      <div className="h-full flex flex-col bg-background">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
+              <div className="flex items-center space-x-2">
+                            <TrendingUp className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium">Strategy Preview</span>
+              </div>
+                          <div className="text-xs text-muted-foreground">
+                            Strategy details and code
+          </div>
+        </div>
+
+                        <div className="flex-1 p-4">
+                          {selectedStrategy ? (
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="flex items-center justify-between">
+                                  {selectedStrategy.name}
+                                  <Button 
+                                    onClick={() => setActiveTab("tester")}
+                                    size="sm"
+                                  >
+                                    Test Strategy
+                                  </Button>
+                                </CardTitle>
+              </CardHeader>
+                              <CardContent className="space-y-4">
+                                <div>
+                                  <h4 className="font-medium mb-2">Type</h4>
+                                  <p className="text-sm text-muted-foreground">{selectedStrategy.type}</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-medium mb-2">Description</h4>
+                                  <p className="text-sm text-muted-foreground">{selectedStrategy.description}</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-medium mb-2">Indicators</h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedStrategy.indicators?.map((ind: any, idx: number) => (
+                                      <span key={idx} className="px-2 py-1 bg-muted rounded text-xs">
+                                        {ind.name}
+                                      </span>
+                                    ))}
+                </div>
+                </div>
+              </CardContent>
+            </Card>
+                          ) : (
+                            <div className="h-full flex items-center justify-center">
+                              <div className="text-center">
+                                <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                                <h3 className="text-lg font-medium mb-2">No Strategy Selected</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  Use the AI builder to create a strategy
+                                </p>
+                </div>
+                </div>
+                          )}
+          </div>
+                      </div>
+                    </ResizablePanel>
+                  </ResizablePanelGroup>
+                </TabsContent>
+
+                <TabsContent value="tester" className="h-full m-0">
+                  <div className="flex flex-col h-full w-full">
+                    {/* Chart container */}
+                    <div className="flex-1 bg-background border-b border-border">
+                      <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
+                    </div>
+                    
+                    {/* Bottom sidebar/panel */}
+                    <div className="h-64 bg-muted/20 border-t border-border p-4">
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center">
+                          <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                          <h3 className="text-lg font-medium mb-2">Strategy Analytics</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Analytics and performance metrics will appear here
+                          </p>
+                  </div>
+                    </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+        </div>
+      </AuthGuard>
+    </ChatProvider>
   );
 };
 

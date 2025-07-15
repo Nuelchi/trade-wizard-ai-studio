@@ -42,9 +42,10 @@ const SYMBOLS_BY_CLASS = {
 interface CodePreviewProps {
   strategy?: any;
   code?: any;
+  onRunBacktest?: () => void;
 }
 
-const CodePreview = ({ strategy, code }: CodePreviewProps) => {
+const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
@@ -148,6 +149,17 @@ const CodePreview = ({ strategy, code }: CodePreviewProps) => {
             <TabsTrigger value="mql4">MQL4</TabsTrigger>
             <TabsTrigger value="mql5">MQL5</TabsTrigger>
           </TabsList>
+          {strategy && code && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-4"
+              onClick={onRunBacktest ? onRunBacktest : () => toast({ title: 'Not implemented', description: 'Backtest function not connected.' })}
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Run Backtest
+            </Button>
+          )}
         </div>
 
         <div className="flex-1 overflow-hidden">

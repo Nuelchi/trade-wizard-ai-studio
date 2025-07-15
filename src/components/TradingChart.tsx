@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TradingViewWidget from 'react-tradingview-widget';
-import { ChevronDown, Upload, ListChecks } from 'lucide-react';
+import { ChevronDown, Upload, ListChecks, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
@@ -254,6 +254,19 @@ const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
         <div className="flex-1" />
         {/* Strategy dropdown and upload icon */}
         <div className="flex flex-row items-center gap-2">
+          {/* Run Backtest Play Icon */}
+          <button
+            className="p-2 rounded hover:bg-accent transition-colors border border-border"
+            title="Run Backtest"
+            onClick={() => {
+              // TODO: Replace with real OHLCV data and backtest logic
+              // Example: runBacktestAndSync(selectedStrategy, ohlcv);
+              alert('Backtest triggered!');
+            }}
+            type="button"
+          >
+            <Play className="w-4 h-4 text-primary" />
+          </button>
           {/* Strategy Dropdown */}
           <select
             className="px-2 py-1 rounded border border-border bg-background text-xs min-w-[180px]"

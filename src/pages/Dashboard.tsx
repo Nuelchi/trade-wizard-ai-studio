@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu, Square, MessageSquarePlus, LayoutPanelLeft } from 'lucide-react';
+import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu, Square, MessageSquarePlus, LayoutPanelLeft, Play } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
@@ -355,6 +355,24 @@ const Dashboard = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            {/* Play icon for Run Backtest */}
+            {currentStrategy && generatedCode && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-1"
+                title="Run Backtest"
+                onClick={() => {
+                  // TODO: Replace with real OHLCV data
+                  const ohlcv = [];
+                  // Call your runBacktestAndSync or similar function here
+                  // Example: runBacktestAndSync(generatedCode, ohlcv);
+                  toast({ title: 'Backtest triggered', description: 'Running backtest...' });
+                }}
+              >
+                <Play className="w-5 h-5 text-primary" />
+              </Button>
+            )}
           </div>
 
           {/* Right Section - Controls */}
