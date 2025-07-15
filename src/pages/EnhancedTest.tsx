@@ -14,10 +14,10 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
-import StrategyTesterFooter from '../../../src/components/StrategyTesterFooter/StrategyTesterFooter';
-import OverviewTab from '../../../src/components/StrategyTesterFooter/OverviewTab';
-import PerformanceTab from '../../../src/components/StrategyTesterFooter/PerformanceTab';
-import TradeAnalysisTab from '../../../src/components/StrategyTesterFooter/TradeAnalysisTab';
+// import StrategyTesterFooter from '../../../src/components/StrategyTesterFooter/StrategyTesterFooter';
+// import OverviewTab from '../../../src/components/StrategyTesterFooter/OverviewTab';
+// import PerformanceTab from '../../../src/components/StrategyTesterFooter/PerformanceTab';
+// import TradeAnalysisTab from '../../../src/components/StrategyTesterFooter/TradeAnalysisTab';
 import { generateStrategyWithAI } from '@/lib/utils';
 
 // Memoized TradingView chart
@@ -118,13 +118,13 @@ const MemoMiniChat = memo(function MemoMiniChat({
         <div className={`${isAiWidgetOpen ? 'w-2/3' : 'w-full'} transition-all duration-300 p-4`}> 
           <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="w-full">
             <TabsContent value="overview">
-              <OverviewTab metrics={metrics} />
+              {/* <OverviewTab metrics={metrics} /> */}
             </TabsContent>
             <TabsContent value="performance">
-              <PerformanceTab metrics={metrics} />
+              {/* <PerformanceTab metrics={metrics} /> */}
             </TabsContent>
             <TabsContent value="trade_analysis">
-              <TradeAnalysisTab metrics={metrics} />
+              {/* <TradeAnalysisTab metrics={metrics} /> */}
             </TabsContent>
           </Tabs>
         </div>
