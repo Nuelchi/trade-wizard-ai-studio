@@ -84,7 +84,6 @@ const Navigation = () => {
               ) : (
                 <Button variant="outline" size="sm" onClick={signOut}>Logout</Button>
               )}
-              <ThemeToggle />
             </div>
           </div>
         </div>
