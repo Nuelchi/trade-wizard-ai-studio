@@ -4,13 +4,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3, Paperclip, Mic, Plus, ArrowUp, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Code, TrendingUp, BarChart3, Paperclip, Mic, Plus, ArrowUp, Loader2, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChatContext } from '@/contexts/ChatContext';
 import type { Database, TablesInsert } from '@/integrations/supabase/types';
 import { generateStrategyWithAI } from '@/lib/utils';
+import React from 'react';
 
 interface Message {
   id: string;
@@ -43,26 +44,96 @@ const WELCOME_MESSAGE: Message = {
 function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
   const [displayed, setDisplayed] = useState('');
   const index = useRef(0);
+  const onDoneRef = useRef(onDone);
+
+  // Update the ref when onDone changes
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     setDisplayed('');
     index.current = 0;
     if (!text) return;
+    
     const interval = setInterval(() => {
       setDisplayed((prev) => {
         const next = text.slice(0, index.current + 1);
         index.current++;
         if (next.length === text.length) {
           clearInterval(interval);
-          if (onDone) onDone();
+          // Use setTimeout to defer the callback to avoid setState during render
+          setTimeout(() => {
+            onDoneRef.current?.();
+          }, 0);
         }
         return next;
       });
     }, 15); // Speed: 15ms per character
+    
     return () => clearInterval(interval);
-  }, [text, onDone]);
+  }, [text]);
 
   return <span>{displayed}</span>;
+}
+
+// Utility to split AI response into text and code blocks
+function splitCodeBlocks(text: string) {
+  const regex = /```([a-zA-Z0-9]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+  const parts = [];
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'code', lang: match[1], content: match[2] });
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+  return parts;
+}
+
+// Custom code block component
+function CodeBlock({ code, lang }: { code: string; lang?: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  };
+  return (
+    <div className="relative my-4 rounded-lg overflow-x-auto p-4 font-mono border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+      <button
+        className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 dark:bg-gray-900/80 text-gray-900 dark:text-gray-100 px-2 py-1 rounded text-xs shadow hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+        onClick={handleCopy}
+        title="Copy code"
+      >
+        <Copy className="w-4 h-4" />
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+      <pre className="whitespace-pre-wrap"><code>{code}</code></pre>
+      {lang && <div className="absolute bottom-2 right-2 text-xs text-gray-400">{lang}</div>}
+    </div>
+  );
+}
+
+// AI message renderer
+function AIMessage({ content }: { content: string }) {
+  const parts = splitCodeBlocks(content);
+  return (
+    <div>
+      {parts.map((part, idx) =>
+        part.type === 'code' ? (
+          <CodeBlock key={idx} code={part.content} lang={part.lang} />
+        ) : (
+          <p key={idx} className="mb-2 whitespace-pre-wrap">{part.content}</p>
+        )
+      )}
+    </div>
+  );
 }
 
 const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfaceProps) => {
@@ -373,6 +444,9 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
     }
   };
 
+  // Track which AI message ids have finished typewriter effect
+  const [formattedIds, setFormattedIds] = useState<string[]>([]);
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Messages */}
@@ -398,7 +472,6 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         {messages.map((message, i) => {
           const isLatestAi =
             message.sender === 'ai' &&
-            // Find the last AI message index
             i === messages.map((m, idx) => (m.sender === 'ai' ? idx : -1)).filter(idx => idx !== -1).pop();
           return (
             <div
@@ -418,13 +491,17 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
                     ? 'bg-primary text-primary-foreground ml-auto' 
                     : 'bg-muted/50 text-foreground'
                 }`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
                     {isLatestAi ? (
-                      <TypewriterText text={message.content} />
+                      formattedIds.includes(message.id) ? (
+                        <AIMessage content={message.content} />
+                      ) : (
+                        <TypewriterText text={message.content} onDone={() => setFormattedIds(ids => [...ids, message.id])} />
+                      )
                     ) : (
-                      message.content
+                      message.sender === 'ai' ? <AIMessage content={message.content} /> : message.content
                     )}
-                  </p>
+                  </div>
                   {message.image && (
                     <img 
                       src={message.image} 

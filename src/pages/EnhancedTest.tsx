@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import CodeCompiler from "@/components/CodeCompiler";
-import { Sparkles, X, Bot, User, ArrowUp, TrendingDown, Clock, TrendingUp, BarChart3, Code, Download, Play, Pause, Upload, FileText } from 'lucide-react';
+import { Sparkles, X, Bot, User, ArrowUp, TrendingDown, Clock, TrendingUp, BarChart3, Code, Download, Play, Pause, Upload, FileText, Copy } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { AdvancedChart } from 'react-tradingview-embed';
 // import TradingViewWidget from 'react-tradingview-widget'; // Removed, missing dependency
@@ -68,6 +68,8 @@ const MemoMiniChat = memo(function MemoMiniChat({
 }: MemoMiniChatProps) {
   const [activeFooterTab, setActiveFooterTab] = useState('overview');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  // Track which AI message ids have finished typewriter effect
+  const [formattedIds, setFormattedIds] = React.useState<string[]>([]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -152,9 +154,13 @@ const MemoMiniChat = memo(function MemoMiniChat({
                           : 'bg-muted'
                       }`}>
                         {isLatestAi ? (
-                          <TypewriterText text={msg.content} />
+                          formattedIds.includes(String(idx)) ? (
+                            <AIMessage content={msg.content} />
+                          ) : (
+                            <TypewriterText text={msg.content} onDone={() => setFormattedIds(ids => [...ids, String(idx)])} />
+                          )
                         ) : (
-                          msg.content
+                          msg.role === 'ai' ? <AIMessage content={msg.content} /> : msg.content
                         )}
                       </div>
                       {msg.role === 'user' && (
@@ -891,26 +897,96 @@ function ExportTabFull({ strategies, loadingStrategies }) {
 function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
   const [displayed, setDisplayed] = React.useState('');
   const index = React.useRef(0);
+  const onDoneRef = React.useRef(onDone);
+
+  // Update the ref when onDone changes
+  React.useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   React.useEffect(() => {
     setDisplayed('');
     index.current = 0;
     if (!text) return;
+    
     const interval = setInterval(() => {
       setDisplayed((prev) => {
         const next = text.slice(0, index.current + 1);
         index.current++;
         if (next.length === text.length) {
           clearInterval(interval);
-          if (onDone) onDone();
+          // Use setTimeout to defer the callback to avoid setState during render
+          setTimeout(() => {
+            onDoneRef.current?.();
+          }, 0);
         }
         return next;
       });
     }, 15); // Speed: 15ms per character
+    
     return () => clearInterval(interval);
-  }, [text, onDone]);
+  }, [text]);
 
   return <span>{displayed}</span>;
+}
+
+// Utility to split AI response into text and code blocks
+function splitCodeBlocks(text: string) {
+  const regex = /```([a-zA-Z0-9]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+  const parts = [];
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'code', lang: match[1], content: match[2] });
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+  return parts;
+}
+
+// Custom code block component
+function CodeBlock({ code, lang }: { code: string; lang?: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  };
+  return (
+    <div className="relative my-4 rounded-lg overflow-x-auto p-4 font-mono border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+      <button
+        className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 dark:bg-gray-900/80 text-gray-900 dark:text-gray-100 px-2 py-1 rounded text-xs shadow hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+        onClick={handleCopy}
+        title="Copy code"
+      >
+        <Copy className="w-4 h-4" />
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+      <pre className="whitespace-pre-wrap"><code>{code}</code></pre>
+      {lang && <div className="absolute bottom-2 right-2 text-xs text-gray-400">{lang}</div>}
+    </div>
+  );
+}
+
+// AI message renderer
+function AIMessage({ content }: { content: string }) {
+  const parts = splitCodeBlocks(content);
+  return (
+    <div>
+      {parts.map((part, idx) =>
+        part.type === 'code' ? (
+          <CodeBlock key={idx} code={part.content} lang={part.lang} />
+        ) : (
+          <p key={idx} className="mb-2 whitespace-pre-wrap">{part.content}</p>
+        )
+      )}
+    </div>
+  );
 }
 
 export default EnhancedTest;
