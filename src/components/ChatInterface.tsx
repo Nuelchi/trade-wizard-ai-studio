@@ -39,6 +39,32 @@ const WELCOME_MESSAGE: Message = {
   ]
 };
 
+// TypewriterText component for typewriter effect
+function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
+  const [displayed, setDisplayed] = useState('');
+  const index = useRef(0);
+
+  useEffect(() => {
+    setDisplayed('');
+    index.current = 0;
+    if (!text) return;
+    const interval = setInterval(() => {
+      setDisplayed((prev) => {
+        const next = text.slice(0, index.current + 1);
+        index.current++;
+        if (next.length === text.length) {
+          clearInterval(interval);
+          if (onDone) onDone();
+        }
+        return next;
+      });
+    }, 15); // Speed: 15ms per character
+    return () => clearInterval(interval);
+  }, [text, onDone]);
+
+  return <span>{displayed}</span>;
+}
+
 const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfaceProps) => {
   const { messages, setMessages, strategy, setStrategy, resetChat, saveCurrentStrategy } = useChatContext();
   const [input, setInput] = useState('');
@@ -369,73 +395,84 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
             </div>
           </div>
         )}
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.sender === 'ai' && (
-              <div className="flex-shrink-0">
-                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-primary-foreground" />
-                </div>
-              </div>
-            )}
-            
-            <div className={`max-w-[85%] ${message.sender === 'user' ? 'order-first' : ''}`}>
-              <div className={`rounded-2xl px-4 py-3 ${
-                message.sender === 'user' 
-                  ? 'bg-primary text-primary-foreground ml-auto' 
-                  : 'bg-muted/50 text-foreground'
-              }`}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                {message.image && (
-                  <img 
-                    src={message.image} 
-                    alt="uploaded" 
-                    className="mt-3 rounded-xl max-w-[200px] max-h-[150px] border border-border/20" 
-                  />
-                )}
-                {message.codeGenerated && (
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
-                    <Badge variant="secondary" className="text-xs font-medium">
-                      <Code className="w-3 h-3 mr-1.5" />
-                      Code Generated
-                    </Badge>
+        {messages.map((message, i) => {
+          const isLatestAi =
+            message.sender === 'ai' &&
+            // Find the last AI message index
+            i === messages.map((m, idx) => (m.sender === 'ai' ? idx : -1)).filter(idx => idx !== -1).pop();
+          return (
+            <div
+              key={message.id}
+              className={`flex gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {message.sender === 'ai' && (
+                <div className="flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary-foreground" />
                   </div>
-                )}
-              </div>
-              
-              {message.suggestions && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {message.suggestions.map((suggestion, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs font-medium px-3 py-1.5 h-auto rounded-full border-border/50 hover:bg-muted/80 hover:border-border transition-colors"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion}
-                    </Button>
-                  ))}
                 </div>
               )}
-              
-              <p className="text-xs text-muted-foreground mt-2 px-1">
-                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            </div>
-            
-            {message.sender === 'user' && (
-              <div className="flex-shrink-0">
-                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                  <User className="w-4 h-4 text-muted-foreground" />
+              <div className={`max-w-[85%] ${message.sender === 'user' ? 'order-first' : ''}`}>
+                <div className={`rounded-2xl px-4 py-3 ${
+                  message.sender === 'user' 
+                    ? 'bg-primary text-primary-foreground ml-auto' 
+                    : 'bg-muted/50 text-foreground'
+                }`}>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {isLatestAi ? (
+                      <TypewriterText text={message.content} />
+                    ) : (
+                      message.content
+                    )}
+                  </p>
+                  {message.image && (
+                    <img 
+                      src={message.image} 
+                      alt="uploaded" 
+                      className="mt-3 rounded-xl max-w-[200px] max-h-[150px] border border-border/20" 
+                    />
+                  )}
+                  {message.codeGenerated && (
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+                      <Badge variant="secondary" className="text-xs font-medium">
+                        <Code className="w-3 h-3 mr-1.5" />
+                        Code Generated
+                      </Badge>
+                    </div>
+                  )}
                 </div>
+                
+                {message.suggestions && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {message.suggestions.map((suggestion, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs font-medium px-3 py-1.5 h-auto rounded-full border-border/50 hover:bg-muted/80 hover:border-border transition-colors"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+                
+                <p className="text-xs text-muted-foreground mt-2 px-1">
+                  {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
-            )}
-          </div>
-        ))}
+              
+              {message.sender === 'user' && (
+                <div className="flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
         
         {isTyping && (
           <div className="flex gap-4 justify-start">

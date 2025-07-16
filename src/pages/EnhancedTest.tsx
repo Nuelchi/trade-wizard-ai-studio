@@ -135,27 +135,36 @@ const MemoMiniChat = memo(function MemoMiniChat({
                   <p className="text-xs text-muted-foreground">Ask about strategy optimization</p>
                 </div>
               ) : (
-                miniChatMessages.map((msg, idx) => (
-                  <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    {msg.role === 'ai' && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Sparkles className="w-2.5 h-2.5 text-primary-foreground" />
+                miniChatMessages.map((msg, idx) => {
+                  const isLatestAi =
+                    msg.role === 'ai' &&
+                    idx === miniChatMessages.map((m, i) => (m.role === 'ai' ? i : -1)).filter(i => i !== -1).pop();
+                  return (
+                    <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {msg.role === 'ai' && (
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Sparkles className="w-2.5 h-2.5 text-primary-foreground" />
+                        </div>
+                      )}
+                      <div className={`max-w-[80%] rounded-lg px-2.5 py-1.5 text-xs ${
+                        msg.role === 'user' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      }`}>
+                        {isLatestAi ? (
+                          <TypewriterText text={msg.content} />
+                        ) : (
+                          msg.content
+                        )}
                       </div>
-                    )}
-                    <div className={`max-w-[80%] rounded-lg px-2.5 py-1.5 text-xs ${
-                      msg.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
-                    }`}>
-                      {msg.content}
+                      {msg.role === 'user' && (
+                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <User className="w-2.5 h-2.5 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-                    {msg.role === 'user' && (
-                      <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <User className="w-2.5 h-2.5 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
               {isAiTyping && (
                 <div className="flex gap-2">
@@ -876,6 +885,32 @@ function ExportTabFull({ strategies, loadingStrategies }) {
       </div>
     </div>
   );
+}
+
+// TypewriterText component for typewriter effect
+function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
+  const [displayed, setDisplayed] = React.useState('');
+  const index = React.useRef(0);
+
+  React.useEffect(() => {
+    setDisplayed('');
+    index.current = 0;
+    if (!text) return;
+    const interval = setInterval(() => {
+      setDisplayed((prev) => {
+        const next = text.slice(0, index.current + 1);
+        index.current++;
+        if (next.length === text.length) {
+          clearInterval(interval);
+          if (onDone) onDone();
+        }
+        return next;
+      });
+    }, 15); // Speed: 15ms per character
+    return () => clearInterval(interval);
+  }, [text, onDone]);
+
+  return <span>{displayed}</span>;
 }
 
 export default EnhancedTest;
