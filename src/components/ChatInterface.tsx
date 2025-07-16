@@ -30,7 +30,7 @@ interface ChatInterfaceProps {
 
 const WELCOME_MESSAGE: Message = {
   id: '1',
-  content: "Hi! I'm your AI trading strategy assistant. Describe the strategy you'd like to create in plain English, and I'll help you build it step by step. What kind of trading strategy are you thinking about?",
+  content: "Hi! I'm your AI trading strategy assistant. I'll create MQL5 code by default, but you can also request Pine Script (TradingView), MQL4 (MetaTrader 4), or Python versions. Describe the strategy you'd like to create in plain English!",
   sender: 'ai',
   timestamp: new Date(),
   suggestions: [
@@ -288,8 +288,12 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
     setIsTyping(true);
 
     try {
-      // Call real AI API
-      const aiResult = await generateStrategyWithAI(input);
+      // Call real AI API with conversation context
+      const conversationHistory = messages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+      const aiResult = await generateStrategyWithAI(input, undefined, conversationHistory);
       const strategy = {
         name: 'AI Generated Strategy',
         description: aiResult.summary,
@@ -330,14 +334,14 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
       }
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Great! Here is your strategy summary and code.\n\n${aiResult.summary}\n\nPine Script, MQL4, and MQL5 code are available in the preview tabs.`,
+        content: `Great! Here is your strategy summary and MQL5 code.\n\n${aiResult.summary}\n\nMQL5 code is ready for MetaTrader 5. You can also request Pine Script (TradingView), MQL4 (MetaTrader 4), or Python versions.`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: [
-          'Run a backtest on this strategy',
-          'Modify the stop loss settings',
-          'Add more indicators',
-          'Change the timeframe'
+          'Give me Pine Script version',
+          'Give me MQL4 version',
+          'Give me Python version',
+          'Modify the strategy'
         ],
         codeGenerated: true
       };

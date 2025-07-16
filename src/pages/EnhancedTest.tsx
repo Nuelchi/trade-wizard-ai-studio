@@ -359,8 +359,12 @@ const EnhancedTest = () => {
     setMiniChatInput('');
     setIsAiTyping(true);
     try {
-      // Use the same AI API as the main app
-      const aiResult = await generateStrategyWithAI(currentInput);
+      // Use the same AI API as the main app with conversation context
+      const conversationHistory = miniChatMessages.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+      const aiResult = await generateStrategyWithAI(currentInput, undefined, conversationHistory);
       const aiResponse = aiResult.summary || "I'm here to help with your trading strategy. Could you please rephrase your question?";
       setMiniChatMessages((msgs) => [...msgs, { role: 'ai' as const, content: aiResponse }]);
     } catch (err) {

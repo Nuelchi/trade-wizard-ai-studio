@@ -45,6 +45,8 @@ const Dashboard = () => {
     pricingType: "free" as "free" | "paid",
     price: ""
   });
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [loadingStrategies, setLoadingStrategies] = useState(false);
   const {
     user,
     signOut
@@ -54,11 +56,12 @@ const Dashboard = () => {
   } = useToast();
   const autosaveTimeout = useRef<NodeJS.Timeout | null>(null);
   const [chatCollapsed, setChatCollapsed] = useState(false);
-  const { resetChat, setMessages, strategy } = useChatContext();
+  const { resetChat, setMessages, strategy, messages } = useChatContext();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleStrategyGenerated = (strategy: any) => {
+    console.log('Strategy generated:', strategy);
     setCurrentStrategy(strategy);
   };
 
@@ -205,7 +208,7 @@ const Dashboard = () => {
       // Optionally call your save logic here
       await handleSaveStrategy();
     }
-    // 2. Reset chat context and messages
+    // 2. Reset chat context and messages - only when explicitly starting new chat
     resetChat();
     setMessages([]);
     // 3. Reset UI state
@@ -220,6 +223,21 @@ const Dashboard = () => {
     }
   };
 
+  // Load strategies for dropdown
+  useEffect(() => {
+    if (!user) return;
+    setLoadingStrategies(true);
+    supabase
+      .from('strategies')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error) setStrategies(data || []);
+        setLoadingStrategies(false);
+      });
+  }, [user]);
+
   // Hydrate from navigation state if a strategy is passed in
   useEffect(() => {
     if (location.state && location.state.strategy) {
@@ -231,27 +249,47 @@ const Dashboard = () => {
     }
   }, [location.state]);
 
+  // Update current strategy when strategy context changes
+  useEffect(() => {
+    if (strategy && strategy.id && strategy.id !== 'undefined') {
+      console.log('Strategy context updated:', strategy);
+      setCurrentStrategy(strategy);
+      setStrategyName(strategy.title || 'Untitled Strategy');
+      setGeneratedCode(strategy.code || null);
+    }
+  }, [strategy]);
+
   useEffect(() => {
     if (!currentStrategy || !user || !currentStrategy.id || currentStrategy.id === 'undefined') return;
     if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
     autosaveTimeout.current = setTimeout(async () => {
+      console.log('Autosaving strategy:', currentStrategy.id);
+      // Convert chat messages to the format expected by the database
+      const chatHistoryJson = messages.map((msg) => ({
+        ...msg,
+        timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp
+      }));
+      
       const { error } = await supabase
         .from('strategies')
         .update({
-          chat_history: currentStrategy.chat_history,
+          chat_history: chatHistoryJson,
           code: generatedCode,
           title: strategyName,
           updated_at: new Date().toISOString(),
         })
         .eq('id', currentStrategy.id);
       if (error) {
+        console.error('Autosave error:', error);
         toast({ title: 'Autosave failed', description: error.message, variant: 'destructive' });
+      } else {
+        console.log('Autosave successful');
       }
     }, 2000);
     return () => {
       if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
     };
-  }, [currentStrategy, generatedCode, strategyName, user]);
+  }, [currentStrategy, generatedCode, strategyName, user, messages]);
 
   const sectionOptions = [
     { path: '/dashboard', label: 'Builder', icon: MessageSquare },
@@ -302,7 +340,7 @@ const Dashboard = () => {
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">
-          {/* Left Section - Strategy Name */}
+          {/* Left Section - Strategy Name & Dropdown */}
           <div className="flex items-center space-x-2 min-w-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <MessageSquare className="w-4 h-4 text-primary-foreground" />
@@ -314,10 +352,70 @@ const Dashboard = () => {
           }} className="text-xl font-bold text-foreground bg-transparent border-none outline-none focus:bg-muted px-2 py-1 rounded" autoFocus /> : <h1 className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted" onClick={() => setIsEditingName(true)} title="Click to edit strategy name">
                 {strategyName}
               </h1>}
+            
+            {/* Strategy Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2 px-3 h-8 border-border bg-background text-foreground font-medium shadow-none">
+                  <User className="w-4 h-4" />
+                  <span className="text-xs">Strategies</span>
+                  <ChevronDown className="w-3 h-3 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64 max-h-96 overflow-y-auto">
+                {loadingStrategies ? (
+                  <DropdownMenuItem disabled>
+                    <div className="flex items-center gap-2 w-full">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm">Loading strategies...</span>
+                    </div>
+                  </DropdownMenuItem>
+                ) : strategies.length === 0 ? (
+                  <DropdownMenuItem disabled>
+                    <span className="text-sm text-muted-foreground">No strategies found</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    {strategies.map((strategy) => (
+                      <DropdownMenuItem 
+                        key={strategy.id} 
+                        onClick={() => {
+                          setCurrentStrategy(strategy);
+                          setStrategyName(strategy.title || 'Untitled Strategy');
+                          setGeneratedCode(strategy.code || null);
+                          // Load chat history if available
+                          if (Array.isArray(strategy.chat_history)) {
+                            setMessages(strategy.chat_history as any[]);
+                          }
+                        }}
+                        className="flex flex-col items-start gap-1 p-3"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="font-medium text-sm truncate">{strategy.title || 'Untitled Strategy'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(strategy.updated_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {strategy.description && (
+                          <span className="text-xs text-muted-foreground truncate w-full">
+                            {strategy.description}
+                          </span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/mystrategies')}>
+                      <User className="w-4 h-4 mr-2" />
+                      <span>View All Strategies</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Center Section - New Chat & Min/Max Icons + Navigation Dropdown */}
-          <div className="flex items-center ml-12 gap-2">
+          <div className="flex items-center gap-2 -ml-14">
             <button
               className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-muted transition-colors"
               onClick={startNewChat}

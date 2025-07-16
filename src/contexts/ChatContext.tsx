@@ -36,8 +36,9 @@ const STRATEGY_STORAGE_KEY = 'traintrade_strategy';
 
 function filterWelcome(messages: any) {
   const safeMessages = Array.isArray(messages) ? messages : [];
+  // Only filter out the exact welcome message, not all AI messages
   return safeMessages.filter(
-    m => !(m.id === '1' && m.sender === 'ai' && m.content.startsWith("Hi! I'm your AI trading strategy assistant"))
+    m => !(m.id === '1' && m.sender === 'ai' && m.content === "Hi! I'm your AI trading strategy assistant. I'll create MQL5 code by default, but you can also request Pine Script (TradingView), MQL4 (MetaTrader 4), or Python versions. Describe the strategy you'd like to create in plain English!")
   );
 }
 
@@ -50,22 +51,36 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     const savedMsgs = localStorage.getItem(CHAT_STORAGE_KEY);
     const savedStrat = localStorage.getItem(STRATEGY_STORAGE_KEY);
     if (savedMsgs) {
-      const parsed = JSON.parse(savedMsgs, (k, v) => k === 'timestamp' ? new Date(v) : v);
-      setMessagesState(filterWelcome(parsed));
+      try {
+        const parsed = JSON.parse(savedMsgs, (k, v) => k === 'timestamp' ? new Date(v) : v);
+        console.log('Loading saved messages:', parsed);
+        setMessagesState(filterWelcome(parsed));
+      } catch (error) {
+        console.error('Error loading saved messages:', error);
+        setMessagesState([]);
+      }
     }
-    if (savedStrat) setStrategy(JSON.parse(savedStrat));
+    if (savedStrat) {
+      try {
+        setStrategy(JSON.parse(savedStrat));
+      } catch (error) {
+        console.error('Error loading saved strategy:', error);
+        setStrategy(null);
+      }
+    }
   }, []);
 
-  // Persist to localStorage (filter out welcome message)
+  // Persist to localStorage
   useEffect(() => {
-    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(filterWelcome(messages)));
+    console.log('Saving messages to localStorage:', messages);
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
   }, [messages]);
   useEffect(() => {
     localStorage.setItem(STRATEGY_STORAGE_KEY, JSON.stringify(strategy));
   }, [strategy]);
 
   const setMessages = (msgs: Message[]) => {
-    setMessagesState(filterWelcome(msgs));
+    setMessagesState(msgs);
   };
 
   const resetChat = () => {
