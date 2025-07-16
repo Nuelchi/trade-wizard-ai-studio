@@ -28,7 +28,7 @@ interface MemoTradingViewChartProps {
 }
 const MemoTradingViewChart = memo(({ symbol, interval }: MemoTradingViewChartProps) => (
   <div className="w-full bg-background rounded-lg overflow-hidden">
-    <AdvancedChart widgetProps={{ symbol: "BINANCE:BTCUSDT", theme: "dark", interval: "D", height: 1000, width: "100%" }} />
+    <AdvancedChart widgetProps={{ symbol: "BINANCE:BTCUSDT", theme: "dark", interval: "D", height: 800, width: "100%" }} />
   </div>
 ));
 
@@ -67,6 +67,13 @@ const MemoMiniChat = memo(function MemoMiniChat({
   metrics
 }: MemoMiniChatProps) {
   const [activeFooterTab, setActiveFooterTab] = useState('overview');
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [miniChatMessages, isAiTyping]);
   return (
     <div className="bg-card border-t border-border mt-6">
       {/* Header with Tabs and AI Assistant Button */}
@@ -120,7 +127,7 @@ const MemoMiniChat = memo(function MemoMiniChat({
         {isAiWidgetOpen && (
           <div className="w-1/3 border-l border-border flex flex-col">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="flex-1 max-h-[130px] overflow-y-auto scrollbar-hide p-3 space-y-2">
               {miniChatMessages.length === 0 ? (
                 <div className="text-center py-4">
                   <Bot className="w-8 h-8 mx-auto mb-2 text-primary/60" />
@@ -164,6 +171,7 @@ const MemoMiniChat = memo(function MemoMiniChat({
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
             {/* Input */}
             <div className="p-3 border-t border-border">

@@ -209,6 +209,28 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
       };
       onStrategyGenerated(strategy);
       onCodeGenerated(code);
+      // Defensive check: Only proceed if PineScript or other code is present
+      if (!aiResult.pineScript || aiResult.pineScript.trim() === "") {
+        // No code generated, just show the summary and skip save/backtest
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: aiResult.summary || "No code generated for this prompt.",
+          sender: 'ai',
+          timestamp: new Date(),
+        };
+        const userMsg: Message = {
+          ...userMessage,
+          sender: 'user',
+        };
+        setMessages([...messages, userMsg, aiMessage]);
+        toast({
+          title: "No Strategy Code Generated",
+          description: "The AI did not generate any code for this prompt. Try asking for a trading strategy!",
+          variant: "default"
+        });
+        setIsTyping(false);
+        return;
+      }
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: `Great! Here is your strategy summary and code.\n\n${aiResult.summary}\n\nPine Script, MQL4, and MQL5 code are available in the preview tabs.`,
@@ -271,7 +293,16 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
       }
     } catch (err: any) {
       setIsTyping(false);
-      toast({ title: 'AI Error', description: err.message || String(err), variant: 'destructive' });
+      // Enhanced error logging for debugging
+      console.error('AI Error:', err);
+      if (err && typeof err === 'object') {
+        for (const key in err) {
+          if (Object.prototype.hasOwnProperty.call(err, key)) {
+            console.error(`AI Error property [${key}]:`, err[key]);
+          }
+        }
+      }
+      toast({ title: 'AI Error', description: err.message || JSON.stringify(err), variant: 'destructive' });
     }
   };
 

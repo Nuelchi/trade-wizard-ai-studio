@@ -34,14 +34,15 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 const CHAT_STORAGE_KEY = 'traintrade_chat';
 const STRATEGY_STORAGE_KEY = 'traintrade_strategy';
 
-function filterWelcome(messages: Message[]): Message[] {
-  return messages.filter(
+function filterWelcome(messages: any) {
+  const safeMessages = Array.isArray(messages) ? messages : [];
+  return safeMessages.filter(
     m => !(m.id === '1' && m.sender === 'ai' && m.content.startsWith("Hi! I'm your AI trading strategy assistant"))
   );
 }
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const [messages, setMessagesState] = useState<Message[]>([]);
+  const [messages, setMessagesState] = useState<any[]>([]);
   const [strategy, setStrategy] = useState<Strategy | null>(null);
 
   // Load from localStorage on mount
