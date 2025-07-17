@@ -26,7 +26,7 @@ interface Message {
 
 interface ChatInterfaceProps {
   onStrategyGenerated: (strategy: any) => void;
-  onCodeGenerated: (code: any) => void;
+  onCodeGenerated: (code: any, type?: string) => void;
 }
 
 const WELCOME_MESSAGE: Message = {
@@ -253,6 +253,9 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
     return conditions;
   };
 
+  const [pendingCode, setPendingCode] = useState<any>(null);
+  const [pendingType, setPendingType] = useState<string | undefined>(undefined);
+
   const handleSend = async () => {
     if (!input.trim() && !imageFile) return;
 
@@ -268,6 +271,16 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
     setImageFile(null);
     setImagePreview(null);
     setIsTyping(true);
+
+    // Detect requested script type
+    let requestedType = undefined;
+    const lowerInput = input.toLowerCase();
+    if (lowerInput.includes('pine')) requestedType = 'pinescript';
+    else if (lowerInput.includes('mql4')) requestedType = 'mql4';
+    else if (lowerInput.includes('mql5')) requestedType = 'mql5';
+    else if (lowerInput.includes('tradingview')) requestedType = 'pinescript';
+    else if (lowerInput.includes('metatrader 4')) requestedType = 'mql4';
+    else if (lowerInput.includes('metatrader 5')) requestedType = 'mql5';
 
     try {
       // Call real AI API with conversation context
@@ -295,8 +308,23 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         mql5: aiResult.mql5,
       };
       
+      // Log the full AI result for debugging
+      console.log('Full AI result:', aiResult);
+      let markdownContent = '';
+      if (aiResult && typeof aiResult === 'object' && 'content' in aiResult && typeof (aiResult as any).content === 'string') {
+        markdownContent = (aiResult as any).content;
+      }
+      const extractedBlocks = extractCodeBlocks(markdownContent);
+      let codeBlocks = {
+        mql5: aiResult.mql5 || extractedBlocks.mql5 || '',
+        pineScript: aiResult.pineScript || extractedBlocks.pineScript || '',
+        mql4: aiResult.mql4 || extractedBlocks.mql4 || '',
+        python: (aiResult as any).python || extractedBlocks.python || '',
+      };
       onStrategyGenerated(strategy);
-      onCodeGenerated(code);
+      setPendingCode(codeBlocks);
+      setPendingType(requestedType);
+      // onCodeGenerated(codeBlocks, requestedType); // DELAYED, now called after typewriter
       
       // Check if actual code was generated
       const hasCode = aiResult.pineScript || aiResult.mql4 || aiResult.mql5;
@@ -428,6 +456,24 @@ Test this strategy in the built-in Strategy Tester (/test) to see how it perform
     }
   }, [messages]);
 
+  // Utility to extract code blocks from markdown
+  function extractCodeBlocks(markdown: string) {
+    const codeBlocks: any = {};
+    const regex = /```(mql5|mql4|pinescript|python)?\n([\s\S]*?)```/gi;
+    let match;
+    while ((match = regex.exec(markdown)) !== null) {
+      const lang = match[1] ? match[1].toLowerCase() : '';
+      const code = match[2];
+      if (lang) {
+        if (lang === 'pinescript') codeBlocks.pineScript = code;
+        else if (lang === 'mql5') codeBlocks.mql5 = code;
+        else if (lang === 'mql4') codeBlocks.mql4 = code;
+        else if (lang === 'python') codeBlocks.python = code;
+      }
+    }
+    return codeBlocks;
+  }
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Messages */}
@@ -477,7 +523,14 @@ Test this strategy in the built-in Strategy Tester (/test) to see how it perform
                       formattedIds.includes(message.id) ? (
                         <AIMessage content={message.content} />
                       ) : (
-                        <TypewriterText text={message.content} onDone={() => setFormattedIds(ids => [...ids, message.id])} />
+                        <TypewriterText text={message.content} onDone={() => {
+                          setFormattedIds(ids => [...ids, message.id]);
+                          if (pendingCode) {
+                            onCodeGenerated(pendingCode, pendingType);
+                            setPendingCode(null);
+                            setPendingType(undefined);
+                          }
+                        }} />
                       )
                     ) : (
                       message.sender === 'ai' ? <AIMessage content={message.content} /> : message.content

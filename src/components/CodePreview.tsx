@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Copy, Download, Play, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TradingViewWidget from 'react-tradingview-widget';
+import { supabase } from '@/integrations/supabase/client';
 
 const ASSET_CLASSES = [
   { key: 'stocks', label: 'Stocks', defaultSymbol: 'NASDAQ:AAPL' },
@@ -41,28 +42,53 @@ const SYMBOLS_BY_CLASS = {
 
 interface CodePreviewProps {
   strategy?: any;
-  code?: any;
   onRunBacktest?: () => void;
 }
 
-const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
-  const [activeTab, setActiveTab] = useState('overview');
+const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
+  const [activeTab, setActiveTab] = useState('mql5');
+  const [dbCode, setDbCode] = useState<any>(null);
   const { toast } = useToast();
 
-  // Auto-select tab based on generated code
+  // Poll for code from DB every 3 seconds
   useEffect(() => {
-    if (code) {
-      if (code.mql5 && code.mql5.trim() !== '') {
-        setActiveTab('mql5');
-      } else if (code.mql4 && code.mql4.trim() !== '') {
-        setActiveTab('mql4');
-      } else if (code.pineScript && code.pineScript.trim() !== '') {
-        setActiveTab('pinescript');
-      } else {
-        setActiveTab('overview');
+    if (!strategy || !strategy.id) return;
+    let mounted = true;
+    const fetchCode = async () => {
+      const { data, error } = await supabase
+        .from('strategies')
+        .select('code')
+        .eq('id', strategy.id)
+        .single();
+      if (!error && data && data.code && mounted) {
+        let codeObj = data.code;
+        if (typeof codeObj === 'string') {
+          try { codeObj = JSON.parse(codeObj); } catch { codeObj = {}; }
+        }
+        if (typeof codeObj === 'object' && codeObj !== null && !Array.isArray(codeObj)) {
+          setDbCode(codeObj);
+          // Auto-select tab based on available code
+          if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
+          else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
+          else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
+          else setActiveTab('mql5');
+        }
       }
-    }
-  }, [code]);
+    };
+    fetchCode();
+    const interval = setInterval(fetchCode, 3000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, [strategy]);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e.detail && e.detail.tab) {
+        setActiveTab(e.detail.tab);
+      }
+    };
+    window.addEventListener('switchCodeTab', handler);
+    return () => window.removeEventListener('switchCodeTab', handler);
+  }, []);
 
   // Chart preview state (local to preview only)
   const [assetClass, setAssetClass] = useState('forex');
@@ -134,7 +160,7 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
     });
   };
 
-  if (!strategy && !code) {
+  if (!strategy || !dbCode) {
     return (
       <div className="h-full flex items-center justify-center bg-muted/20 rounded-lg border-2 border-dashed border-border">
         <div className="text-center p-8">
@@ -159,7 +185,6 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
           <TabsList className="overflow-x-auto">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="pinescript">Pine Script</TabsTrigger>
             <TabsTrigger value="mql4">MQL4</TabsTrigger>
             <TabsTrigger value="mql5">MQL5</TabsTrigger>
@@ -167,90 +192,13 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
         </div>
 
         <div className="flex-1 overflow-hidden min-h-0">
-          <TabsContent value="overview" className="h-full m-0 p-4">
-            {strategy && (
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{strategy.name}</CardTitle>
-                      <Badge variant="secondary">{strategy.confidence}% Confidence</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Strategy Type</h4>
-                      <Badge>{strategy.type}</Badge>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium mb-2">Description</h4>
-                      <p className="text-sm text-muted-foreground">{strategy.description}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium mb-2">Indicators</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {strategy.indicators?.map((indicator: any, index: number) => (
-                          <Badge key={index} variant="outline">
-                            {indicator.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Entry Conditions</h4>
-                        <ul className="text-sm text-muted-foreground space-y-1">
-                          {strategy.conditions?.entry?.map((condition: string, index: number) => (
-                            <li key={index}>• {condition}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium mb-2">Exit Conditions</h4>
-                        <ul className="text-sm text-muted-foreground space-y-1">
-                          {strategy.conditions?.exit?.map((condition: string, index: number) => (
-                            <li key={index}>• {condition}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    {strategy.riskManagement && (
-                      <div>
-                        <h4 className="font-medium mb-2">Risk Management</h4>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          {strategy.riskManagement.stopLoss && (
-                            <div>
-                              <span className="text-muted-foreground">Stop Loss:</span>
-                              <span className="ml-2 font-medium">{strategy.riskManagement.stopLoss}</span>
-                            </div>
-                          )}
-                          {strategy.riskManagement.takeProfit && (
-                            <div>
-                              <span className="text-muted-foreground">Take Profit:</span>
-                              <span className="ml-2 font-medium">{strategy.riskManagement.takeProfit}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </TabsContent>
-
           <TabsContent value="pinescript" className="h-full m-0 overflow-hidden">
-            {code?.pineScript ? (
+            {dbCode && typeof dbCode === 'object' && !Array.isArray(dbCode) && typeof dbCode.pineScript === 'string' && dbCode.pineScript ? (
               <CodeEditor
-                code={code.pineScript}
+                code={dbCode.pineScript}
                 language="pinescript"
-                onCopy={() => handleCopy(code.pineScript)}
-                onDownload={() => handleDownload(code.pineScript, `${strategy?.name || 'strategy'}.pine`)}
+                onCopy={() => handleCopy(dbCode.pineScript)}
+                onDownload={() => handleDownload(dbCode.pineScript, `${strategy?.name || 'strategy'}.pine`)}
               />
             ) : (
               <EmptyState message="No Pine Script generated yet" />
@@ -258,12 +206,12 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
           </TabsContent>
 
           <TabsContent value="mql4" className="h-full m-0 overflow-hidden">
-            {code?.mql4 ? (
+            {dbCode && typeof dbCode === 'object' && !Array.isArray(dbCode) && typeof dbCode.mql4 === 'string' && dbCode.mql4 ? (
               <CodeEditor
-                code={code.mql4}
+                code={dbCode.mql4}
                 language="mql4"
-                onCopy={() => handleCopy(code.mql4)}
-                onDownload={() => handleDownload(code.mql4, `${strategy?.name || 'strategy'}.mq4`)}
+                onCopy={() => handleCopy(dbCode.mql4)}
+                onDownload={() => handleDownload(dbCode.mql4, `${strategy?.name || 'strategy'}.mq4`)}
               />
             ) : (
               <EmptyState message="No MQL4 code generated yet" />
@@ -271,12 +219,16 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
           </TabsContent>
 
           <TabsContent value="mql5" className="h-full m-0 overflow-hidden">
-            <CodeEditor
-              code={code?.mql5 || `// AI Generated Strategy – MQL5 Expert Advisor\n#property copyright \"Trainflow AI\"\n#property version   \"1.00\"\n\n// Input Parameters\n\nvoid OnTick()\n{\n    // Strategy Implementation\n}\n`}
-              language="mql5"
-              onCopy={() => handleCopy(code?.mql5 || `// AI Generated Strategy – MQL5 Expert Advisor\n#property copyright \"Trainflow AI\"\n#property version   \"1.00\"\n\n// Input Parameters\n\nvoid OnTick()\n{\n    // Strategy Implementation\n}\n`)}
-              onDownload={() => handleDownload(code?.mql5 || `// AI Generated Strategy – MQL5 Expert Advisor\n#property copyright \"Trainflow AI\"\n#property version   \"1.00\"\n\n// Input Parameters\n\nvoid OnTick()\n{\n    // Strategy Implementation\n}\n`, `${strategy?.name || 'strategy'}.mq5`)}
-            />
+            {dbCode && typeof dbCode === 'object' && !Array.isArray(dbCode) && typeof dbCode.mql5 === 'string' && dbCode.mql5 ? (
+              <CodeEditor
+                code={dbCode.mql5}
+                language="mql5"
+                onCopy={() => handleCopy(dbCode.mql5)}
+                onDownload={() => handleDownload(dbCode.mql5, `${strategy?.name || 'strategy'}.mq5`)}
+              />
+            ) : (
+              <EmptyState message="No MQL5 code generated yet" />
+            )}
           </TabsContent>
         </div>
       </Tabs>

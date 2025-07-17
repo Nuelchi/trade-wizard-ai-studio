@@ -65,9 +65,117 @@ const Dashboard = () => {
     setCurrentStrategy(strategy);
   };
 
-  const handleCodeGenerated = (code: any) => {
-    setGeneratedCode(code);
+  const handleCodeGenerated = async (code: any, requestedType?: string) => {
+    // Log the incoming code object
+    console.log('Incoming code object:', code);
+
+    // Normalize code object
+    let normalizedCode = { pineScript: '', mql4: '', mql5: '' };
+    if (code.pineScript || code.pine_script) normalizedCode.pineScript = code.pineScript || code.pine_script;
+    if (code.mql4) normalizedCode.mql4 = code.mql4;
+    if (code.mql5) normalizedCode.mql5 = code.mql5;
+    // If AI sometimes returns 'code' for pine, mql4, or mql5, try to infer:
+    if (requestedType === 'pinescript' && code.code) normalizedCode.pineScript = code.code;
+    if (requestedType === 'mql4' && code.code) normalizedCode.mql4 = code.code;
+    if (requestedType === 'mql5' && code.code) normalizedCode.mql5 = code.code;
+    // Add more mappings as needed
+    console.log('Normalized code object:', normalizedCode);
+
+    // Fetch current code from DB
+    let currentDbCode = {};
+    if (currentStrategy && currentStrategy.id && user) {
+      const { data, error } = await supabase
+        .from('strategies')
+        .select('code')
+        .eq('id', currentStrategy.id)
+        .single();
+      if (!error && data && data.code) {
+        try {
+          currentDbCode = typeof data.code === 'string' ? JSON.parse(data.code) : data.code;
+        } catch (e) {
+          console.error('Error parsing code from DB:', e, data.code);
+          currentDbCode = {};
+        }
+      } else if (error) {
+        console.error('Error fetching code from DB before update:', error);
+      }
+    }
+    // Merge normalized code with current DB code
+    let pineScript = '';
+    let mql4 = '';
+    let mql5 = '';
+    if (currentDbCode && typeof currentDbCode === 'object' && !Array.isArray(currentDbCode)) {
+      pineScript = (currentDbCode as any).pineScript || '';
+      mql4 = (currentDbCode as any).mql4 || '';
+      mql5 = (currentDbCode as any).mql5 || '';
+    }
+    const mergedCode = {
+      pineScript: normalizedCode.pineScript || pineScript,
+      mql4: normalizedCode.mql4 || mql4,
+      mql5: normalizedCode.mql5 || mql5,
+    };
+    console.log('Saving merged code to DB:', mergedCode);
+    // Save merged code to DB
+    if (currentStrategy && currentStrategy.id && user) {
+      const { error } = await supabase
+        .from('strategies')
+        .update({ code: mergedCode, updated_at: new Date().toISOString() })
+        .eq('id', currentStrategy.id);
+      if (error) {
+        console.error('Error updating code in DB:', error);
+      }
+    }
+    setGeneratedCode(mergedCode);
+    // Auto-switch to the newly generated tab
+    if (requestedType) {
+      setTimeout(() => {
+        const tabMap: { [key: string]: string } = {
+          pinescript: 'pinescript',
+          pine: 'pinescript',
+          tradingview: 'pinescript',
+          mql4: 'mql4',
+          metatrader4: 'mql4',
+          mql5: 'mql5',
+          metatrader5: 'mql5',
+        };
+        const targetTab = tabMap[requestedType.toLowerCase()];
+        if (targetTab) {
+          // Dispatch a custom event to switch the tab in CodePreview
+          const event = new CustomEvent('switchCodeTab', { detail: { tab: targetTab } });
+          window.dispatchEvent(event);
+        }
+      }, 100);
+    }
   };
+
+  // Poll for latest code from DB every 20 seconds
+  useEffect(() => {
+    if (!currentStrategy || !currentStrategy.id) return;
+    const interval = setInterval(async () => {
+      const { data, error } = await supabase
+        .from('strategies')
+        .select('code')
+        .eq('id', currentStrategy.id)
+        .single();
+      if (!error && data && data.code) {
+        let codeObj = data.code;
+        if (typeof codeObj === 'string') {
+          try { codeObj = JSON.parse(codeObj); } catch { codeObj = {}; }
+        }
+        console.log('Fetched code from DB:', codeObj);
+        setGeneratedCode((prev: any) => {
+          // Only update if code actually changed
+          if (JSON.stringify(prev) !== JSON.stringify(codeObj)) {
+            return codeObj;
+          }
+          return prev;
+        });
+      } else if (error) {
+        console.error('Error polling code from DB:', error);
+      }
+    }, 20000); // 20 seconds
+    return () => clearInterval(interval);
+  }, [currentStrategy]);
 
   const handleLogout = async () => {
     await signOut();
@@ -570,7 +678,7 @@ const Dashboard = () => {
               <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
                   
                   
-                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} code={generatedCode} /> :
+                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} /> :
   <div className="h-full flex flex-col min-h-0 overflow-hidden">
     <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
     <div className="w-full mt-4">
