@@ -287,17 +287,27 @@ const EnhancedTest = () => {
     const strat = strategies.find((s) => s.id === selectedStrategy);
     if (strat) {
       if (Array.isArray(strat.chat_history)) {
-        // Normalize chat history to ensure valid roles and restore left/right alignment
-        const normalized = (strat.chat_history as any[]).map((msg, idx) => {
+        // Improved normalization: infer role for missing, detect AI greeting
+        const normalized = (strat.chat_history as any[]).map((msg, idx, arr) => {
           let role = msg.role;
           if (role !== 'user' && role !== 'ai') {
-            // Alternate roles if missing: even index = user, odd = ai
-            role = idx % 2 === 0 ? 'user' : 'ai';
+            if (idx === 0) {
+              // If first message looks like a greeting, treat as AI
+              const content = (msg.content || '').toLowerCase();
+              if (content.includes('hi') || content.includes('hello') || content.includes('assistant')) {
+                role = 'ai';
+              } else {
+                role = 'user';
+              }
+            } else {
+              // For subsequent missing roles, alternate based on previous
+              const prevRole = arr[idx - 1]?.role || (idx - 1) % 2 === 0 ? 'user' : 'ai';
+              role = prevRole === 'user' ? 'ai' : 'user';
+            }
           }
           return { ...msg, role };
         });
         setMiniChatMessages(normalized);
-        // Mark all loaded AI messages as formatted (skip typewriter for history)
         setFormattedIds(normalized.map((msg, idx) => msg.role === 'ai' ? String(idx) : null).filter(Boolean));
       }
       let pine = '', mql4 = '', mql5 = '';
