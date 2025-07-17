@@ -39,10 +39,8 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <NavLink to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-tr from-orange-500 via-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">❤</span>
-            </div>
-            <span className="text-xl font-bold text-foreground">Lovable</span>
+            <img src="/BA9F91F4-70B5-476A-9DC3-29879730CF55.png" alt="TrainFlow Logo" className="h-8 w-8" />
+            <span className="text-xl font-bold text-foreground">TrainFlow</span>
           </NavLink>
           {/* Navigation Links & Actions */}
           <div className="flex items-center space-x-4">
