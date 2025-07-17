@@ -76,8 +76,8 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
       }
     };
     fetchCode();
-    const interval = setInterval(fetchCode, 3000);
-    return () => { mounted = false; clearInterval(interval); };
+    const interval = window.setInterval(fetchCode, 3000);
+    return () => { mounted = false; window.clearInterval(interval); };
   }, [strategy]);
 
   useEffect(() => {
@@ -193,16 +193,17 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
 
         <div className="flex-1 overflow-hidden min-h-0">
           <TabsContent value="pinescript" className="h-full m-0 overflow-hidden">
-            {dbCode && typeof dbCode === 'object' && !Array.isArray(dbCode) && typeof dbCode.pineScript === 'string' && dbCode.pineScript ? (
-              <CodeEditor
-                code={dbCode.pineScript}
-                language="pinescript"
-                onCopy={() => handleCopy(dbCode.pineScript)}
-                onDownload={() => handleDownload(dbCode.pineScript, `${strategy?.name || 'strategy'}.pine`)}
-              />
-            ) : (
-              <EmptyState message="No Pine Script generated yet" />
-            )}
+            {dbCode && typeof dbCode === 'object' && !Array.isArray(dbCode) && typeof dbCode.pineScript === 'string' && dbCode.pineScript &&
+              (dbCode.pineScript.trim().startsWith('//@version=4') || dbCode.pineScript.trim().startsWith('//@version=5')) ? (
+                <CodeEditor
+                  code={dbCode.pineScript}
+                  language="pinescript"
+                  onCopy={() => handleCopy(dbCode.pineScript)}
+                  onDownload={() => handleDownload(dbCode.pineScript, `${strategy?.name || 'strategy'}.pine`)}
+                />
+              ) : (
+                <EmptyState message="No Pine Script generated yet" />
+              )}
           </TabsContent>
 
           <TabsContent value="mql4" className="h-full m-0 overflow-hidden">

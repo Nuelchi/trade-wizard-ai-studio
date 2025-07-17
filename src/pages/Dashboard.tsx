@@ -27,6 +27,63 @@ type Strategy = Database['public']['Tables']['strategies']['Row'];
 type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
 type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
 
+// Utility: Robust code extraction and validation
+function extractAndValidateCodeBlocks(aiResponse: string, requestedType?: string) {
+  const codeBlocks = {
+    pineScript: '',
+    mql4: '',
+    mql5: ''
+  };
+  // Regex for code blocks (labelled and unlabelled)
+  const pineRegex = /```(?:pinescript|pine|tradingview)?\s*([\s\S]*?)```/gi;
+  const mql4Regex = /```(?:mql4|mq4)?\s*([\s\S]*?)```/gi;
+  const mql5Regex = /```(?:mql5|mq5)?\s*([\s\S]*?)```/gi;
+
+  // Extract Pine Script
+  let match;
+  while ((match = pineRegex.exec(aiResponse))) {
+    if (match[1].includes('//@version')) {
+      codeBlocks.pineScript = match[1].trim();
+      break;
+    }
+  }
+  // Extract MQL4
+  while ((match = mql4Regex.exec(aiResponse))) {
+    if (match[1].includes('#property') && match[1].includes('strict')) {
+      codeBlocks.mql4 = match[1].trim();
+      break;
+    }
+  }
+  // Extract MQL5
+  while ((match = mql5Regex.exec(aiResponse))) {
+    if (match[1].includes('#property') && match[1].includes('strict')) {
+      codeBlocks.mql5 = match[1].trim();
+      break;
+    }
+  }
+  // Fallback: If only one code block and requestedType is set, try to assign
+  if (requestedType && !codeBlocks[requestedType]) {
+    // Try to find any code block
+    const genericRegex = /```[a-zA-Z0-9]*\s*([\s\S]*?)```/gi;
+    while ((match = genericRegex.exec(aiResponse))) {
+      const code = match[1].trim();
+      if (requestedType === 'pinescript' && code.includes('//@version')) {
+        codeBlocks.pineScript = code;
+        break;
+      }
+      if (requestedType === 'mql4' && code.includes('#property') && code.includes('strict')) {
+        codeBlocks.mql4 = code;
+        break;
+      }
+      if (requestedType === 'mql5' && code.includes('#property') && code.includes('strict')) {
+        codeBlocks.mql5 = code;
+        break;
+      }
+    }
+  }
+  return codeBlocks;
+}
+
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
@@ -69,17 +126,21 @@ const Dashboard = () => {
     // Log the incoming code object
     console.log('Incoming code object:', code);
 
-    // Normalize code object
-    let normalizedCode = { pineScript: '', mql4: '', mql5: '' };
-    if (code.pineScript || code.pine_script) normalizedCode.pineScript = code.pineScript || code.pine_script;
-    if (code.mql4) normalizedCode.mql4 = code.mql4;
-    if (code.mql5) normalizedCode.mql5 = code.mql5;
-    // If AI sometimes returns 'code' for pine, mql4, or mql5, try to infer:
-    if (requestedType === 'pinescript' && code.code) normalizedCode.pineScript = code.code;
-    if (requestedType === 'mql4' && code.code) normalizedCode.mql4 = code.code;
-    if (requestedType === 'mql5' && code.code) normalizedCode.mql5 = code.code;
-    // Add more mappings as needed
-    console.log('Normalized code object:', normalizedCode);
+    // If the AI response is a string, extract code blocks robustly
+    let extracted = { pineScript: '', mql4: '', mql5: '' };
+    if (typeof code === 'string') {
+      extracted = extractAndValidateCodeBlocks(code, requestedType);
+    } else {
+      // Normalize code object (legacy path)
+      if (code.pineScript || code.pine_script) extracted.pineScript = code.pineScript || code.pine_script;
+      if (code.mql4) extracted.mql4 = code.mql4;
+      if (code.mql5) extracted.mql5 = code.mql5;
+      // If AI sometimes returns 'code' for pine, mql4, or mql5, try to infer:
+      if (requestedType === 'pinescript' && code.code && code.code.includes('//@version')) extracted.pineScript = code.code;
+      if (requestedType === 'mql4' && code.code && code.code.includes('#property') && code.code.includes('strict')) extracted.mql4 = code.code;
+      if (requestedType === 'mql5' && code.code && code.code.includes('#property') && code.code.includes('strict')) extracted.mql5 = code.code;
+    }
+    console.log('Extracted/validated code object:', extracted);
 
     // Fetch current code from DB
     let currentDbCode = {};
@@ -100,7 +161,7 @@ const Dashboard = () => {
         console.error('Error fetching code from DB before update:', error);
       }
     }
-    // Merge normalized code with current DB code
+    // Merge extracted code with current DB code
     let pineScript = '';
     let mql4 = '';
     let mql5 = '';
@@ -110,9 +171,9 @@ const Dashboard = () => {
       mql5 = (currentDbCode as any).mql5 || '';
     }
     const mergedCode = {
-      pineScript: normalizedCode.pineScript && normalizedCode.pineScript.trim() !== '' ? normalizedCode.pineScript : pineScript,
-      mql4: normalizedCode.mql4 && normalizedCode.mql4.trim() !== '' ? normalizedCode.mql4 : mql4,
-      mql5: normalizedCode.mql5 && normalizedCode.mql5.trim() !== '' ? normalizedCode.mql5 : mql5,
+      pineScript: extracted.pineScript && extracted.pineScript.trim() !== '' ? extracted.pineScript : pineScript,
+      mql4: extracted.mql4 && extracted.mql4.trim() !== '' ? extracted.mql4 : mql4,
+      mql5: extracted.mql5 && extracted.mql5.trim() !== '' ? extracted.mql5 : mql5,
     };
     console.log('Saving merged code to DB:', mergedCode);
     // Save merged code to DB
