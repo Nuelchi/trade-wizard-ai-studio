@@ -118,14 +118,10 @@ const Dashboard = () => {
   const location = useLocation();
 
   const handleStrategyGenerated = (strategy: any) => {
-    console.log('Strategy generated:', strategy);
     setCurrentStrategy(strategy);
   };
 
   const handleCodeGenerated = async (code: any, requestedType?: string) => {
-    // Log the incoming code object
-    console.log('Incoming code object:', code);
-
     // If the AI response is a string, extract code blocks robustly
     let extracted = { pineScript: '', mql4: '', mql5: '' };
     if (typeof code === 'string') {
@@ -140,7 +136,6 @@ const Dashboard = () => {
       if (requestedType === 'mql4' && code.code && code.code.includes('#property') && code.code.includes('strict')) extracted.mql4 = code.code;
       if (requestedType === 'mql5' && code.code && code.code.includes('#property') && code.code.includes('strict')) extracted.mql5 = code.code;
     }
-    console.log('Extracted/validated code object:', extracted);
 
     // Fetch current code from DB
     let currentDbCode = {};
@@ -175,7 +170,7 @@ const Dashboard = () => {
       mql4: extracted.mql4 && extracted.mql4.trim() !== '' ? extracted.mql4 : mql4,
       mql5: extracted.mql5 && extracted.mql5.trim() !== '' ? extracted.mql5 : mql5,
     };
-    console.log('Saving merged code to DB:', mergedCode);
+
     // Save merged code to DB
     if (currentStrategy && currentStrategy.id && user) {
       const { error } = await supabase
@@ -237,7 +232,6 @@ const Dashboard = () => {
         if (typeof codeObj === 'string') {
           try { codeObj = JSON.parse(codeObj); } catch { codeObj = {}; }
         }
-        console.log('Fetched code from DB:', codeObj);
         setGeneratedCode((prev: any) => {
           // Only update if code actually changed
           if (JSON.stringify(prev) !== JSON.stringify(codeObj)) {
@@ -270,7 +264,6 @@ const Dashboard = () => {
 
   const handleSave = () => {
     // Save strategy logic
-    console.log('Saving strategy...');
   };
 
   const handleSaveStrategy = async () => {
@@ -436,7 +429,6 @@ const Dashboard = () => {
   // Update current strategy when strategy context changes
   useEffect(() => {
     if (strategy && strategy.id && strategy.id !== 'undefined') {
-      console.log('Strategy context updated:', strategy);
       setCurrentStrategy(strategy);
       setStrategyName(strategy.title || 'Untitled Strategy');
       setGeneratedCode(strategy.code || null);
@@ -449,7 +441,6 @@ const Dashboard = () => {
     if (savedChatHistory) {
       try {
         const parsedHistory = JSON.parse(savedChatHistory);
-        console.log('Loading saved chat history:', parsedHistory);
         if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
           setMessages(parsedHistory);
         } else {
@@ -468,7 +459,6 @@ const Dashboard = () => {
     if (!currentStrategy || !user || !currentStrategy.id || currentStrategy.id === 'undefined') return;
     if (autosaveTimeout.current) clearTimeout(autosaveTimeout.current);
     autosaveTimeout.current = setTimeout(async () => {
-      console.log('Autosaving strategy:', currentStrategy.id);
       // Convert chat messages to the format expected by the database
       const chatHistoryJson = messages.map((msg) => ({
         ...msg,
@@ -488,7 +478,6 @@ const Dashboard = () => {
         console.error('Autosave error:', error);
         toast({ title: 'Autosave failed', description: error.message, variant: 'destructive' });
       } else {
-        console.log('Autosave successful');
       }
     }, 2000);
     return () => {

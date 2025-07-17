@@ -308,8 +308,6 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         mql5: aiResult.mql5,
       };
       
-      // Log the full AI result for debugging
-      console.log('Full AI result:', aiResult);
       let markdownContent = '';
       if (aiResult && typeof aiResult === 'object' && 'content' in aiResult && typeof (aiResult as any).content === 'string') {
         markdownContent = (aiResult as any).content;
