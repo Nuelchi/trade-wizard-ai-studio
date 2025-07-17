@@ -39,7 +39,8 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <NavLink to="/" className="flex items-center space-x-2">
-            <img src="/BA9F91F4-70B5-476A-9DC3-29879730CF55.png" alt="TrainFlow Logo" className="h-8 w-8" />
+            <img src="/7EAD4198-05FA-4DC9-91EA-69E1014CC1E5.png" alt="TrainFlow Logo" className="h-8 w-8 block dark:hidden rounded-xl border border-border shadow-md" />
+            <img src="/BA9F91F4-70B5-476A-9DC3-29879730CF55.png" alt="TrainFlow Logo Light" className="h-8 w-8 hidden dark:block rounded-xl border border-border shadow-md" />
             <span className="text-xl font-bold text-foreground">TrainFlow</span>
           </NavLink>
           {/* Navigation Links & Actions */}
