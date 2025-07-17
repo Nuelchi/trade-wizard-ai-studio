@@ -49,6 +49,8 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
   const [activeTab, setActiveTab] = useState('mql5');
   const [dbCode, setDbCode] = useState<any>(null);
   const { toast } = useToast();
+  // Track if user has manually selected a tab
+  const [userSelectedTab, setUserSelectedTab] = useState(false);
 
   // Poll for code from DB every 3 seconds
   useEffect(() => {
@@ -67,23 +69,26 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
         }
         if (typeof codeObj === 'object' && codeObj !== null && !Array.isArray(codeObj)) {
           setDbCode(codeObj);
-          // Auto-select tab based on available code
-          if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
-          else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
-          else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
-          else setActiveTab('mql5');
+          // Only auto-select tab if user hasn't manually selected one
+          if (!userSelectedTab) {
+            if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
+            else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
+            else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
+            else setActiveTab('mql5');
+          }
         }
       }
     };
     fetchCode();
     const interval = window.setInterval(fetchCode, 3000);
     return () => { mounted = false; window.clearInterval(interval); };
-  }, [strategy]);
+  }, [strategy, userSelectedTab]);
 
   useEffect(() => {
     const handler = (e: any) => {
       if (e.detail && e.detail.tab) {
         setActiveTab(e.detail.tab);
+        setUserSelectedTab(false); // Reset so next code generation can auto-switch
       }
     };
     window.addEventListener('switchCodeTab', handler);
@@ -182,7 +187,7 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
   return (
     <div className="h-full flex flex-col min-h-0">
       {/* Chart Preview Bar and Chart removed: no chart in any tab */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+      <Tabs value={activeTab} onValueChange={tab => { setActiveTab(tab); setUserSelectedTab(true); }} className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
           <TabsList className="overflow-x-auto">
             <TabsTrigger value="pinescript">Pine Script</TabsTrigger>
