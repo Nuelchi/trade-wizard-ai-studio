@@ -56,6 +56,7 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
   useEffect(() => {
     if (!strategy || !strategy.id) return;
     let mounted = true;
+    let lastCodeString = '';
     const fetchCode = async () => {
       const { data, error } = await supabase
         .from('strategies')
@@ -68,13 +69,23 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
           try { codeObj = JSON.parse(codeObj); } catch { codeObj = {}; }
         }
         if (typeof codeObj === 'object' && codeObj !== null && !Array.isArray(codeObj)) {
-          setDbCode(codeObj);
-          // Only auto-select tab if user hasn't manually selected one
-          if (!userSelectedTab) {
-            if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
-            else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
-            else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
-            else setActiveTab('mql5');
+          const codeString = JSON.stringify(codeObj);
+          if (codeString !== lastCodeString) {
+            lastCodeString = codeString;
+            // Delay update by 12 seconds if code changed
+            setTimeout(() => {
+              if (mounted) {
+                setDbCode(codeObj);
+                if (!userSelectedTab) {
+                  if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
+                  else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
+                  else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
+                  else setActiveTab('mql5');
+                }
+              }
+            }, 24000); // 24 seconds
+          } else {
+            setDbCode(codeObj); // No delay if code unchanged
           }
         }
       }
