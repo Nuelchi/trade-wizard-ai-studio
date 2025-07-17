@@ -151,17 +151,24 @@ serve(async (req) => {
     const message = aiResponse.choices && aiResponse.choices[0] && aiResponse.choices[0].message ? aiResponse.choices[0].message : {};
     const content = message.content || '';
     
+    // Log the raw AI content for debugging
+    //console.log('AI raw content:', content);
+
     // Extract code blocks from the response
-    const pineScriptMatch = content.match(/```pine\s*\n([\s\S]*?)```/i);
-    const mql4Match = content.match(/```mql4\s*\n([\s\S]*?)```/i);
-    const mql5Match = content.match(/```mql5\s*\n([\s\S]*?)```/i);
+    const pineScriptMatch = content.match(/```(pinescript|pine)\s*\n([\s\S]*?)```/i);
+    // Fallback: match any code block if labeled one is not found
+    const fallbackPine = !pineScriptMatch && content.match(/```[\s\S]*?\n([\s\S]*?)```/i);
+    const pineScript = pineScriptMatch ? pineScriptMatch[2].trim() : (fallbackPine ? fallbackPine[1].trim() : '');
+
+    const mql4Match = content.match(/```(mql4|mq4)\s*\n([\s\S]*?)```/i);
+    const mql5Match = content.match(/```(mql5|mq5)\s*\n([\s\S]*?)```/i);
     const pythonMatch = content.match(/```python\s*\n([\s\S]*?)```/i);
     
     return new Response(JSON.stringify({
       summary: content,
-      pineScript: pineScriptMatch ? pineScriptMatch[1].trim() : '',
-      mql4: mql4Match ? mql4Match[1].trim() : '',
-      mql5: mql5Match ? mql5Match[1].trim() : '',
+      pineScript: pineScript,
+      mql4: mql4Match ? mql4Match[2].trim() : '',
+      mql5: mql5Match ? mql5Match[2].trim() : '',
       python: pythonMatch ? pythonMatch[1].trim() : '',
       risk: null,
       jsonLogic: null,
