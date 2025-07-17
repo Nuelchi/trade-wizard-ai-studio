@@ -70,7 +70,7 @@ function TypewriterText({ text, onDone }: { text: string; onDone?: () => void })
         }
         return next;
       });
-    }, 15); // Speed: 15ms per character
+    }, 8); // Speed: 8ms per character
     
     return () => clearInterval(interval);
   }, [text]);
