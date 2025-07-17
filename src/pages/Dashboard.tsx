@@ -211,6 +211,7 @@ const Dashboard = () => {
     // 2. Reset chat context and messages - only when explicitly starting new chat
     resetChat();
     setMessages([]);
+    localStorage.removeItem('chatHistory');
     // 3. Reset UI state
     setChatCollapsed(false);
     setPreviewMode('code');
@@ -258,6 +259,27 @@ const Dashboard = () => {
       setGeneratedCode(strategy.code || null);
     }
   }, [strategy]);
+
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const savedChatHistory = localStorage.getItem('chatHistory');
+    if (savedChatHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedChatHistory);
+        console.log('Loading saved chat history:', parsedHistory);
+        if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+          setMessages(parsedHistory);
+        } else {
+          setMessages([]);
+        }
+      } catch (error) {
+        console.error('Error parsing chat history:', error);
+        setMessages([]);
+      }
+    } else {
+      setMessages([]);
+    }
+  }, []);
 
   useEffect(() => {
     if (!currentStrategy || !user || !currentStrategy.id || currentStrategy.id === 'undefined') return;
@@ -384,8 +406,10 @@ const Dashboard = () => {
                           setStrategyName(strategy.title || 'Untitled Strategy');
                           setGeneratedCode(strategy.code || null);
                           // Load chat history if available
-                          if (Array.isArray(strategy.chat_history)) {
+                          if (Array.isArray(strategy.chat_history) && strategy.chat_history.length > 0) {
                             setMessages(strategy.chat_history as any[]);
+                          } else {
+                            setMessages([]);
                           }
                         }}
                         className="flex flex-col items-start gap-1 p-3"
@@ -453,24 +477,6 @@ const Dashboard = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* Play icon for Run Backtest */}
-            {currentStrategy && generatedCode && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-1"
-                title="Run Backtest"
-                onClick={() => {
-                  // TODO: Replace with real OHLCV data
-                  const ohlcv = [];
-                  // Call your runBacktestAndSync or similar function here
-                  // Example: runBacktestAndSync(generatedCode, ohlcv);
-                  toast({ title: 'Backtest triggered', description: 'Running backtest...' });
-                }}
-              >
-                <Play className="w-5 h-5 text-primary" />
-              </Button>
-            )}
           </div>
 
           {/* Right Section - Controls */}

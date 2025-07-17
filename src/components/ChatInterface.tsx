@@ -74,7 +74,7 @@ function TypewriterText({ text, onDone }: { text: string; onDone?: () => void })
     return () => clearInterval(interval);
   }, [text]);
 
-  return <span>{displayed}</span>;
+  return <span className="break-words">{displayed}</span>;
 }
 
 // Utility to split AI response into text and code blocks
@@ -124,12 +124,12 @@ function CodeBlock({ code, lang }: { code: string; lang?: string }) {
 function AIMessage({ content }: { content: string }) {
   const parts = splitCodeBlocks(content);
   return (
-    <div>
+    <div className="w-full">
       {parts.map((part, idx) =>
         part.type === 'code' ? (
           <CodeBlock key={idx} code={part.content} lang={part.lang} />
         ) : (
-          <p key={idx} className="mb-2 whitespace-pre-wrap">{part.content}</p>
+          <p key={idx} className="mb-2 whitespace-pre-wrap break-words">{part.content}</p>
         )
       )}
     </div>
@@ -138,6 +138,31 @@ function AIMessage({ content }: { content: string }) {
 
 const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfaceProps) => {
   const { messages, setMessages, strategy, setStrategy, resetChat, saveCurrentStrategy } = useChatContext();
+  
+  // Initialize with welcome message if no messages exist
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([WELCOME_MESSAGE]);
+    }
+  }, [messages.length, setMessages]);
+
+  // Mark loaded messages as formatted to prevent typewriter effect on load
+  useEffect(() => {
+    if (messages.length > 1) {
+      // Only mark messages that are not the welcome message and are older than current time
+      const now = Date.now();
+      const loadedMessageIds = messages
+        .filter(msg => msg.id !== '1' && new Date(msg.timestamp).getTime() < now - 1000) // Messages older than 1 second
+        .map(msg => msg.id);
+      
+      if (loadedMessageIds.length > 0) {
+        setFormattedIds(prev => {
+          const combined = [...new Set([...prev, ...loadedMessageIds])];
+          return combined;
+        });
+      }
+    }
+  }, [messages.length]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -294,7 +319,10 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         content: msg.content
       }));
       const aiResult = await generateStrategyWithAI(input, undefined, conversationHistory);
+      
+      // Generate strategy and code like the old version
       const strategy = {
+        id: Math.random().toString(36).substr(2, 9),
         name: 'AI Generated Strategy',
         description: aiResult.summary,
         type: aiResult.jsonLogic?.type || 'Custom',
@@ -303,51 +331,47 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         conditions: aiResult.jsonLogic?.conditions || { entry: [], exit: [] },
         riskManagement: aiResult.risk || {},
       };
+      
       const code = {
         pineScript: aiResult.pineScript,
         mql4: aiResult.mql4,
         mql5: aiResult.mql5,
       };
+      
       onStrategyGenerated(strategy);
       onCodeGenerated(code);
-      // Defensive check: Only proceed if PineScript or other code is present
-      if (!aiResult.pineScript || aiResult.pineScript.trim() === "") {
-        // No code generated, just show the summary and skip save/backtest
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: aiResult.summary || "No code generated for this prompt.",
-          sender: 'ai',
-          timestamp: new Date(),
-        };
-        const userMsg: Message = {
-          ...userMessage,
-          sender: 'user',
-        };
-        setMessages([...messages, userMsg, aiMessage]);
-        toast({
-          title: "No Strategy Code Generated",
-          description: "The AI did not generate any code for this prompt. Try asking for a trading strategy!",
-          variant: "default"
-        });
-        setIsTyping(false);
-        return;
-      }
+      
+      // Check if actual code was generated
+      const hasCode = aiResult.pineScript || aiResult.mql4 || aiResult.mql5;
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Great! Here is your strategy summary and MQL5 code.\n\n${aiResult.summary}\n\nMQL5 code is ready for MetaTrader 5. You can also request Pine Script (TradingView), MQL4 (MetaTrader 4), or Python versions.`,
+        content: `${aiResult.summary}
+
+${hasCode ? `I've generated MQL5 code for MetaTrader 5. You can also request Pine Script (TradingView), MQL4 (MetaTrader 4), or Python versions.
+
+The strategy includes:
+• Technical indicators based on your requirements
+• Entry and exit conditions
+• Risk management parameters
+
+Test this strategy in the built-in Strategy Tester (/test) to see how it performs!` : ''}`,
         sender: 'ai',
         timestamp: new Date(),
-        suggestions: [
-          'Give me Pine Script version',
-          'Give me MQL4 version',
-          'Give me Python version',
-          'Modify the strategy'
-        ],
-        codeGenerated: true
+        ...(hasCode && {
+          codeGenerated: true
+        })
       };
+
       setMessages([...messages, userMessage, aiResponse]);
       setIsTyping(false);
-      // Persist strategy to Supabase and run backtest as before...
+
+      toast({
+        title: 'Strategy Generated!',
+        description: 'Your code is ready in the preview panel.',
+      });
+
+      // Persist strategy to Supabase
       if (user) {
         const chatHistoryJson = [
           ...messages,
@@ -386,23 +410,11 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
           toast({ title: 'Failed to save strategy', description: error.message, variant: 'destructive' });
         } else if (data) {
           setStrategy(data);
-          // After saving, run backtest and sync metrics
-          // You must provide real OHLCV data here:
-          const ohlcv = []; // TODO: Replace with real OHLCV data for the selected symbol/interval
-          await runBacktestAndSync(code, ohlcv);
         }
       }
     } catch (err: any) {
       setIsTyping(false);
-      // Enhanced error logging for debugging
       console.error('AI Error:', err);
-      if (err && typeof err === 'object') {
-        for (const key in err) {
-          if (Object.prototype.hasOwnProperty.call(err, key)) {
-            console.error(`AI Error property [${key}]:`, err[key]);
-          }
-        }
-      }
       toast({ title: 'AI Error', description: err.message || JSON.stringify(err), variant: 'destructive' });
     }
   };
@@ -451,6 +463,14 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
   // Track which AI message ids have finished typewriter effect
   const [formattedIds, setFormattedIds] = useState<string[]>([]);
 
+  // Save chat history to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 1) { // Only save if there are messages beyond the initial greeting
+      const messagesToSave = messages.filter(msg => msg.id !== '1'); // Filter out welcome message
+      localStorage.setItem('chatHistory', JSON.stringify(messagesToSave));
+    }
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Messages */}
@@ -495,7 +515,7 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
                     ? 'bg-primary text-primary-foreground ml-auto' 
                     : 'bg-muted/50 text-foreground'
                 }`}>
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
                     {isLatestAi ? (
                       formattedIds.includes(message.id) ? (
                         <AIMessage content={message.content} />
@@ -513,14 +533,7 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
                       className="mt-3 rounded-xl max-w-[200px] max-h-[150px] border border-border/20" 
                     />
                   )}
-                  {message.codeGenerated && (
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
-                      <Badge variant="secondary" className="text-xs font-medium">
-                        <Code className="w-3 h-3 mr-1.5" />
-                        Code Generated
-                      </Badge>
-                    </div>
-                  )}
+
                 </div>
                 
                 {message.suggestions && (

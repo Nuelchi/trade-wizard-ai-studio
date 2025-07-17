@@ -49,6 +49,21 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
+  // Auto-select tab based on generated code
+  useEffect(() => {
+    if (code) {
+      if (code.mql5 && code.mql5.trim() !== '') {
+        setActiveTab('mql5');
+      } else if (code.mql4 && code.mql4.trim() !== '') {
+        setActiveTab('mql4');
+      } else if (code.pineScript && code.pineScript.trim() !== '') {
+        setActiveTab('pinescript');
+      } else {
+        setActiveTab('overview');
+      }
+    }
+  }, [code]);
+
   // Chart preview state (local to preview only)
   const [assetClass, setAssetClass] = useState('forex');
   const [symbol, setSymbol] = useState('FX:EURUSD');
@@ -139,30 +154,19 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col min-h-0">
       {/* Chart Preview Bar and Chart removed: no chart in any tab */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
+          <TabsList className="overflow-x-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="pinescript">Pine Script</TabsTrigger>
             <TabsTrigger value="mql4">MQL4</TabsTrigger>
             <TabsTrigger value="mql5">MQL5</TabsTrigger>
           </TabsList>
-          {strategy && code && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-4"
-              onClick={onRunBacktest ? onRunBacktest : () => toast({ title: 'Not implemented', description: 'Backtest function not connected.' })}
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Run Backtest
-            </Button>
-          )}
         </div>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden min-h-0">
           <TabsContent value="overview" className="h-full m-0 p-4">
             {strategy && (
               <div className="space-y-4">
@@ -240,7 +244,7 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
             )}
           </TabsContent>
 
-          <TabsContent value="pinescript" className="h-full m-0">
+          <TabsContent value="pinescript" className="h-full m-0 overflow-hidden">
             {code?.pineScript ? (
               <CodeEditor
                 code={code.pineScript}
@@ -253,7 +257,7 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
             )}
           </TabsContent>
 
-          <TabsContent value="mql4" className="h-full m-0">
+          <TabsContent value="mql4" className="h-full m-0 overflow-hidden">
             {code?.mql4 ? (
               <CodeEditor
                 code={code.mql4}
@@ -266,7 +270,7 @@ const CodePreview = ({ strategy, code, onRunBacktest }: CodePreviewProps) => {
             )}
           </TabsContent>
 
-          <TabsContent value="mql5" className="h-full m-0">
+          <TabsContent value="mql5" className="h-full m-0 overflow-hidden">
             <CodeEditor
               code={code?.mql5 || `// AI Generated Strategy – MQL5 Expert Advisor\n#property copyright \"Trainflow AI\"\n#property version   \"1.00\"\n\n// Input Parameters\n\nvoid OnTick()\n{\n    // Strategy Implementation\n}\n`}
               language="mql5"
@@ -289,8 +293,8 @@ interface CodeEditorProps {
 
 const CodeEditor = ({ code, language, onCopy, onDownload }: CodeEditorProps) => {
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20">
+    <div className="h-full flex flex-col min-h-0">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20 flex-shrink-0">
         <div className="flex items-center space-x-2">
           <Badge variant="secondary">{language.toUpperCase()}</Badge>
           <span className="text-sm text-muted-foreground">Live Generated Code</span>
@@ -307,10 +311,12 @@ const CodeEditor = ({ code, language, onCopy, onDownload }: CodeEditorProps) => 
         </div>
       </div>
       
-      <div className="flex-1 overflow-auto">
-        <pre className="p-4 text-sm font-mono text-foreground bg-background">
-          <code>{code}</code>
-        </pre>
+      <div className="flex-1 overflow-auto min-h-0 code-scrollable">
+        <div className="p-4">
+          <pre className="text-sm font-mono text-foreground bg-background whitespace-pre overflow-x-auto code-scrollable">
+            <code className="block min-w-max">{code}</code>
+          </pre>
+        </div>
       </div>
     </div>
   );
