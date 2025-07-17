@@ -176,4 +176,26 @@ const SimpleMarkdownRenderer = ({ content }: SimpleMarkdownRendererProps) => {
   );
 };
 
+// Export CodeBlock for use in chat rendering
+export { CodeBlock };
+
+// Utility to split markdown into code and text parts (for chat rendering)
+export function splitCodeBlocks(content: string): Array<{ type: 'code' | 'text'; content: string; lang?: string }> {
+  const parts: Array<{ type: 'code' | 'text'; content: string; lang?: string }> = [];
+  const codeBlockRegex = /```([a-zA-Z0-9]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: content.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'code', content: match[2], lang: match[1] || undefined });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', content: content.slice(lastIndex) });
+  }
+  return parts;
+}
+
 export default SimpleMarkdownRenderer; 

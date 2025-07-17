@@ -20,6 +20,7 @@ import type { Database } from '@/integrations/supabase/types';
 // import PerformanceTab from '../../../src/components/StrategyTesterFooter/PerformanceTab';
 // import TradeAnalysisTab from '../../../src/components/StrategyTesterFooter/TradeAnalysisTab';
 import { generateStrategyWithAI } from '@/lib/utils';
+import SimpleMarkdownRenderer, { splitCodeBlocks, CodeBlock } from '@/components/SimpleMarkdownRenderer';
 
 // Memoized TradingView chart
 interface MemoTradingViewChartProps {
@@ -153,14 +154,11 @@ const MemoMiniChat = memo(function MemoMiniChat({
                           ? 'bg-primary text-primary-foreground' 
                           : 'bg-muted'
                       }`}>
-                        {isLatestAi ? (
-                          formattedIds.includes(String(idx)) ? (
-                            <AIMessage content={msg.content} />
-                          ) : (
-                            <TypewriterText text={msg.content} onDone={() => setFormattedIds(ids => [...ids, String(idx)])} />
-                          )
+                        {/* Only use TypewriterText for the latest, currently streaming AI message */}
+                        {msg.role === 'ai' && isLatestAi && !formattedIds.includes(String(idx)) ? (
+                          <TypewriterText text={msg.content} onDone={() => setFormattedIds(ids => [...ids, String(idx)])} />
                         ) : (
-                          msg.role === 'ai' ? <AIMessage content={msg.content} /> : msg.content
+                          msg.role === 'ai' ? <AIMessage content={msg.content} /> : <span>{msg.content}</span>
                         )}
                       </div>
                       {msg.role === 'user' && (
@@ -257,7 +255,8 @@ const EnhancedTest = () => {
   const [strategies, setStrategies] = useState<Database['public']['Tables']['strategies']['Row'][]>([]);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
   const autosaveTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [activeCodeTab, setActiveCodeTab] = useState('pineScript');
+  const [activeCodeTab, setActiveCodeTab] = useState('view');
+  const [formattedIds, setFormattedIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -281,13 +280,25 @@ const EnhancedTest = () => {
       setPineScript('');
       setMql4Code('');
       setMql5Code('');
-      setActiveCodeTab('pineScript');
+      setActiveCodeTab('view');
+      setFormattedIds([]);
       return;
     }
     const strat = strategies.find((s) => s.id === selectedStrategy);
     if (strat) {
       if (Array.isArray(strat.chat_history)) {
-        setMiniChatMessages(strat.chat_history as any[]);
+        // Normalize chat history to ensure valid roles and restore left/right alignment
+        const normalized = (strat.chat_history as any[]).map((msg, idx) => {
+          let role = msg.role;
+          if (role !== 'user' && role !== 'ai') {
+            // Alternate roles if missing: even index = user, odd = ai
+            role = idx % 2 === 0 ? 'user' : 'ai';
+          }
+          return { ...msg, role };
+        });
+        setMiniChatMessages(normalized);
+        // Mark all loaded AI messages as formatted (skip typewriter for history)
+        setFormattedIds(normalized.map((msg, idx) => msg.role === 'ai' ? String(idx) : null).filter(Boolean));
       }
       let pine = '', mql4 = '', mql5 = '';
       if (typeof strat.code === 'object' && strat.code !== null && !Array.isArray(strat.code)) {
@@ -298,17 +309,13 @@ const EnhancedTest = () => {
         setPineScript(pine);
         setMql4Code(mql4);
         setMql5Code(mql5);
-        // Auto-switch to first non-empty code tab
-        if (pine.trim()) setActiveCodeTab('pineScript');
-        else if (mql4.trim()) setActiveCodeTab('mql4');
-        else if (mql5.trim()) setActiveCodeTab('mql5');
-        else setActiveCodeTab('pineScript');
+        setActiveCodeTab('view');
       } else {
         setStrategyCode('');
         setPineScript('');
         setMql4Code('');
         setMql5Code('');
-        setActiveCodeTab('pineScript');
+        setActiveCodeTab('view');
       }
     }
   }, [selectedStrategy, strategies]);
@@ -511,47 +518,65 @@ const EnhancedTest = () => {
                           <TabsTrigger value="view">View Generated</TabsTrigger>
                         </TabsList>
                         <TabsContent value="pineScript" className="space-y-4">
-                          <Textarea
-                            placeholder="Edit Pine Script code..."
-                            value={pineScript}
-                            onChange={(e) => setPineScript(e.target.value)}
-                            className="min-h-[400px] font-mono text-sm"
-                          />
+                          {pineScript && (pineScript.trim().startsWith('//@version=4') || pineScript.trim().startsWith('//@version=5')) ? (
+                            <Textarea
+                              placeholder="Edit Pine Script code..."
+                              value={pineScript}
+                              onChange={(e) => setPineScript(e.target.value)}
+                              className="min-h-[400px] font-mono text-sm"
+                            />
+                          ) : (
+                            <div className="h-40 flex items-center justify-center text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed border-border">
+                              No Pine Script generated yet
+                            </div>
+                          )}
                         </TabsContent>
                         <TabsContent value="mql4" className="space-y-4">
-                          <Textarea
-                            placeholder="Edit MQL4 code..."
-                            value={mql4Code}
-                            onChange={(e) => setMql4Code(e.target.value)}
-                            className="min-h-[400px] font-mono text-sm"
-                          />
+                          {mql4Code && mql4Code.trim() ? (
+                            <Textarea
+                              placeholder="Edit MQL4 code..."
+                              value={mql4Code}
+                              onChange={(e) => setMql4Code(e.target.value)}
+                              className="min-h-[400px] font-mono text-sm"
+                            />
+                          ) : (
+                            <div className="h-40 flex items-center justify-center text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed border-border">
+                              No MQL4 code generated yet
+                            </div>
+                          )}
                         </TabsContent>
                         <TabsContent value="mql5" className="space-y-4">
-                          <Textarea
-                            placeholder="Edit MQL5 code..."
-                            value={mql5Code}
-                            onChange={(e) => setMql5Code(e.target.value)}
-                            className="min-h-[400px] font-mono text-sm"
-                          />
+                          {mql5Code && mql5Code.trim() ? (
+                            <Textarea
+                              placeholder="Edit MQL5 code..."
+                              value={mql5Code}
+                              onChange={(e) => setMql5Code(e.target.value)}
+                              className="min-h-[400px] font-mono text-sm"
+                            />
+                          ) : (
+                            <div className="h-40 flex items-center justify-center text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed border-border">
+                              No MQL5 code generated yet
+                            </div>
+                          )}
                         </TabsContent>
                         <TabsContent value="view" className="space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                               <label className="text-sm font-medium">Pine Script</label>
                               <pre className="bg-muted/30 rounded p-3 text-xs overflow-auto h-40">
-                                {pineScript || '// Pine Script will appear here after compilation'}
+                                {pineScript && (pineScript.trim().startsWith('//@version=4') || pineScript.trim().startsWith('//@version=5')) ? pineScript : '// Pine Script will appear here after compilation'}
                               </pre>
                             </div>
                             <div className="space-y-2">
                               <label className="text-sm font-medium">MQL4</label>
                               <pre className="bg-muted/30 rounded p-3 text-xs overflow-auto h-40">
-                                {mql4Code || '// MQL4 code will appear here after compilation'}
+                                {mql4Code && mql4Code.trim() ? mql4Code : '// MQL4 code will appear here after compilation'}
                               </pre>
                             </div>
                             <div className="space-y-2">
                               <label className="text-sm font-medium">MQL5</label>
                               <pre className="bg-muted/30 rounded p-3 text-xs overflow-auto h-40">
-                                {mql5Code || '// MQL5 code will appear here after compilation'}
+                                {mql5Code && mql5Code.trim() ? mql5Code : '// MQL5 code will appear here after compilation'}
                               </pre>
                             </div>
                           </div>
@@ -909,87 +934,7 @@ function ExportTabFull({ strategies, loadingStrategies }) {
   );
 }
 
-// TypewriterText component for typewriter effect
-function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
-  const [displayed, setDisplayed] = React.useState('');
-  const index = React.useRef(0);
-  const onDoneRef = React.useRef(onDone);
-
-  // Update the ref when onDone changes
-  React.useEffect(() => {
-    onDoneRef.current = onDone;
-  }, [onDone]);
-
-  React.useEffect(() => {
-    setDisplayed('');
-    index.current = 0;
-    if (!text) return;
-    
-    const interval = setInterval(() => {
-      setDisplayed((prev) => {
-        const next = text.slice(0, index.current + 1);
-        index.current++;
-        if (next.length === text.length) {
-          clearInterval(interval);
-          // Use setTimeout to defer the callback to avoid setState during render
-          setTimeout(() => {
-            onDoneRef.current?.();
-          }, 0);
-        }
-        return next;
-      });
-    }, 8); // Speed: 8ms per character
-    
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return <span>{displayed}</span>;
-}
-
-// Utility to split AI response into text and code blocks
-function splitCodeBlocks(text: string) {
-  const regex = /```([a-zA-Z0-9]*)\n([\s\S]*?)```/g;
-  let lastIndex = 0;
-  let match;
-  const parts = [];
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
-    }
-    parts.push({ type: 'code', lang: match[1], content: match[2] });
-    lastIndex = regex.lastIndex;
-  }
-  if (lastIndex < text.length) {
-    parts.push({ type: 'text', content: text.slice(lastIndex) });
-  }
-  return parts;
-}
-
-// Custom code block component
-function CodeBlock({ code, lang }: { code: string; lang?: string }) {
-  const [copied, setCopied] = React.useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  };
-  return (
-    <div className="relative my-4 rounded-lg overflow-x-auto p-4 font-mono border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-      <button
-        className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 dark:bg-gray-900/80 text-gray-900 dark:text-gray-100 px-2 py-1 rounded text-xs shadow hover:bg-gray-200 dark:hover:bg-gray-800 transition"
-        onClick={handleCopy}
-        title="Copy code"
-      >
-        <Copy className="w-4 h-4" />
-        {copied ? 'Copied!' : 'Copy'}
-      </button>
-      <pre className="whitespace-pre-wrap"><code>{code}</code></pre>
-      {lang && <div className="absolute bottom-2 right-2 text-xs text-gray-400">{lang}</div>}
-    </div>
-  );
-}
-
-// AI message renderer
+// AI message renderer (dashboard style, using imported utilities)
 function AIMessage({ content }: { content: string }) {
   const parts = splitCodeBlocks(content);
   return (
@@ -998,11 +943,37 @@ function AIMessage({ content }: { content: string }) {
         part.type === 'code' ? (
           <CodeBlock key={idx} code={part.content} lang={part.lang} />
         ) : (
-          <p key={idx} className="mb-2 whitespace-pre-wrap">{part.content}</p>
+          <div key={idx} className="w-full break-words text-sm leading-relaxed"><SimpleMarkdownRenderer content={part.content} /></div>
         )
       )}
     </div>
   );
+}
+// TypewriterText for streaming AI (dashboard style)
+function TypewriterText({ text, onDone }: { text: string; onDone?: () => void }) {
+  const [displayed, setDisplayed] = React.useState('');
+  const index = React.useRef(0);
+  const onDoneRef = React.useRef(onDone);
+  React.useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
+  React.useEffect(() => {
+    setDisplayed('');
+    index.current = 0;
+    if (!text) return;
+    const interval = setInterval(() => {
+      setDisplayed((prev) => {
+        const next = text.slice(0, index.current + 1);
+        index.current++;
+        if (next.length === text.length) {
+          clearInterval(interval);
+          setTimeout(() => { onDoneRef.current?.(); }, 0);
+        }
+        return next;
+      });
+    }, 8);
+    return () => clearInterval(interval);
+  }, [text]);
+  // Use AIMessage for live streaming
+  return <AIMessage content={displayed} />;
 }
 
 export default EnhancedTest;

@@ -72,18 +72,13 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
           const codeString = JSON.stringify(codeObj);
           if (codeString !== lastCodeString) {
             lastCodeString = codeString;
-            // Delay update by 12 seconds if code changed
-            setTimeout(() => {
-              if (mounted) {
-                setDbCode(codeObj);
-                if (!userSelectedTab) {
-                  if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
-                  else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
-                  else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
-                  else setActiveTab('mql5');
-                }
-              }
-            }, 24000); // 24 seconds
+            setDbCode(codeObj);
+            if (!userSelectedTab) {
+              if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
+              else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
+              else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
+              else setActiveTab('mql5');
+            }
           } else {
             setDbCode(codeObj); // No delay if code unchanged
           }

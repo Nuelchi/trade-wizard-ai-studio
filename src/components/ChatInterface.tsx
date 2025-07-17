@@ -502,7 +502,7 @@ Test this strategy in the built-in Strategy Tester (/test) to see how it perform
             i === messages.map((m, idx) => (m.sender === 'ai' ? idx : -1)).filter(idx => idx !== -1).pop();
           return (
             <div
-              key={message.id}
+              key={message.id || i}
               className={`flex gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.sender === 'ai' && (

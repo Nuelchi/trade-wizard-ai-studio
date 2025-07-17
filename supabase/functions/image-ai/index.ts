@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
-const systemPrompt = `You are TradeFlow AI — an expert trading assistant that helps users build winning trading strategies for crypto, forex, and stocks.
+const systemPrompt = `You are TrainFlow AI — an expert trading assistant that helps users build winning trading strategies for crypto, forex, and stocks.
 
 IMPORTANT: Always maintain conversation context. When a user refers to previous messages or asks follow-up questions, respond appropriately to the conversation flow. For example:
 - If they ask "give it to me in pine script" after you provided a strategy, generate the Pine Script code
