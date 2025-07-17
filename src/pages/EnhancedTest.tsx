@@ -257,6 +257,7 @@ const EnhancedTest = () => {
   const [strategies, setStrategies] = useState<Database['public']['Tables']['strategies']['Row'][]>([]);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
   const autosaveTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [activeCodeTab, setActiveCodeTab] = useState('pineScript');
 
   useEffect(() => {
     if (!user) return;
@@ -280,6 +281,7 @@ const EnhancedTest = () => {
       setPineScript('');
       setMql4Code('');
       setMql5Code('');
+      setActiveCodeTab('pineScript');
       return;
     }
     const strat = strategies.find((s) => s.id === selectedStrategy);
@@ -287,16 +289,26 @@ const EnhancedTest = () => {
       if (Array.isArray(strat.chat_history)) {
         setMiniChatMessages(strat.chat_history as any[]);
       }
+      let pine = '', mql4 = '', mql5 = '';
       if (typeof strat.code === 'object' && strat.code !== null && !Array.isArray(strat.code)) {
+        pine = (strat.code as any).pineScript || '';
+        mql4 = (strat.code as any).mql4 || '';
+        mql5 = (strat.code as any).mql5 || '';
         setStrategyCode((strat.code as any).main || '');
-        setPineScript((strat.code as any).pineScript || '');
-        setMql4Code((strat.code as any).mql4 || '');
-        setMql5Code((strat.code as any).mql5 || '');
+        setPineScript(pine);
+        setMql4Code(mql4);
+        setMql5Code(mql5);
+        // Auto-switch to first non-empty code tab
+        if (pine.trim()) setActiveCodeTab('pineScript');
+        else if (mql4.trim()) setActiveCodeTab('mql4');
+        else if (mql5.trim()) setActiveCodeTab('mql5');
+        else setActiveCodeTab('pineScript');
       } else {
         setStrategyCode('');
         setPineScript('');
         setMql4Code('');
         setMql5Code('');
+        setActiveCodeTab('pineScript');
       }
     }
   }, [selectedStrategy, strategies]);
@@ -491,7 +503,7 @@ const EnhancedTest = () => {
                       <CardTitle>Strategy Code Editor</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Tabs defaultValue="pineScript">
+                      <Tabs value={activeCodeTab} onValueChange={setActiveCodeTab}>
                         <TabsList>
                           <TabsTrigger value="pineScript">Pine Script</TabsTrigger>
                           <TabsTrigger value="mql4">MQL4</TabsTrigger>
