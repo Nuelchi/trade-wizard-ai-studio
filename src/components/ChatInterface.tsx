@@ -75,7 +75,11 @@ function TypewriterText({ text, onDone }: { text: string; onDone?: () => void })
     return () => clearInterval(interval);
   }, [text]);
 
-  return <span className="break-words">{displayed}</span>;
+  return (
+    <div className="break-words">
+      <SimpleMarkdownRenderer content={displayed} />
+    </div>
+  );
 }
 
 
