@@ -110,9 +110,9 @@ const Dashboard = () => {
       mql5 = (currentDbCode as any).mql5 || '';
     }
     const mergedCode = {
-      pineScript: normalizedCode.pineScript || pineScript,
-      mql4: normalizedCode.mql4 || mql4,
-      mql5: normalizedCode.mql5 || mql5,
+      pineScript: normalizedCode.pineScript && normalizedCode.pineScript.trim() !== '' ? normalizedCode.pineScript : pineScript,
+      mql4: normalizedCode.mql4 && normalizedCode.mql4.trim() !== '' ? normalizedCode.mql4 : mql4,
+      mql5: normalizedCode.mql5 && normalizedCode.mql5.trim() !== '' ? normalizedCode.mql5 : mql5,
     };
     console.log('Saving merged code to DB:', mergedCode);
     // Save merged code to DB
@@ -123,9 +123,23 @@ const Dashboard = () => {
         .eq('id', currentStrategy.id);
       if (error) {
         console.error('Error updating code in DB:', error);
+      } else {
+        // Refetch latest code from DB to update preview tabs immediately
+        const { data: refetchData, error: refetchError } = await supabase
+          .from('strategies')
+          .select('code')
+          .eq('id', currentStrategy.id)
+          .single();
+        if (!refetchError && refetchData && refetchData.code) {
+          let codeObj = refetchData.code;
+          if (typeof codeObj === 'string') {
+            try { codeObj = JSON.parse(codeObj); } catch { codeObj = {}; }
+          }
+          setGeneratedCode(codeObj);
+        }
       }
     }
-    setGeneratedCode(mergedCode);
+    // setGeneratedCode(mergedCode); // Now handled by refetch
     // Auto-switch to the newly generated tab
     if (requestedType) {
       setTimeout(() => {
