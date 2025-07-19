@@ -23,7 +23,15 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useChatContext } from '@/contexts/ChatContext';
 import TradingChart from '@/components/TradingChart';
-import sha256 from 'crypto-js/sha256'; // Add at the top
+// Remove: import sha256 from 'crypto-js/sha256';
+// Add a simple hash function (djb2)
+function simpleHash(str) {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+  }
+  return hash.toString();
+}
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
 type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
@@ -91,7 +99,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'chat' | 'code'>('chat');
   const [strategyName, setStrategyName] = useState('Untitled Strategy');
   const [isEditingName, setIsEditingName] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'code' | 'chart'>('code');
+  const [previewMode, setPreviewMode] = useState<'code' | 'chart'>('chart');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedPair, setSelectedPair] = useState('EUR/USD');
   const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
@@ -117,132 +125,46 @@ const Dashboard = () => {
   const { resetChat, setMessages, strategy, messages } = useChatContext();
   const navigate = useNavigate();
   const location = useLocation();
+  const [pendingThumbnail, setPendingThumbnail] = useState<null | { strategy: any, newCode: string }>(null);
+  const lastCapturedCodeHash = useRef('');
 
+  // Remove thumbnail logic from handleStrategyGenerated and useEffect
   const handleStrategyGenerated = async (strategy: any) => {
     setCurrentStrategy(strategy);
     setStrategyName(strategy.title || 'Untitled Strategy');
-    // Only update thumbnail if code is new
-    const newCode = strategy.code?.pineScript || strategy.code?.mql4 || strategy.code?.mql5 || strategy.code?.python || '';
-    const lastCode = currentStrategy?.code?.pineScript || currentStrategy?.code?.mql4 || currentStrategy?.code?.mql5 || currentStrategy?.code?.python || '';
-    if (newCode !== lastCode) {
+  };
+
+  // Move thumbnail logic here
+  const handleCodeGenerated = async (codeBlocks: any, requestedType?: string) => {
+    setGeneratedCode(codeBlocks); // Update code state as usual
+    // Always try to capture thumbnail if chart tab is open and chart is present, but only once per unique code
+    const codeString = codeBlocks?.pineScript || codeBlocks?.mql4 || codeBlocks?.mql5 || codeBlocks?.python || '';
+    const codeHash = simpleHash(codeString);
+    if (previewMode === 'chart' && currentStrategy && currentStrategy.id && codeString && codeHash !== lastCapturedCodeHash.current) {
       setTimeout(async () => {
         const chartElement = document.getElementById('chart-preview');
         if (chartElement && user) {
           try {
-            const canvas = await html2canvas(chartElement, {
-              backgroundColor: null,
-              scale: 2,
-              logging: false
-            });
+            console.log('Capturing chart thumbnail (once per unique code)...');
+            const canvas = await html2canvas(chartElement, { backgroundColor: null, scale: 2, logging: false });
             const thumbnail = canvas.toDataURL('image/png');
-            if (strategy && strategy.id) {
-              await supabase
-                .from('strategies')
-                .update({ thumbnail, updated_at: new Date().toISOString() })
-                .eq('id', strategy.id);
+            const { error } = await supabase
+              .from('strategies')
+              .update({ thumbnail, updated_at: new Date().toISOString() })
+              .eq('id', currentStrategy.id);
+            if (error) {
+              console.error('Supabase update error:', error);
+            } else {
+              console.log('Thumbnail updated successfully');
+              lastCapturedCodeHash.current = codeHash;
             }
           } catch (error) {
             console.error('Error capturing chart thumbnail:', error);
           }
+        } else {
+          console.log('Chart element not found or user not set');
         }
-      }, 500);
-    }
-  };
-
-  const handleCodeGenerated = async (code: any, requestedType?: string) => {
-    // If the AI response is a string, extract code blocks robustly
-    let extracted = { pineScript: '', mql4: '', mql5: '' };
-    if (typeof code === 'string') {
-      extracted = extractAndValidateCodeBlocks(code, requestedType);
-    } else {
-      // Normalize code object (legacy path)
-      if (code.pineScript || code.pine_script) extracted.pineScript = code.pineScript || code.pine_script;
-      if (code.mql4) extracted.mql4 = code.mql4;
-      if (code.mql5) extracted.mql5 = code.mql5;
-      // If AI sometimes returns 'code' for pine, mql4, or mql5, try to infer:
-      if (requestedType === 'pinescript' && code.code && code.code.includes('//@version')) extracted.pineScript = code.code;
-      if (requestedType === 'mql4' && code.code && code.code.includes('#property') && code.code.includes('strict')) extracted.mql4 = code.code;
-      if (requestedType === 'mql5' && code.code && code.code.includes('#property') && code.code.includes('strict')) extracted.mql5 = code.code;
-    }
-
-    // Fetch current code from DB
-    let currentDbCode = {};
-    if (currentStrategy && currentStrategy.id && user) {
-      const { data, error } = await supabase
-        .from('strategies')
-        .select('code')
-        .eq('id', currentStrategy.id)
-        .single();
-      if (!error && data && data.code) {
-        try {
-          currentDbCode = typeof data.code === 'string' ? JSON.parse(data.code) : data.code;
-        } catch (e) {
-          console.error('Error parsing code from DB:', e, data.code);
-          currentDbCode = {};
-        }
-      } else if (error) {
-        console.error('Error fetching code from DB before update:', error);
-      }
-    }
-    // Merge extracted code with current DB code
-    let pineScript = '';
-    let mql4 = '';
-    let mql5 = '';
-    if (currentDbCode && typeof currentDbCode === 'object' && !Array.isArray(currentDbCode)) {
-      pineScript = (currentDbCode as any).pineScript || '';
-      mql4 = (currentDbCode as any).mql4 || '';
-      mql5 = (currentDbCode as any).mql5 || '';
-    }
-    const mergedCode = {
-      pineScript: extracted.pineScript && extracted.pineScript.trim() !== '' ? extracted.pineScript : pineScript,
-      mql4: extracted.mql4 && extracted.mql4.trim() !== '' ? extracted.mql4 : mql4,
-      mql5: extracted.mql5 && extracted.mql5.trim() !== '' ? extracted.mql5 : mql5,
-    };
-
-    // Save merged code to DB
-    if (currentStrategy && currentStrategy.id && user) {
-      const { error } = await supabase
-        .from('strategies')
-        .update({ code: mergedCode, updated_at: new Date().toISOString() })
-        .eq('id', currentStrategy.id);
-      if (error) {
-        console.error('Error updating code in DB:', error);
-      } else {
-        // Refetch latest code from DB to update preview tabs immediately
-        const { data: refetchData, error: refetchError } = await supabase
-          .from('strategies')
-          .select('code')
-          .eq('id', currentStrategy.id)
-          .single();
-        if (!refetchError && refetchData && refetchData.code) {
-          let codeObj = refetchData.code;
-          if (typeof codeObj === 'string') {
-            try { codeObj = JSON.parse(codeObj); } catch { codeObj = {}; }
-          }
-          setGeneratedCode(codeObj);
-        }
-      }
-    }
-    // setGeneratedCode(mergedCode); // Now handled by refetch
-    // Auto-switch to the newly generated tab
-    if (requestedType) {
-      setTimeout(() => {
-        const tabMap: { [key: string]: string } = {
-          pinescript: 'pinescript',
-          pine: 'pinescript',
-          tradingview: 'pinescript',
-          mql4: 'mql4',
-          metatrader4: 'mql4',
-          mql5: 'mql5',
-          metatrader5: 'mql5',
-        };
-        const targetTab = tabMap[requestedType.toLowerCase()];
-        if (targetTab) {
-          // Dispatch a custom event to switch the tab in CodePreview
-          const event = new CustomEvent('switchCodeTab', { detail: { tab: targetTab } });
-          window.dispatchEvent(event);
-        }
-      }, 100);
+      }, 1200); // Give React time to render the chart
     }
   };
 
@@ -773,7 +695,7 @@ const Dashboard = () => {
                   {previewMode === 'code' ? <CodePreview strategy={currentStrategy} /> :
   <div className="h-full flex flex-col min-h-0 overflow-hidden">
     <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
-    <div className="w-full mt-4">
+    <div id="chart-preview" className="w-full mt-4">
       <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
         {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
         <div className="flex flex-row justify-between items-end w-full mb-4">

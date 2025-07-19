@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Upload, ListChecks, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,6 +63,23 @@ function getPersisted(key, fallback) {
     return fallback;
   }
 }
+
+// Memoized TradingView AdvancedChart
+interface MemoAdvancedChartProps {
+  symbol: string;
+  interval: string;
+}
+const MemoAdvancedChart: React.FC<MemoAdvancedChartProps> = React.memo(({ symbol, interval }) => (
+  <AdvancedChart
+    widgetProps={{
+      symbol,
+      theme: "dark",
+      interval,
+      height: 700,
+      width: "100%",
+    }}
+  />
+));
 
 const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
   const { user } = useAuth();
@@ -295,7 +312,7 @@ const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
         <div className="glass-card p-6 rounded-lg mb-8 animate-fade-in">
           {/* Removed header for more space */}
           <div className="w-full">
-            <AdvancedChart widgetProps={{ symbol: "BINANCE:BTCUSDT", theme: "dark", interval: "D", height: 700, width: "100%" }} />
+            <MemoAdvancedChart symbol={symbol} interval={interval} key={`${symbol}-${interval}`} />
           </div>
         </div>
       </div>
