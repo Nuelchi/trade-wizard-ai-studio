@@ -119,6 +119,7 @@ const Dashboard = () => {
 
   const handleStrategyGenerated = (strategy: any) => {
     setCurrentStrategy(strategy);
+    setStrategyName(strategy.title || 'Untitled Strategy');
   };
 
   const handleCodeGenerated = async (code: any, requestedType?: string) => {

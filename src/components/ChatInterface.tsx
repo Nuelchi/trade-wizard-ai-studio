@@ -13,6 +13,7 @@ import type { Database, TablesInsert } from '@/integrations/supabase/types';
 import { generateStrategyWithAI } from '@/lib/utils';
 import React from 'react';
 import SimpleMarkdownRenderer from './SimpleMarkdownRenderer';
+import { generateStrategyName } from '@/lib/strategyName';
 
 interface Message {
   id: string;
@@ -180,10 +181,16 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
     scrollToBottom();
   }, [messages]);
 
-  const generateStrategy = (prompt: string) => {
-    // Mock strategy generation based on prompt analysis
+  const generateStrategy = async (prompt: string, aiSummary: string, code: string) => {
+    // Call the AI naming tool after code is generated
+    let name = '';
+    try {
+      name = await generateStrategyName({ userPrompt: prompt, aiSummary, code });
+    } catch {
+      name = '';
+    }
     const strategy = {
-      name: `AI Generated Strategy`,
+      name, // Use the AI-generated name directly
       description: prompt,
       type: prompt.toLowerCase().includes('scalp') ? 'Scalping' : 
             prompt.toLowerCase().includes('crossover') ? 'Trend Following' :
@@ -199,7 +206,6 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         takeProfit: prompt.toLowerCase().includes('profit') ? '4%' : null
       }
     };
-
     onStrategyGenerated(strategy);
     return strategy;
   };
@@ -290,24 +296,7 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
       }));
       const aiResult = await generateStrategyWithAI(input, undefined, conversationHistory);
       
-      // Generate strategy and code like the old version
-      const strategy = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: 'AI Generated Strategy',
-        description: aiResult.summary,
-        type: aiResult.jsonLogic?.type || 'Custom',
-        confidence: aiResult.jsonLogic?.confidence || 90,
-        indicators: aiResult.jsonLogic?.indicators || [],
-        conditions: aiResult.jsonLogic?.conditions || { entry: [], exit: [] },
-        riskManagement: aiResult.risk || {},
-      };
-      
-      const code = {
-        pineScript: aiResult.pineScript,
-        mql4: aiResult.mql4,
-        mql5: aiResult.mql5,
-      };
-      
+      // Extract code blocks from markdown if present
       let markdownContent = '';
       if (aiResult && typeof aiResult === 'object' && 'content' in aiResult && typeof (aiResult as any).content === 'string') {
         markdownContent = (aiResult as any).content;
@@ -319,41 +308,82 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         mql4: aiResult.mql4 || extractedBlocks.mql4 || '',
         python: (aiResult as any).python || extractedBlocks.python || '',
       };
+      // Pick the best available code for naming
+      const codeForNaming = codeBlocks.mql5 || codeBlocks.mql4 || codeBlocks.pineScript || '';
+      // Call the AI naming tool
+      let aiName = '';
+      try {
+        aiName = await generateStrategyName({ userPrompt: input, aiSummary: aiResult.summary, code: codeForNaming });
+      } catch (err) {
+        console.error('AI naming tool failed:', err);
+        aiName = '';
+      }
+      console.log('AI generated strategy name:', aiName);
+      if (!aiName || typeof aiName !== 'string' || !aiName.trim()) {
+        aiName = 'AI Generated Strategy';
+      }
+      // Generate strategy and code like the old version, but use AI name
+      const strategy = {
+        name: aiName,
+        description: aiResult.summary,
+        type: aiResult.jsonLogic?.type || 'Custom',
+        confidence: aiResult.jsonLogic?.confidence || 90,
+        indicators: aiResult.jsonLogic?.indicators || [],
+        conditions: aiResult.jsonLogic?.conditions || { entry: [], exit: [] },
+        riskManagement: aiResult.risk || {},
+      };
+      const code = {
+        pineScript: aiResult.pineScript,
+        mql4: aiResult.mql4,
+        mql5: aiResult.mql5,
+      };
       onStrategyGenerated(strategy);
       setPendingCode(codeBlocks);
       setPendingType(requestedType);
       // onCodeGenerated(codeBlocks, requestedType); // DELAYED, now called after typewriter
-      
       // Check if actual code was generated
       const hasCode = aiResult.pineScript || aiResult.mql4 || aiResult.mql5;
-      
+      // Parse toast messages from AI response
+      const toastMessages = parseToastMessages(aiResult.summary);
+      // Remove toast markers from the displayed content
+      const cleanContent = removeToastMarkers(aiResult.summary);
+      // Display toast messages
+      toastMessages.forEach(({ type, title, message }) => {
+        switch (type) {
+          case 'success':
+            toast({ title, description: message });
+            break;
+          case 'error':
+            toast({ title, description: message, variant: 'destructive' });
+            break;
+          case 'warning':
+            toast({ title, description: message, variant: 'destructive' });
+            break;
+          case 'info':
+            toast({ title, description: message });
+            break;
+        }
+      });
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: `${aiResult.summary}
+        content: `${cleanContent}
 
-${hasCode ? `I've generated MQL5 code for MetaTrader 5. You can also request Pine Script (TradingView), MQL4 (MetaTrader 4), or Python versions.
+${hasCode ? `I've successfully generated The working script
 
 The strategy includes:
 • Technical indicators based on your requirements
 • Entry and exit conditions
 • Risk management parameters
 
-Test this strategy in the built-in Strategy Tester (/test) to see how it performs!` : ''}`,
+You can also test this strategy in the built-in Strategy Tester to see how it performs!` : ''}`,
         sender: 'ai',
         timestamp: new Date(),
         ...(hasCode && {
           codeGenerated: true
         })
       };
-
       setMessages([...messages, userMessage, aiResponse]);
       setIsTyping(false);
-
-      toast({
-        title: 'Strategy Generated!',
-        description: 'Your code is ready in the preview panel.',
-      });
-
       // Persist strategy to Supabase
       if (user) {
         const chatHistoryJson = [
@@ -398,7 +428,27 @@ Test this strategy in the built-in Strategy Tester (/test) to see how it perform
     } catch (err: any) {
       setIsTyping(false);
       console.error('AI Error:', err);
-      toast({ title: 'AI Error', description: err.message || JSON.stringify(err), variant: 'destructive' });
+      
+      // Enhanced error handling with specific toast messages
+      let errorTitle = 'AI Error';
+      let errorMessage = err.message || JSON.stringify(err);
+      
+      if (err.message?.includes('network') || err.message?.includes('fetch')) {
+        errorTitle = 'Connection Error';
+        errorMessage = 'Unable to connect to AI service. Please check your internet connection.';
+      } else if (err.message?.includes('rate limit')) {
+        errorTitle = 'Rate Limit Exceeded';
+        errorMessage = 'Too many requests. Please wait a moment before trying again.';
+      } else if (err.message?.includes('authentication')) {
+        errorTitle = 'Authentication Error';
+        errorMessage = 'Please log in to use the AI features.';
+      }
+      
+      toast({ 
+        title: errorTitle, 
+        description: errorMessage, 
+        variant: 'destructive' 
+      });
     }
   };
 
@@ -470,6 +520,29 @@ Test this strategy in the built-in Strategy Tester (/test) to see how it perform
       }
     }
     return codeBlocks;
+  }
+
+  // Utility to parse toast messages from AI response
+  function parseToastMessages(content: string) {
+    const toastMessages: Array<{type: string, title: string, message: string}> = [];
+    const toastRegex = /\[TOAST_(SUCCESS|ERROR|WARNING|INFO):([^:]+):([^\]]+)\]/g;
+    let match;
+    
+    while ((match = toastRegex.exec(content)) !== null) {
+      const [, type, title, message] = match;
+      toastMessages.push({
+        type: type.toLowerCase(),
+        title: title.trim(),
+        message: message.trim()
+      });
+    }
+    
+    return toastMessages;
+  }
+
+  // Utility to remove toast markers from content
+  function removeToastMarkers(content: string) {
+    return content.replace(/\[TOAST_(SUCCESS|ERROR|WARNING|INFO):[^:]+:[^\]]+\]/g, '').trim();
   }
 
   return (
