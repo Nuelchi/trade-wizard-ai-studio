@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useChatContext } from '@/contexts/ChatContext';
 import TradingChart from '@/components/TradingChart';
+import sha256 from 'crypto-js/sha256'; // Add at the top
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
 type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
@@ -117,9 +118,35 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleStrategyGenerated = (strategy: any) => {
+  const handleStrategyGenerated = async (strategy: any) => {
     setCurrentStrategy(strategy);
     setStrategyName(strategy.title || 'Untitled Strategy');
+    // Only update thumbnail if code is new
+    const newCode = strategy.code?.pineScript || strategy.code?.mql4 || strategy.code?.mql5 || strategy.code?.python || '';
+    const lastCode = currentStrategy?.code?.pineScript || currentStrategy?.code?.mql4 || currentStrategy?.code?.mql5 || currentStrategy?.code?.python || '';
+    if (newCode !== lastCode) {
+      setTimeout(async () => {
+        const chartElement = document.getElementById('chart-preview');
+        if (chartElement && user) {
+          try {
+            const canvas = await html2canvas(chartElement, {
+              backgroundColor: null,
+              scale: 2,
+              logging: false
+            });
+            const thumbnail = canvas.toDataURL('image/png');
+            if (strategy && strategy.id) {
+              await supabase
+                .from('strategies')
+                .update({ thumbnail, updated_at: new Date().toISOString() })
+                .eq('id', strategy.id);
+            }
+          } catch (error) {
+            console.error('Error capturing chart thumbnail:', error);
+          }
+        }
+      }, 500);
+    }
   };
 
   const handleCodeGenerated = async (code: any, requestedType?: string) => {
