@@ -34,10 +34,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Create profile for new social auth users
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            // Check if profile already exists
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (!existingProfile) {
+              // Create profile with display name from user metadata
+              const displayName = session.user.user_metadata?.full_name || 
+                                session.user.user_metadata?.name ||
+                                session.user.email?.split('@')[0] ||
+                                'User';
+              
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: session.user.id,
+                  display_name: displayName,
+                  avatar_url: session.user.user_metadata?.avatar_url || null
+                });
+              
+              if (profileError) {
+                console.error('Error creating profile for social auth user:', profileError);
+              }
+            }
+          } catch (error) {
+            console.error('Error handling profile creation:', error);
+          }
+        }
       }
     );
 

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight, Brain, Code, TrendingUp, Zap, Star, Copy, Play, Eye, Users, Activity, DollarSign, Heart, Download, GitFork } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowRight, Brain, Code, TrendingUp, Zap, Star, Copy, Play, Eye, Users, Activity, DollarSign, Heart, Download, GitFork, MoreVertical, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthDialog } from "@/contexts/AuthDialogContext";
@@ -55,6 +56,8 @@ const Home = () => {
   const [strategy, setStrategy] = useState("");
   const [likedStrategies, setLikedStrategies] = useState<Set<number>>(new Set());
   const [strategyLikes, setStrategyLikes] = useState<Record<number, number>>({});
+  const [selectedStrategy, setSelectedStrategy] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { openAuthDialog } = useAuthDialog();
@@ -86,84 +89,162 @@ const Home = () => {
     "Short SPY when VIX spikes above 30 and price breaks key support"
   ];
 
-  const showcaseStrategies = [
-    {
-      id: 1,
-      title: "Momentum Breakout Pro",
-      description: "AI-powered momentum strategy with adaptive stop-loss",
-      author: "Alex Chen",
-      avatar: "AC",
-      performance: {
-        returns: "+156.7%",
-        winRate: "73.2%",
-        sharpe: "2.41",
-        maxDrawdown: "-8.3%"
-      },
-      tags: ["Momentum", "Breakout", "AI"],
-      price: "Free",
-      likes: 247,
-      copies: 1432,
-      thumbnail: "/placeholder.svg",
-      isPublic: true
-    },
-    {
-      id: 2,
-      title: "Crypto Scalping Beast",
-      description: "High-frequency scalping for BTC/ETH pairs",
-      author: "Maria Silva", 
-      avatar: "MS",
-      performance: {
-        returns: "+89.4%",
-        winRate: "68.9%",
-        sharpe: "1.87",
-        maxDrawdown: "-12.1%"
-      },
-      tags: ["Crypto", "Scalping", "High-Freq"],
-      price: "$49",
-      likes: 189,
-      copies: 892,
-      thumbnail: "/placeholder.svg",
-      isPublic: false
-    },
-    {
-      id: 3,
-      title: "Mean Reversion Master",
-      description: "Statistical arbitrage with machine learning signals",
-      author: "David Kim",
-      avatar: "DK", 
-      performance: {
-        returns: "+203.1%",
-        winRate: "81.5%",
-        sharpe: "3.12",
-        maxDrawdown: "-5.7%"
-      },
-      tags: ["Mean Reversion", "ML", "Statistical"],
-      price: "$99",
-      likes: 356,
-      copies: 2156,
-      thumbnail: "/placeholder.svg",
-      isPublic: false
-    },
-    {
-      id: 4,
-      title: "Forex Trend Rider",
-      description: "Multi-timeframe trend following for major pairs",
-      author: "Sarah Johnson",
-      avatar: "SJ",
-      performance: {
-        returns: "+127.3%",
-        winRate: "69.8%",
-        sharpe: "2.23",
-        maxDrawdown: "-9.8%"
-      },
-      tags: ["Forex", "Trend", "Multi-TF"],
-      price: "Free",
-      likes: 412,
-      copies: 1876,
-      thumbnail: "/placeholder.svg",
-      isPublic: true
-    }
-  ];
+  const [showcaseStrategies, setShowcaseStrategies] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchStrategies = async () => {
+      console.log('Fetching published strategies from public_strategies table...');
+      
+      // Fetch public strategies
+      const { data: strategiesData, error: strategiesError } = await supabase
+        .from('public_strategies')
+        .select('*')
+        .order('updated_at', { ascending: false });
+      
+      if (strategiesError) {
+        console.error('Error fetching strategies:', strategiesError);
+        return;
+      }
+      
+      // Fetch all user profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, avatar_url');
+      
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        return;
+      }
+      
+      // Create a map of user_id to profile data
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.user_id, profile);
+      });
+      
+      console.log('Fetch result:', { strategiesData, profilesData });
+      
+      if (strategiesData && strategiesData.length > 0) {
+        //console.log('Found', strategiesData.length, 'published strategies');
+        // Transform database data to match display structure
+        const transformedData = strategiesData.map(strategy => {
+          //console.log('Strategy thumbnail:', strategy.thumbnail); // Debug thumbnail
+          
+          // Get user display name from profiles map
+          const userProfile = profilesMap.get(strategy.user_id);
+          const displayName = userProfile?.display_name || 'Anonymous';
+          const avatarInitials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          
+          return {
+            id: strategy.id,
+            title: strategy.title || 'Untitled Strategy',
+            description: strategy.description || 'No description available',
+            author: displayName,
+            avatar: avatarInitials,
+            performance: {
+              returns: (strategy.analytics as any)?.total_return ? `+${(strategy.analytics as any).total_return.toFixed(1)}%` : '+0.0%',
+              winRate: (strategy.analytics as any)?.win_rate ? `${((strategy.analytics as any).win_rate * 100).toFixed(1)}%` : '0.0%',
+              sharpe: (strategy.analytics as any)?.sharpe_ratio ? (strategy.analytics as any).sharpe_ratio.toFixed(2) : '0.00',
+              maxDrawdown: (strategy.analytics as any)?.max_drawdown ? `${(strategy.analytics as any).max_drawdown.toFixed(1)}%` : '0.0%'
+            },
+            tags: strategy.tags || [],
+            price: strategy.is_paid && strategy.price ? `$${strategy.price}` : "Free",
+            likes: strategy.likes || 0,
+            copies: strategy.copies || 0,
+            remixes: strategy.remixes || 0,
+            thumbnail: strategy.thumbnail,
+            isPublic: !strategy.is_paid, // Free strategies are public
+            summary: strategy.summary,
+            code: strategy.code,
+            analytics: strategy.analytics,
+            publish_version: strategy.publish_version
+          };
+        });
+        setShowcaseStrategies(transformedData);
+      } else {
+        console.log('No published strategies found, using fallback data');
+        // fallback to hardcoded if fetch fails or empty
+        setShowcaseStrategies([
+          {
+            id: 1,
+            title: "Momentum Breakout Pro",
+            description: "AI-powered momentum strategy with adaptive stop-loss",
+            author: "Alex Chen",
+            avatar: "AC",
+            performance: {
+              returns: "+156.7%",
+              winRate: "73.2%",
+              sharpe: "2.41",
+              maxDrawdown: "-8.3%"
+            },
+            tags: ["Momentum", "Breakout", "AI"],
+            price: "Free",
+            likes: 247,
+            copies: 1432,
+            thumbnail: "/placeholder.svg",
+            isPublic: true
+          },
+          {
+            id: 2,
+            title: "Crypto Scalping Beast",
+            description: "High-frequency scalping for BTC/ETH pairs",
+            author: "Maria Silva", 
+            avatar: "MS",
+            performance: {
+              returns: "+89.4%",
+              winRate: "68.9%",
+              sharpe: "1.87",
+              maxDrawdown: "-12.1%"
+            },
+            tags: ["Crypto", "Scalping", "High-Freq"],
+            price: "$49",
+            likes: 189,
+            copies: 892,
+            thumbnail: "/placeholder.svg",
+            isPublic: false
+          },
+          {
+            id: 3,
+            title: "Mean Reversion Master",
+            description: "Statistical arbitrage with machine learning signals",
+            author: "David Kim",
+            avatar: "DK", 
+            performance: {
+              returns: "+203.1%",
+              winRate: "81.5%",
+              sharpe: "3.12",
+              maxDrawdown: "-5.7%"
+            },
+            tags: ["Mean Reversion", "ML", "Statistical"],
+            price: "$99",
+            likes: 356,
+            copies: 2156,
+            thumbnail: "/placeholder.svg",
+            isPublic: false
+          },
+          {
+            id: 4,
+            title: "Forex Trend Rider",
+            description: "Multi-timeframe trend following for major pairs",
+            author: "Sarah Johnson",
+            avatar: "SJ",
+            performance: {
+              returns: "+127.3%",
+              winRate: "69.8%",
+              sharpe: "2.23",
+              maxDrawdown: "-9.8%"
+            },
+            tags: ["Forex", "Trend", "Multi-TF"],
+            price: "Free",
+            likes: 412,
+            copies: 1876,
+            thumbnail: "/placeholder.svg",
+            isPublic: true
+          }
+        ]);
+      }
+    };
+    fetchStrategies();
+  }, []);
 
   const features = [
     {
@@ -188,14 +269,111 @@ const Home = () => {
     }
   ];
 
-  const handleCopyStrategy = (strategyId: number) => {
-    toast({
-      title: "Strategy copied!",
-      description: "Strategy has been added to your workspace.",
-    });
+  const handleCopyStrategy = async (strategyId: number) => {
+    // Find the strategy by ID
+    const strategy = showcaseStrategies.find(s => s.id === strategyId);
+    if (!strategy || !strategy.code) {
+      toast({
+        title: "No code available",
+        description: "This strategy doesn't have any code to copy.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get the best available code (prefer MQL5, then MQL4, then Pine Script)
+    let codeToCopy = '';
+    if (strategy.code.mql5 && strategy.code.mql5.trim()) {
+      codeToCopy = strategy.code.mql5;
+    } else if (strategy.code.mql4 && strategy.code.mql4.trim()) {
+      codeToCopy = strategy.code.mql4;
+    } else if (strategy.code.pineScript && strategy.code.pineScript.trim()) {
+      codeToCopy = strategy.code.pineScript;
+    }
+
+    if (!codeToCopy) {
+      toast({
+        title: "No code available",
+        description: "This strategy doesn't have any code to copy.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(codeToCopy);
+      
+      // Increment remix count in database
+      const { error: updateError } = await supabase
+        .from('public_strategies')
+        .update({ 
+          remixes: (strategy.remixes || 0) + 1 
+        })
+        .eq('id', strategyId.toString());
+      
+      if (updateError) {
+        console.error('Error updating remix count:', updateError);
+      } else {
+        // Update local state
+        setShowcaseStrategies(prev => 
+          prev.map(s => 
+            s.id === strategyId 
+              ? { ...s, remixes: (s.remixes || 0) + 1 }
+              : s
+          )
+        );
+      }
+      
+      // Determine which code type was copied
+      let codeType = '';
+      if (strategy.code.mql5 && strategy.code.mql5.trim()) {
+        codeType = 'MQL5';
+      } else if (strategy.code.mql4 && strategy.code.mql4.trim()) {
+        codeType = 'MQL4';
+      } else if (strategy.code.pineScript && strategy.code.pineScript.trim()) {
+        codeType = 'Pine Script';
+      }
+      
+      toast({
+        title: "✅ Strategy copied to clipboard!",
+        description: `${codeType} code for "${strategy.title}" has been copied. You can now paste it into your trading platform.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy code",
+        description: "Please copy the code manually.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleRemixStrategy = (strategyId: number) => {
+  const handleRemixStrategy = async (strategyId: number) => {
+    // Find the strategy by ID
+    const strategy = showcaseStrategies.find(s => s.id === strategyId);
+    
+    // Increment remix count in database
+    if (strategy) {
+      const { error: updateError } = await supabase
+        .from('public_strategies')
+        .update({ 
+          remixes: (strategy.remixes || 0) + 1 
+        })
+        .eq('id', strategyId.toString());
+      
+      if (updateError) {
+        console.error('Error updating remix count:', updateError);
+      } else {
+        // Update local state
+        setShowcaseStrategies(prev => 
+          prev.map(s => 
+            s.id === strategyId 
+              ? { ...s, remixes: (s.remixes || 0) + 1 }
+              : s
+          )
+        );
+      }
+    }
+    
     navigate(`/dashboard?remix=${strategyId}`);
   };
 
@@ -228,6 +406,13 @@ const Home = () => {
           .eq('user_id', user.id)
           .eq('strategy_id', strategyId.toString());
         
+        // Update likes count in public_strategies table
+        const currentLikes = strategyLikes[strategyId] || 0;
+        await supabase
+          .from('public_strategies')
+          .update({ likes: Math.max(currentLikes - 1, 0) })
+          .eq('id', strategyId.toString());
+        
         setLikedStrategies(prev => {
           const newSet = new Set(prev);
           newSet.delete(strategyId);
@@ -246,6 +431,13 @@ const Home = () => {
             user_id: user.id,
             strategy_id: strategyId.toString()
           });
+        
+        // Update likes count in public_strategies table
+        const currentLikes = strategyLikes[strategyId] || 0;
+        await supabase
+          .from('public_strategies')
+          .update({ likes: currentLikes + 1 })
+          .eq('id', strategyId.toString());
         
         setLikedStrategies(prev => new Set([...prev, strategyId]));
         setStrategyLikes(prev => ({
@@ -270,7 +462,29 @@ const Home = () => {
       initialLikes[strategy.id] = strategy.likes;
     });
     setStrategyLikes(initialLikes);
-  }, []);
+  }, [showcaseStrategies]); // Add showcaseStrategies to dependency array
+
+  const handleStrategyDetails = (strategy: any) => {
+    setSelectedStrategy(strategy);
+    setIsModalOpen(true);
+  };
+
+  const handleShareStrategy = async (strategy: any) => {
+    const shareUrl = `${window.location.origin}/strategy/${strategy.id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied!",
+        description: "Strategy link has been copied to clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy link",
+        description: "Please copy the link manually.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -349,7 +563,19 @@ const Home = () => {
             {showcaseStrategies.map((strategy) => (
               <Card key={strategy.id} className="trading-card hover:shadow-glow transition-all group overflow-hidden">
                 <div className="relative">
-                  <div className="h-32 bg-gradient-card flex items-center justify-center">
+                  {strategy.thumbnail ? (
+                    <img 
+                      src={strategy.thumbnail} 
+                      alt={strategy.title}
+                      className="h-32 w-full object-cover"
+                      onError={(e) => {
+                        console.log('Thumbnail failed to load:', strategy.thumbnail);
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`h-32 bg-gradient-card flex items-center justify-center ${strategy.thumbnail ? 'hidden' : ''}`}>
                     <Activity className="w-12 h-12 text-primary/50" />
                   </div>
                   {strategy.isPublic && (
@@ -357,6 +583,15 @@ const Home = () => {
                       Free
                     </Badge>
                   )}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStrategyDetails(strategy);
+                    }}
+                    className="absolute top-2 left-2 p-1 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                  >
+                    <MoreVertical className="w-4 h-4 text-white" />
+                  </button>
                 </div>
                 
                 <CardHeader className="pb-3">
@@ -381,7 +616,6 @@ const Home = () => {
                       </span>
                     </button>
                   </div>
-                  <CardDescription className="text-sm">{strategy.description}</CardDescription>
                   
                   <div className="flex items-center space-x-2 mt-2">
                     <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">
@@ -404,15 +638,15 @@ const Home = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {strategy.tags.map((tag) => (
+                    {strategy.tags.map((tag: string) => (
                       <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
                     ))}
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
                     <div className="flex items-center space-x-1">
-                      <Copy className="w-3 h-3" />
-                      <span>{strategy.copies}</span>
+                      <GitFork className="w-3 h-3" />
+                      <span>{strategy.remixes || 0}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Eye className="w-3 h-3" />
@@ -445,6 +679,116 @@ const Home = () => {
               </Card>
             ))}
           </div>
+
+          {/* Strategy Details Modal */}
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">{selectedStrategy?.title}</DialogTitle>
+                <DialogDescription className="text-base">
+                  {selectedStrategy?.description}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Thumbnail */}
+                {selectedStrategy?.thumbnail && (
+                  <div className="relative">
+                    <img 
+                      src={selectedStrategy.thumbnail} 
+                      alt={selectedStrategy.title}
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+                
+                {/* Strategy Details */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-muted-foreground">Performance</h4>
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Returns:</span>
+                        <span className="text-sm font-medium text-success">{selectedStrategy?.performance?.returns}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Win Rate:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.performance?.winRate}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Sharpe Ratio:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.performance?.sharpe}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Max Drawdown:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.performance?.maxDrawdown}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-muted-foreground">Strategy Info</h4>
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Type:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.summary?.type || 'Custom'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Confidence:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.summary?.confidence || 0}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Likes:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.likes || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Remixes:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.remixes || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tags */}
+                {selectedStrategy?.tags && selectedStrategy.tags.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground mb-2">Tags</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedStrategy.tags.map((tag: string) => (
+                        <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Action Buttons */}
+                <div className="flex space-x-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => handleShareStrategy(selectedStrategy)}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    onClick={() => handleCopyStrategy(selectedStrategy?.id)}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Strategy
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    onClick={() => handleRemixStrategy(selectedStrategy?.id)}
+                  >
+                    <GitFork className="w-4 h-4 mr-2" />
+                    Remix
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <div className="text-center mt-12">
             <Button variant="outline" size="lg">

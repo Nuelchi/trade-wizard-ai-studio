@@ -412,6 +412,7 @@ You can also test this strategy in the built-in Strategy Tester to see how it pe
           thumbnail: null,
           likes: 0,
           copies: 0,
+          remixes: 0,
           price: null,
         };
         const { data, error } = await supabase
@@ -596,6 +597,8 @@ You can also test this strategy in the built-in Strategy Tester to see how it pe
                       ) : (
                         <TypewriterText text={message.content} onDone={() => {
                           setFormattedIds(ids => [...ids, message.id]);
+                          // Scroll to bottom when code is generated
+                          scrollToBottom();
                           if (pendingCode) {
                             onCodeGenerated(pendingCode, pendingType);
                             setPendingCode(null);

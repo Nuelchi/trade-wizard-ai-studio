@@ -52,6 +52,18 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
   // Track if user has manually selected a tab
   const [userSelectedTab, setUserSelectedTab] = useState(false);
 
+  // Auto-scroll to bottom when code is loaded
+  useEffect(() => {
+    if (dbCode) {
+      setTimeout(() => {
+        const codeContainer = document.querySelector('.code-scrollable');
+        if (codeContainer) {
+          codeContainer.scrollTop = codeContainer.scrollHeight;
+        }
+      }, 100); // Small delay to ensure rendering is complete
+    }
+  }, [dbCode]);
+
   // Poll for code from DB every 3 seconds
   useEffect(() => {
     if (!strategy || !strategy.id) return;
@@ -72,17 +84,15 @@ const CodePreview = ({ strategy, onRunBacktest }: CodePreviewProps) => {
           const codeString = JSON.stringify(codeObj);
           if (codeString !== lastCodeString) {
             lastCodeString = codeString;
-            setTimeout(() => {
-              if (mounted) {
-                setDbCode(codeObj);
-                if (!userSelectedTab) {
-                  if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
-                  else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
-                  else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
-                  else setActiveTab('mql5');
-                }
+            if (mounted) {
+              setDbCode(codeObj);
+              if (!userSelectedTab) {
+                if (typeof codeObj.mql5 === 'string' && codeObj.mql5.trim() !== '') setActiveTab('mql5');
+                else if (typeof codeObj.mql4 === 'string' && codeObj.mql4.trim() !== '') setActiveTab('mql4');
+                else if (typeof codeObj.pineScript === 'string' && codeObj.pineScript.trim() !== '') setActiveTab('pinescript');
+                else setActiveTab('mql5');
               }
-            }, 8000); // 8 seconds
+            }
           } else {
             setDbCode(codeObj); // No delay if code unchanged
           }

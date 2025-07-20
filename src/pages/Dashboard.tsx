@@ -113,6 +113,7 @@ const Dashboard = () => {
   });
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const {
     user,
     signOut
@@ -279,6 +280,11 @@ const Dashboard = () => {
   };
 
   const handlePublishStrategy = () => {
+    // Auto-set the publish modal title to the current strategy's title if available
+    setPublishData(prev => ({
+      ...prev,
+      title: currentStrategy?.title || strategyName || ''
+    }));
     setPublishDialogOpen(true);
   };
 
@@ -301,31 +307,112 @@ const Dashboard = () => {
   };
 
   const handlePublishSubmit = async () => {
-    const thumbnail = await captureChartThumbnail();
+    if (!currentStrategy || !user || !currentStrategy.id) {
+      toast({
+        title: "No strategy to publish",
+        description: "Please create a strategy first.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Here you would normally save to your backend/database
-    console.log('Publishing strategy:', {
-      ...publishData,
-      thumbnail,
-      strategyCode: generatedCode,
-      performanceData: {
-        pair: selectedPair,
-        timeframe: selectedTimeframe
-        // Add actual performance metrics here
+    const thumbnail = await captureChartThumbnail();
+    
+    // Parse tags from comma-separated string
+    const tags = publishData.tags
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0);
+
+    try {
+      // First, check if this strategy is already published in public_strategies
+      const { data: existingPublicStrategy } = await supabase
+        .from('public_strategies')
+        .select('id, publish_version')
+        .eq('strategy_id', currentStrategy.id)
+        .single();
+
+      const publicStrategyData = {
+        strategy_id: currentStrategy.id,
+        user_id: user.id,
+        title: publishData.title,
+        description: publishData.description,
+        summary: currentStrategy.summary,
+        code: currentStrategy.code,
+        analytics: currentStrategy.analytics,
+        tags: tags,
+        thumbnail: thumbnail,
+        price: publishData.pricingType === 'paid' ? parseFloat(publishData.price) : null,
+        is_paid: publishData.pricingType === 'paid',
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      };
+
+      let result;
+      if (existingPublicStrategy) {
+        // Update existing public strategy and increment version
+        console.log('Updating existing public strategy:', existingPublicStrategy.id);
+        result = await supabase
+          .from('public_strategies')
+          .update({
+            ...publicStrategyData,
+            publish_version: (existingPublicStrategy.publish_version || 1) + 1
+          })
+          .eq('id', existingPublicStrategy.id);
+      } else {
+        // Insert new public strategy
+        console.log('Creating new public strategy for strategy_id:', currentStrategy.id);
+        result = await supabase
+          .from('public_strategies')
+          .insert({
+            ...publicStrategyData,
+            publish_version: 1
+          });
       }
-    });
-    toast({
-      title: "Strategy Published!",
-      description: "Your strategy is now available in the showcase"
-    });
-    setPublishDialogOpen(false);
-    setPublishData({
-      title: "",
-      description: "",
-      tags: "",
-      pricingType: "free",
-      price: ""
-    });
+
+      if (result.error) {
+        console.error('Publish error:', result.error);
+        toast({
+          title: "Failed to publish strategy",
+          description: result.error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Strategy Published!",
+        description: "Your strategy is now available in the showcase"
+      });
+      
+      setPublishDialogOpen(false);
+      setPublishData({
+        title: "",
+        description: "",
+        tags: "",
+        pricingType: "free",
+        price: ""
+      });
+
+      // Refresh the current strategy to reflect the changes
+      const { data: updatedStrategy } = await supabase
+        .from('strategies')
+        .select('*')
+        .eq('id', currentStrategy.id)
+        .single();
+      
+      if (updatedStrategy) {
+        setCurrentStrategy(updatedStrategy);
+      }
+
+    } catch (error) {
+      console.error('Publish error:', error);
+      toast({
+        title: "Failed to publish strategy",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
   };
 
   const startNewChat = async () => {
@@ -362,6 +449,21 @@ const Dashboard = () => {
       .then(({ data, error }) => {
         if (!error) setStrategies(data || []);
         setLoadingStrategies(false);
+      });
+  }, [user]);
+
+  // Fetch user profile
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setUserProfile(data);
+        }
       });
   }, [user]);
 
@@ -658,7 +760,7 @@ const Dashboard = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
-                  <span>{user?.email}</span>
+                  <span>{userProfile?.display_name || user?.email}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="mr-2 h-4 w-4" />

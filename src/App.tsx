@@ -34,12 +34,30 @@ const GlobalAuthDialog = () => {
       const password = formData.get('password') as string;
       const redirectUrl = `${window.location.origin}/`;
       if (type === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const name = formData.get('name') as string;
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: redirectUrl }
         });
         if (error) throw error;
+        
+        // Create profile record with display name
+        if (data.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: data.user.id,
+              display_name: name || email.split('@')[0], // Use name or fallback to email prefix
+              avatar_url: null
+            });
+          
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            // Don't throw error here as user is already created
+          }
+        }
+        
         toast({
           title: 'Account created!',
           description: 'Please check your email to verify your account.',
@@ -65,11 +83,14 @@ const GlobalAuthDialog = () => {
 
   const handleSocialAuth = useCallback(async (provider: 'google' | 'twitter') => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo: `${window.location.origin}/` }
       });
       if (error) throw error;
+      
+      // Note: For social auth, we'll need to handle profile creation in a different way
+      // since the user might not be immediately available. We'll handle this in the auth state change listener.
     } catch (error: any) {
       toast({
         title: 'Authentication failed',
@@ -78,6 +99,47 @@ const GlobalAuthDialog = () => {
       });
     }
   }, [toast]);
+
+  // Function to fix existing users with email as display name
+  const fixExistingUserProfiles = useCallback(async () => {
+    try {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .like('display_name', '%@%'); // Find profiles with email addresses
+      
+      if (error) {
+        console.error('Error fetching profiles to fix:', error);
+        return;
+      }
+      
+      if (profiles && profiles.length > 0) {
+        console.log(`Found ${profiles.length} profiles with email addresses as display names`);
+        
+        // Update each profile to use email prefix as display name
+        for (const profile of profiles) {
+          const emailPrefix = profile.display_name?.split('@')[0];
+          if (emailPrefix) {
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ display_name: emailPrefix })
+              .eq('id', profile.id);
+            
+            if (updateError) {
+              console.error('Error updating profile:', updateError);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fixing existing profiles:', error);
+    }
+  }, []);
+
+  // Run profile fix on component mount
+  React.useEffect(() => {
+    fixExistingUserProfiles();
+  }, [fixExistingUserProfiles]);
 
   return (
     <AuthDialog

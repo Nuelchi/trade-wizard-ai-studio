@@ -54,6 +54,7 @@ export type Database = {
           likes: number | null
           price: number | null
           publish_version: number | null
+          remixes: number | null
           strategy_id: string | null
           summary: Json | null
           tags: string[] | null
@@ -74,6 +75,7 @@ export type Database = {
           likes?: number | null
           price?: number | null
           publish_version?: number | null
+          remixes?: number | null
           strategy_id?: string | null
           summary?: Json | null
           tags?: string[] | null
@@ -94,6 +96,7 @@ export type Database = {
           likes?: number | null
           price?: number | null
           publish_version?: number | null
+          remixes?: number | null
           strategy_id?: string | null
           summary?: Json | null
           tags?: string[] | null
@@ -124,6 +127,7 @@ export type Database = {
           is_public: boolean | null
           likes: number | null
           price: number | null
+          remixes: number | null
           summary: Json | null
           tags: string[] | null
           thumbnail: string | null
@@ -142,6 +146,7 @@ export type Database = {
           is_public?: boolean | null
           likes?: number | null
           price?: number | null
+          remixes?: number | null
           summary?: Json | null
           tags?: string[] | null
           thumbnail?: string | null
@@ -160,6 +165,7 @@ export type Database = {
           is_public?: boolean | null
           likes?: number | null
           price?: number | null
+          remixes?: number | null
           summary?: Json | null
           tags?: string[] | null
           thumbnail?: string | null

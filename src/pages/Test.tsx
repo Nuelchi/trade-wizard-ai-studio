@@ -257,7 +257,7 @@ const Test = () => {
           </div>
         </div>
 
-                        <div className="flex-1 p-4">
+                        <div className="flex-1 p-4 overflow-y-auto max-h-[500px]">
                           {selectedStrategy ? (
                             <Card>
                               <CardHeader>
