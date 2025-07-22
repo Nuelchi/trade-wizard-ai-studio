@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Learn() {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col items-center justify-center h-[70vh] text-center gap-6">
       <div className="flex items-center justify-center w-20 h-20 rounded-full bg-muted/40 mx-auto">

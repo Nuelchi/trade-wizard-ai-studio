@@ -109,7 +109,8 @@ const Dashboard = () => {
     description: "",
     tags: "",
     pricingType: "free" as "free" | "paid",
-    price: ""
+    price: "",
+    type: "FX", // Default type
   });
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
@@ -346,6 +347,7 @@ const Dashboard = () => {
         is_paid: publishData.pricingType === 'paid',
         is_active: true,
         updated_at: new Date().toISOString(),
+        type: publishData.type, // Add type to public strategy data
       };
 
       let result;
@@ -391,7 +393,8 @@ const Dashboard = () => {
         description: "",
         tags: "",
         pricingType: "free",
-        price: ""
+        price: "",
+        type: "FX", // Reset type
       });
 
       // Refresh the current strategy to reflect the changes
@@ -914,6 +917,24 @@ const Dashboard = () => {
                 price: e.target.value
               })} placeholder="0" min="0" />
                 </div>}
+              
+              {/* Strategy Type Selection */}
+              <div className="grid gap-2">
+                <Label htmlFor="type" className="text-sm font-medium">Strategy Type</Label>
+                <select
+                  id="type"
+                  value={publishData.type}
+                  onChange={e => setPublishData({ ...publishData, type: e.target.value })}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="FX">FX</option>
+                  <option value="Stock">Stock</option>
+                  <option value="Crypto">Crypto</option>
+                  <option value="ETF">ETF</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
               <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <Camera className="w-4 h-4" />

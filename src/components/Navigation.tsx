@@ -21,6 +21,11 @@ const Navigation = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   const publicNavItems = [
     { to: '/community', label: 'Community' },
     { to: '/pricing', label: 'Pricing' },
@@ -31,6 +36,7 @@ const Navigation = () => {
     { to: '/dashboard', label: 'Builder', icon: MessageSquare },
     { to: '/test', label: 'Strategy Tester', icon: TrendingUp },
     { to: '/mystrategies', label: 'My Strategies', icon: User },
+    { to: '/marketplace', label: 'Marketplace', icon: Download }, // Added Marketplace
   ];
 
   return (
@@ -75,13 +81,17 @@ const Navigation = () => {
                   })}
             </div>
             <div className="flex items-center space-x-2">
+              {/* Back to Home button for public pages, not on landing */}
+              {!user && location.pathname !== "/" && (
+                <Button variant="outline" size="sm" onClick={() => navigate("/")}>Back to Home</Button>
+              )}
               {!user ? (
                 <>
                   <Button variant="outline" size="sm" onClick={() => openAuthDialog('login')}>Log in</Button>
                   <Button size="sm" onClick={() => openAuthDialog('signup')}>Get started</Button>
                 </>
               ) : (
-                <Button variant="outline" size="sm" onClick={signOut}>Logout</Button>
+                <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
               )}
             </div>
           </div>
