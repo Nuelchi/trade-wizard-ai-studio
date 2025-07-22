@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, Copy, Eye, GitFork, DollarSign, Heart } from "lucide-react";
+import { Activity, Copy, Eye, GitFork, DollarSign, Heart, MoreVertical } from "lucide-react";
 import React from "react";
 
 export type Strategy = {
@@ -30,9 +30,10 @@ type Props = {
   onCopy?: (id: number) => void;
   onRemix?: (id: number) => void;
   onBuy?: (id: number, price: string) => void;
+  onMoreInfo?: (strategy: Strategy) => void;
 };
 
-const StrategyShowcaseGrid: React.FC<Props> = ({ strategies, onCopy, onRemix, onBuy }) => (
+const StrategyShowcaseGrid: React.FC<Props> = ({ strategies, onCopy, onRemix, onBuy, onMoreInfo }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     {strategies.map((strategy) => (
       <Card key={strategy.id} className="trading-card hover:shadow-glow transition-all group overflow-hidden">
@@ -56,6 +57,15 @@ const StrategyShowcaseGrid: React.FC<Props> = ({ strategies, onCopy, onRemix, on
               Free
             </Badge>
           )}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoreInfo?.(strategy);
+            }}
+            className="absolute top-2 left-2 p-1 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          >
+            <MoreVertical className="w-4 h-4 text-white" />
+          </button>
         </div>
         
         <CardHeader className="pb-3">
@@ -96,8 +106,8 @@ const StrategyShowcaseGrid: React.FC<Props> = ({ strategies, onCopy, onRemix, on
 
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
             <div className="flex items-center space-x-1">
-              <Copy className="w-3 h-3" />
-              <span>{strategy.copies}</span>
+              <GitFork className="w-3 h-3" />
+              <span>{strategy.remixes ?? 0}</span>
             </div>
             <div className="flex items-center space-x-1">
               <Eye className="w-3 h-3" />
