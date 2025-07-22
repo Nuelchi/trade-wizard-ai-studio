@@ -21,6 +21,7 @@ import { useState, useCallback } from "react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ChatProvider } from "@/contexts/ChatContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const GlobalAuthDialog = () => {
   const { isOpen, setOpen, defaultTab } = useAuthDialog();
@@ -157,30 +158,32 @@ const App = () => {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith("/dashboard");
   return (
-    <ChatProvider>
-      <AuthDialogProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <GlobalAuthDialog />
-          <div className="min-h-screen bg-background">
-            {!isDashboard && <Navigation />}
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/test" element={<EnhancedTest />} />
-              <Route path="/export" element={<Export />} />
-              <Route path="/mystrategies" element={<MyStrategies />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/learn" element={<Learn />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </TooltipProvider>
-      </AuthDialogProvider>
-    </ChatProvider>
+    <ThemeProvider>
+      <ChatProvider>
+        <AuthDialogProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <GlobalAuthDialog />
+            <div className="min-h-screen bg-background">
+              {!isDashboard && <Navigation />}
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/test" element={<EnhancedTest />} />
+                <Route path="/export" element={<Export />} />
+                <Route path="/mystrategies" element={<MyStrategies />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/learn" element={<Learn />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </TooltipProvider>
+        </AuthDialogProvider>
+      </ChatProvider>
+    </ThemeProvider>
   );
 };
 

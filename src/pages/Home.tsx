@@ -63,10 +63,8 @@ const Home = () => {
   const { openAuthDialog } = useAuthDialog();
 
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-    return () => {
-      document.documentElement.classList.remove('dark');
-    };
+    // Theme is now managed globally
+    return () => {};
   }, []);
 
   const handleBuildStrategy = () => {
