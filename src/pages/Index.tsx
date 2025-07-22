@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Brain, Code, TrendingUp, Zap, Star, Copy, Play, Eye, Users, Activity, DollarSign, Heart, Download, GitFork } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import StrategyShowcaseGrid from "@/components/StrategyShowcaseGrid";
+import { useFetchStrategies } from "@/hooks/useFetchStrategies";
 
 const Index = () => {
   const [strategy, setStrategy] = useState("");
@@ -110,6 +112,9 @@ const Index = () => {
       isPublic: true
     }
   ];
+
+  const { strategies, loading, error } = useFetchStrategies({ publicOnly: true, sortBy: 'likes' });
+  const limitedShowcaseStrategies = strategies.slice(0, 12);
 
   const features = [
     {
@@ -250,100 +255,20 @@ const Index = () => {
               Explore top-performing strategies created by our community. Copy, remix, or purchase to accelerate your trading success.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {showcaseStrategies.map((strategy) => (
-              <Card key={strategy.id} className="trading-card hover:shadow-glow transition-all group overflow-hidden">
-                <div className="relative">
-                  <div className="h-32 bg-gradient-card flex items-center justify-center">
-                    <Activity className="w-12 h-12 text-primary/50" />
-                  </div>
-                  {strategy.isPublic && (
-                    <Badge className="absolute top-2 right-2 bg-success text-success-foreground">
-                      Free
-                    </Badge>
-                  )}
-                </div>
-                
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardTitle className="text-lg">{strategy.title}</CardTitle>
-                    <div className="flex items-center space-x-1">
-                      <Heart className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">{strategy.likes}</span>
-                    </div>
-                  </div>
-                  <CardDescription className="text-sm">{strategy.description}</CardDescription>
-                  
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">
-                      {strategy.avatar}
-                    </div>
-                    <span className="text-sm text-muted-foreground">{strategy.author}</span>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="metric-card">
-                      <div className="text-sm font-medium text-success">{strategy.performance.returns}</div>
-                      <div className="text-xs text-muted-foreground">Returns</div>
-                    </div>
-                    <div className="metric-card">
-                      <div className="text-sm font-medium">{strategy.performance.winRate}</div>
-                      <div className="text-xs text-muted-foreground">Win Rate</div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {strategy.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                    <div className="flex items-center space-x-1">
-                      <Copy className="w-3 h-3" />
-                      <span>{strategy.copies}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Eye className="w-3 h-3" />
-                      <span>Live</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {strategy.isPublic ? (
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="flex-1" onClick={() => handleCopyStrategy(strategy.id)}>
-                          <Copy className="w-3 h-3 mr-1" />
-                          Copy
-                        </Button>
-                        <Button size="sm" className="flex-1" onClick={() => handleRemixStrategy(strategy.id)}>
-                          <GitFork className="w-3 h-3 mr-1" />
-                          Remix
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <Eye className="w-3 h-3 mr-1" />
-                          Preview
-                        </Button>
-                        <Button size="sm" className="flex-1 bg-gradient-primary" onClick={() => handleBuyStrategy(strategy.id, strategy.price)}>
-                          <DollarSign className="w-3 h-3 mr-1" />
-                          {strategy.price}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
+          {loading ? (
+            <div className="flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+          ) : error ? (
+            <div className="text-center text-destructive py-12">{error}</div>
+          ) : (
+            <StrategyShowcaseGrid
+              strategies={limitedShowcaseStrategies}
+              onCopy={handleCopyStrategy}
+              onRemix={handleRemixStrategy}
+              onBuy={handleBuyStrategy}
+            />
+          )}
           <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" onClick={() => navigate("/marketplace")}> 
               View All Strategies
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

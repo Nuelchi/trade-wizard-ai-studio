@@ -8,56 +8,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 import { useChatContext } from '@/contexts/ChatContext';
+import { useFetchStrategies } from "@/hooks/useFetchStrategies";
 
 type Strategy = Database['public']['Tables']['strategies']['Row'];
 type StrategyInsert = Database['public']['Tables']['strategies']['Insert'];
 type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
 
 const MyStrategies = () => {
-  const [strategies, setStrategies] = useState<Strategy[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { strategies, loading, error } = useFetchStrategies({ publicOnly: false, userId: user?.id });
   const navigate = useNavigate();
   const { setMessages } = useChatContext();
 
-  useEffect(() => {
-    if (!user) return;
-    setLoading(true);
-    supabase
-      .from('strategies')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) {
-          toast('Failed to fetch strategies');
-        } else {
-          setStrategies(data || []);
-        }
-        setLoading(false);
-      });
-  }, [user]);
-
-  const handleDelete = async (id: string) => {
-    const confirmed = window.confirm('Are you sure you want to delete this strategy? This action cannot be undone.');
-    if (!confirmed) return;
-    const { error } = await supabase.from('strategies').delete().eq('id', id);
-    if (error) {
-      toast('Failed to delete strategy');
-    } else {
-      setStrategies((prev) => prev.filter((s) => s.id !== id));
-      toast('Strategy deleted');
-    }
-  };
-
-  const handleOpen = (strategy: Strategy) => {
+  const handleOpen = (strategy: any) => {
     setMessages(Array.isArray(strategy.chat_history) ? strategy.chat_history as any[] : []);
     navigate('/dashboard', { state: { strategy } });
-  };
-
-  const handleExport = (strategy: Strategy) => {
-    // Implement export logic as needed
-    toast('Export not implemented yet.');
   };
 
   if (!loading && strategies.length === 0) {
@@ -83,7 +48,9 @@ const MyStrategies = () => {
     <div className="max-w-6xl mx-auto px-6 py-8">
       <h1 className="text-3xl font-bold text-foreground mb-6">My Strategies</h1>
       {loading ? (
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+      ) : error ? (
+        <div className="text-center text-destructive py-12">{error}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {strategies.map((s) => (
@@ -103,22 +70,18 @@ const MyStrategies = () => {
                   {s.title}
                 </CardTitle>
                 <CardDescription>
-                  Saved: {new Date(s.created_at).toLocaleString()}
+                  Saved: {s.created_at ? new Date(s.created_at).toLocaleString() : '--'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-2 text-sm text-muted-foreground line-clamp-2">
-                  {s.description || (s.summary as any)?.description || '--'}
-                </div>
                 <div className="flex gap-2 mt-2">
-                  <Button onClick={e => { e.stopPropagation(); handleOpen(s); }} variant="default">
-                    <Edit className="w-4 h-4 mr-1" /> Open
+                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); /* handleExport(s); */ }}>
+                    <Download className="w-4 h-4 mr-1" />
+                    Export
                   </Button>
-                  <Button onClick={e => { e.stopPropagation(); handleExport(s); }} variant="outline">
-                    <Download className="w-4 h-4 mr-1" /> Export
-                  </Button>
-                  <Button onClick={e => { e.stopPropagation(); handleDelete(s.id); }} variant="destructive">
-                    <Trash className="w-4 h-4 mr-1" /> Delete
+                  <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); /* handleDelete(s.id); */ }}>
+                    <Trash className="w-4 h-4 mr-1" />
+                    Delete
                   </Button>
                 </div>
               </CardContent>
