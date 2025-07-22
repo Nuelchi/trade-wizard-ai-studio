@@ -730,7 +730,7 @@ const Dashboard = () => {
               Publish
             </Button>
             {/* Upgrade Button */}
-            <Button variant="outline" size="sm" className="h-8">
+            <Button variant="outline" size="sm" className="h-8" onClick={() => navigate('/pricing')}>
               Upgrade
             </Button>
             {/* Theme Toggle */}
