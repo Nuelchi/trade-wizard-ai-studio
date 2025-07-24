@@ -18,7 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import html2canvas from 'html2canvas';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ThemeToggle from '@/components/ThemeToggle';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Area, Bar } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Area, Bar } from 'recharts';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -763,10 +764,39 @@ const Dashboard = () => {
               <Upload className="w-4 h-4" />
               Publish
             </Button>
-            {/* Upgrade Button */}
-            <Button variant="outline" size="sm" className="h-8" onClick={() => navigate('/pricing')}>
-              Upgrade
-            </Button>
+            {/* Dynamic Plan/Upgrade Button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={subscription && subscription.tier !== 'Free' ? 'outline' : 'default'}
+                    size="sm"
+                    className="h-8 flex items-center gap-2 px-4"
+                    onClick={() => {
+                      if (!subscription || subscription.tier === 'Free') navigate('/pricing');
+                    }}
+                    disabled={!!subscription && subscription.tier !== 'Free'}
+                  >
+                    {subscription && subscription.tier !== 'Free' ? (
+                      <>
+                        <Download className="w-4 h-4" />
+                        <span className="hidden md:inline">{subscription.tier}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>Upgrade</span>
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {subscription && subscription.tier !== 'Free'
+                    ? `Current Plan: ${subscription.tier}`
+                    : 'Upgrade to unlock premium features'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {/* Theme Toggle */}
             <ThemeToggle />
             {/* Settings/User Menu */}
