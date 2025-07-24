@@ -222,6 +222,7 @@ const Dashboard = () => {
     await signOut();
     setCurrentStrategy(null);
     setGeneratedCode(null);
+    navigate('/');
   };
 
   const handleNameChange = (newName: string) => {
@@ -842,7 +843,7 @@ const Dashboard = () => {
                   <User className="mr-2 h-4 w-4" />
                   <span>{userProfile?.display_name || user?.email}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign Out</span>
                 </DropdownMenuItem>
