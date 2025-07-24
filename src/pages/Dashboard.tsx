@@ -544,6 +544,7 @@ const Dashboard = () => {
     { path: '/dashboard', label: 'Builder', icon: MessageSquare },
     { path: '/test', label: 'Strategy Tester', icon: TrendingUp },
     { path: '/mystrategies', label: 'My Strategies', icon: User },
+    { path: '/marketplace', label: 'Marketplace', icon: Download }, // Added Marketplace
   ];
   const currentSection = sectionOptions.find(opt => location.pathname.startsWith(opt.path)) || sectionOptions[0];
 
