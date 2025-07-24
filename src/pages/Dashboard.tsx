@@ -608,7 +608,19 @@ const Dashboard = () => {
 
   return <AuthGuard requireAuth={true}>
     {/* Subscription Status Banner */}
-    {/* Removed subscription status banner as requested */}
+    <div className="w-full flex justify-center items-center py-2 bg-muted/40 border-b border-border">
+      {loadingSub ? (
+        <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="animate-spin w-4 h-4" /> Checking subscription...</span>
+      ) : subscription ? (
+        <span className="flex items-center gap-2 text-sm">
+          <Badge variant="outline">{subscription.tier}</Badge>
+          Status: <span className="font-semibold">{subscription.status}</span>
+          {subscription.status !== 'active' && <span className="text-destructive ml-2">(Not Active)</span>}
+        </span>
+      ) : (
+        <span className="text-sm text-destructive">No active subscription found.</span>
+      )}
+    </div>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">
@@ -736,31 +748,19 @@ const Dashboard = () => {
                 Save
               </Button>
             )}
-            {/* Code/Chart Toggle - replaced with a modern toggle switch */}
+            {/* Code/Chart Toggle */}
             <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
-              <Button
-                variant={previewMode === 'code' ? 'modern' : 'modern-outline'}
-                size="sm"
-                onClick={() => setPreviewMode('code')}
-                className="flex items-center gap-2 h-8 px-2 transition-all duration-200"
-                aria-label="Code View"
-              >
+              <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
                 <FileCode className="w-4 h-4" />
-                {previewMode === 'code' && <span className="ml-1">Code</span>}
+                Code
               </Button>
-              <Button
-                variant={previewMode === 'chart' ? 'modern' : 'modern-outline'}
-                size="sm"
-                onClick={() => setPreviewMode('chart')}
-                className="flex items-center gap-2 h-8 px-2 transition-all duration-200"
-                aria-label="Chart View"
-              >
+              <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
                 <BarChart3 className="w-4 h-4" />
-                {previewMode === 'chart' && <span className="ml-1">Chart</span>}
+                Chart
               </Button>
             </div>
             {/* Publish Button - now labeled and primary */}
-            <Button variant="modern" size="sm" onClick={handlePublishStrategy} className="h-8 flex items-center gap-2 px-4">
+            <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary flex items-center gap-2 px-4">
               <Upload className="w-4 h-4" />
               Publish
             </Button>
@@ -769,7 +769,7 @@ const Dashboard = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant={subscription && subscription.tier !== 'Free' ? 'modern-outline' : 'modern'}
+                    variant={subscription && subscription.tier !== 'Free' ? 'outline' : 'default'}
                     size="sm"
                     className="h-8 flex items-center gap-2 px-4"
                     onClick={() => {
