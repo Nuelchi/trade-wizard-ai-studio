@@ -270,42 +270,15 @@ const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
         {/* Spacer */}
         <div className="flex-1" />
         {/* Strategy dropdown and upload icon */}
+        {/* Removed: Play button, strategy dropdown, and upload icon */}
+        {/*
         <div className="flex flex-row items-center gap-2">
-          {/* Run Backtest Play Icon */}
-          <button
-            className="p-2 rounded hover:bg-accent transition-colors border border-border"
-            title="Run Backtest"
-            onClick={() => {
-              // TODO: Replace with real OHLCV data and backtest logic
-              // Example: runBacktestAndSync(selectedStrategy, ohlcv);
-              alert('Backtest triggered!');
-            }}
-            type="button"
-          >
-            <Play className="w-4 h-4 text-primary" />
-          </button>
-          {/* Strategy Dropdown */}
-          <select
-            className="px-2 py-1 rounded border border-border bg-background text-xs min-w-[180px]"
-            value={selectedStrategy?.id || ''}
-            onChange={e => handleStrategySelect(e.target.value)}
-          >
-            {strategies.map(s => (
-              <option key={s.id} value={s.id}>{s.title}</option>
-            ))}
-          </select>
-          {/* Upload Icon */}
-          <button className="p-2 rounded hover:bg-accent transition-colors border border-border" onClick={handleUploadClick} type="button">
-            <Upload className="w-4 h-4" />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pine,.mq4,.mq5,.txt"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+          <button ...>...</button>
+          <select ...>...</select>
+          <button ...>...</button>
+          <input ... />
         </div>
+        */}
       </div>
       {/* Chart area fills all remaining space */}
       <div className="flex-1 h-0 w-full">
