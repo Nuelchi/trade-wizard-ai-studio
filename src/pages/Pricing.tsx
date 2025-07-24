@@ -143,7 +143,8 @@ export default function Pricing() {
                 try {
                   const url = await createPolarCheckout(productId, user.email);
                   toast.success("Redirecting to secure checkout...");
-                  window.location.href = url;
+                  const encodedUrl = encodeURI(url);
+                  window.location.href = encodedUrl;
                 } catch (err) {
                   const message = err instanceof Error ? err.message : String(err);
                   toast.error("Failed to start checkout: " + message);

@@ -1,20 +1,28 @@
-export async function createPolarCheckout(productId: string, userEmail: string) {
-  const apiKey = import.meta.env.VITE_POLAR_API_KEY || process.env.VITE_POLAR_API_KEY;
-  if (!apiKey) throw new Error('Polar API key not set');
+import { supabase } from '@/integrations/supabase/client';
 
-  const res = await fetch('https://api.polar.sh/v1/checkouts', {
+// Hardcoded production Supabase Edge Function URL for Polar checkout
+export async function createPolarCheckout(product_id: string, email: string) {
+  const url = 'https://kgfzbkwyepchbysaysky.functions.supabase.co/polar-checkout'; // Hardcoded production URL
+  // Get the current user's access token
+  const session = (await supabase.auth.getSession()).data.session;
+  const accessToken = session?.access_token;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+  };
+  const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      product_id: productId,
-      customer_email: userEmail,
-      // Optionally, add more metadata here
-    }),
+    headers,
+    body: JSON.stringify({ product_id, email }),
   });
-  if (!res.ok) throw new Error('Failed to create Polar checkout');
+  if (res.status === 404) {
+    throw new Error('Checkout function not found. Please check your deployment and URL.');
+  }
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'Failed to create Polar checkout');
+  }
   const data = await res.json();
+  if (!data.url) throw new Error('No checkout URL returned from server.');
   return data.url;
 } 
