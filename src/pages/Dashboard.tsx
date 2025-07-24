@@ -748,34 +748,47 @@ const Dashboard = () => {
                 Save
               </Button>
             )}
-            {/* Code/Chart Toggle */}
-            <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
-              <Button variant={previewMode === 'code' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('code')} className="flex items-center gap-2 h-8">
+            {/* Code/Chart Toggle - pill group, only active shows label, inactive is just icon */}
+            <div className="flex items-center rounded-full bg-muted/60 p-1 gap-1">
+              <button
+                onClick={() => setPreviewMode('code')}
+                className={`flex items-center transition-all duration-200 px-3 h-9 rounded-full font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${previewMode === 'code' ? 'bg-background shadow text-primary' : 'hover:bg-muted/80 text-muted-foreground'} `}
+                aria-label="Code View"
+                type="button"
+              >
                 <FileCode className="w-4 h-4" />
-                Code
-              </Button>
-              <Button variant={previewMode === 'chart' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('chart')} className="flex items-center gap-2 h-8">
+                {previewMode === 'code' && <span className="ml-2">Code</span>}
+              </button>
+              <button
+                onClick={() => setPreviewMode('chart')}
+                className={`flex items-center transition-all duration-200 px-3 h-9 rounded-full font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${previewMode === 'chart' ? 'bg-background shadow text-primary' : 'hover:bg-muted/80 text-muted-foreground'} `}
+                aria-label="Chart View"
+                type="button"
+              >
                 <BarChart3 className="w-4 h-4" />
-                Chart
-              </Button>
+                {previewMode === 'chart' && <span className="ml-2">Chart</span>}
+              </button>
             </div>
-            {/* Publish Button - now labeled and primary */}
-            <Button variant="default" size="sm" onClick={handlePublishStrategy} className="h-8 bg-gradient-primary flex items-center gap-2 px-4">
+            {/* Publish Button - minimal/outline, icon+label, highlight on hover/active */}
+            <button
+              onClick={handlePublishStrategy}
+              className="flex items-center gap-2 px-4 h-9 rounded-full font-medium text-sm border border-border bg-transparent text-foreground hover:bg-muted/70 active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 ml-2"
+              type="button"
+            >
               <Upload className="w-4 h-4" />
-              Publish
-            </Button>
-            {/* Dynamic Plan/Upgrade Button */}
+              <span>Publish</span>
+            </button>
+            {/* Upgrade Button - minimal/outline, icon+label, highlight on hover/active, disabled if subscribed */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant={subscription && subscription.tier !== 'Free' ? 'outline' : 'default'}
-                    size="sm"
-                    className="h-8 flex items-center gap-2 px-4"
+                  <button
                     onClick={() => {
                       if (!subscription || subscription.tier === 'Free') navigate('/pricing');
                     }}
                     disabled={!!subscription && subscription.tier !== 'Free'}
+                    className={`flex items-center gap-2 px-4 h-9 rounded-full font-medium text-sm border border-border bg-transparent ${subscription && subscription.tier !== 'Free' ? 'text-muted-foreground opacity-60 cursor-not-allowed' : 'text-foreground hover:bg-muted/70 active:scale-95'} transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 ml-2`}
+                    type="button"
                   >
                     {subscription && subscription.tier !== 'Free' ? (
                       <>
@@ -788,7 +801,7 @@ const Dashboard = () => {
                         <span>Upgrade</span>
                       </>
                     )}
-                  </Button>
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent>
                   {subscription && subscription.tier !== 'Free'
