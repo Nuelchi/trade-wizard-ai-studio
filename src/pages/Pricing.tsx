@@ -132,16 +132,21 @@ export default function Pricing() {
                   window.location.href = "/dashboard";
                   return;
                 }
+                if (!user || !user.email) {
+                  toast.error("You must be logged in to start checkout. Please log in or sign up.");
+                  return;
+                }
                 setLoadingIdx(idx);
                 let productId = "";
                 if (plan.name === "Premium") productId = annual[idx] ? productIds.premium_annual : productIds.premium_monthly;
                 if (plan.name === "Ultimate") productId = annual[idx] ? productIds.ultimate_annual : productIds.ultimate_monthly;
                 try {
-                  const url = await createPolarCheckout(productId, user?.email || "");
+                  const url = await createPolarCheckout(productId, user.email);
                   toast.success("Redirecting to secure checkout...");
                   window.location.href = url;
                 } catch (err) {
-                  toast.error("Failed to start checkout. Please try again.");
+                  const message = err instanceof Error ? err.message : String(err);
+                  toast.error("Failed to start checkout: " + message);
                 } finally {
                   setLoadingIdx(null);
                 }
