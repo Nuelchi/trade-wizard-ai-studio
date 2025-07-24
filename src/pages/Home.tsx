@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -679,9 +679,11 @@ const Home = () => {
           </Dialog>
 
           <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              View All Strategies
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button asChild variant="outline" size="lg">
+              <NavLink to="/marketplace" className="flex items-center justify-center">
+                View All Strategies
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </NavLink>
             </Button>
           </div>
         </div>
