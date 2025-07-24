@@ -26,5 +26,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "supabase/functions/polar-checkout.ts", "supabase/functions/polar-webhook.ts"]
 }

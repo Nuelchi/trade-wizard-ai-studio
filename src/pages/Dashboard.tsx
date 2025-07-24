@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu, Square, MessageSquarePlus, LayoutPanelLeft, Play } from 'lucide-react';
+import { MessageSquare, Code, User, LogOut, Eye, Settings, ChevronDown, Save, Share2, Download, Upload, Moon, Sun, Bell, HelpCircle, BarChart3, FileCode, ToggleLeft, ToggleRight, Camera, Globe, Lock, TrendingUp, Menu, Square, MessageSquarePlus, LayoutPanelLeft, Play, Loader2 } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import AuthGuard from '@/components/AuthGuard';
 import ChatInterface from '@/components/ChatInterface';
@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useChatContext } from '@/contexts/ChatContext';
 import TradingChart from '@/components/TradingChart';
+import { Badge } from '@/components/ui/badge';
 // Remove: import sha256 from 'crypto-js/sha256';
 // Add a simple hash function (djb2)
 function simpleHash(str) {
@@ -129,6 +130,24 @@ const Dashboard = () => {
   const location = useLocation();
   const [pendingThumbnail, setPendingThumbnail] = useState<null | { strategy: any, newCode: string }>(null);
   const lastCapturedCodeHash = useRef('');
+  const [subscription, setSubscription] = useState<any>(null);
+  const [loadingSub, setLoadingSub] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    setLoadingSub(true);
+    supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single()
+      .then(({ data, error }) => {
+        setSubscription(data);
+        setLoadingSub(false);
+      });
+  }, [user]);
 
   // Remove thumbnail logic from handleStrategyGenerated and useEffect
   const handleStrategyGenerated = async (strategy: any) => {
@@ -587,6 +606,20 @@ const Dashboard = () => {
   ];
 
   return <AuthGuard requireAuth={true}>
+    {/* Subscription Status Banner */}
+    <div className="w-full flex justify-center items-center py-2 bg-muted/40 border-b border-border">
+      {loadingSub ? (
+        <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="animate-spin w-4 h-4" /> Checking subscription...</span>
+      ) : subscription ? (
+        <span className="flex items-center gap-2 text-sm">
+          <Badge variant="outline">{subscription.tier}</Badge>
+          Status: <span className="font-semibold">{subscription.status}</span>
+          {subscription.status !== 'active' && <span className="text-destructive ml-2">(Not Active)</span>}
+        </span>
+      ) : (
+        <span className="text-sm text-destructive">No active subscription found.</span>
+      )}
+    </div>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createPolarCheckout } from "@/lib/polar";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -137,9 +138,10 @@ export default function Pricing() {
                 if (plan.name === "Ultimate") productId = annual[idx] ? productIds.ultimate_annual : productIds.ultimate_monthly;
                 try {
                   const url = await createPolarCheckout(productId, user?.email || "");
+                  toast.success("Redirecting to secure checkout...");
                   window.location.href = url;
                 } catch (err) {
-                  alert("Failed to start checkout. Please try again.");
+                  toast.error("Failed to start checkout. Please try again.");
                 } finally {
                   setLoadingIdx(null);
                 }

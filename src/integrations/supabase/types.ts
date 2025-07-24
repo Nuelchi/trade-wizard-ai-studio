@@ -196,6 +196,66 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          user_id: string;
+          tier: string | null;
+          status: string | null;
+          provider: string | null;
+          polar_subscription_id: string | null;
+          polar_customer_id: string | null;
+          polar_checkout_id: string | null;
+          polar_product_id: string | null;
+          polar_price_id: string | null;
+          amount: number | null;
+          billing_period: string | null;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean | null;
+          start_date: string | null;
+          end_date: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          tier?: string | null;
+          status?: string | null;
+          provider?: string | null;
+          polar_subscription_id?: string | null;
+          polar_customer_id?: string | null;
+          polar_checkout_id?: string | null;
+          polar_product_id?: string | null;
+          polar_price_id?: string | null;
+          amount?: number | null;
+          billing_period?: string | null;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean | null;
+          start_date?: string | null;
+          end_date?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          user_id?: string;
+          tier?: string | null;
+          status?: string | null;
+          provider?: string | null;
+          polar_subscription_id?: string | null;
+          polar_customer_id?: string | null;
+          polar_checkout_id?: string | null;
+          polar_product_id?: string | null;
+          polar_price_id?: string | null;
+          amount?: number | null;
+          billing_period?: string | null;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean | null;
+          start_date?: string | null;
+          end_date?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
     }
     Views: {
       [_ in never]: never

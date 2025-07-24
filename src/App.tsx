@@ -15,6 +15,7 @@ import Marketplace from './pages/Marketplace';
 import Pricing from './pages/Pricing';
 import Community from './pages/Community';
 import Learn from './pages/Learn';
+import Account from './pages/Account';
 import { AuthDialogProvider, useAuthDialog } from "@/contexts/AuthDialogContext";
 import AuthDialog from "./components/AuthDialog";
 import { useState, useCallback } from "react";
@@ -177,6 +178,7 @@ const App = () => {
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/community" element={<Community />} />
                 <Route path="/learn" element={<Learn />} />
+                <Route path="/account" element={<Account />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
