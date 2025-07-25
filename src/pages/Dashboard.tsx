@@ -462,7 +462,12 @@ const Dashboard = () => {
 
   // Load strategies for dropdown
   useEffect(() => {
-    if (!user) return;
+    let didCancel = false;
+    if (!user) {
+      setLoadingStrategies(true);
+      setTimeout(() => { if (!didCancel) setLoadingStrategies(false); }, 2000);
+      return () => { didCancel = true; };
+    }
     setLoadingStrategies(true);
     supabase
       .from('strategies')
@@ -470,9 +475,16 @@ const Dashboard = () => {
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .then(({ data, error }) => {
-        if (!error) setStrategies(data || []);
-        setLoadingStrategies(false);
+        if (!didCancel) {
+          if (!error) setStrategies(data || []);
+          else {
+            setStrategies([]);
+            toast({ title: 'Failed to load strategies', description: error.message, variant: 'destructive' });
+          }
+          setLoadingStrategies(false);
+        }
       });
+    return () => { didCancel = true; };
   }, [user]);
 
   // Fetch user profile
@@ -645,7 +657,7 @@ const Dashboard = () => {
                   <ChevronDown className="w-3 h-3 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48 sm:w-64 max-h-60 sm:max-h-96 overflow-y-auto">
+              <DropdownMenuContent align="start" className="w-48 sm:w-64 max-h-60 sm:max-h-96 overflow-y-auto z-50 shadow-lg">
                 {loadingStrategies ? (
                   <DropdownMenuItem disabled>
                     <div className="flex items-center gap-2 w-full">
@@ -655,7 +667,7 @@ const Dashboard = () => {
                   </DropdownMenuItem>
                 ) : strategies.length === 0 ? (
                   <DropdownMenuItem disabled>
-                    <span className="text-sm text-muted-foreground">No strategies found</span>
+                    <span className="text-sm text-muted-foreground">No strategies found or failed to load.</span>
                   </DropdownMenuItem>
                 ) : (
                   <>
@@ -727,7 +739,7 @@ const Dashboard = () => {
                   <ChevronDown className="w-4 h-4 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-36 sm:w-48">
+              <DropdownMenuContent align="start" className="w-36 sm:w-48 z-50 shadow-lg">
                 {sectionOptions.map(opt => (
                   <DropdownMenuItem asChild key={opt.path} className={opt.path === currentSection.path ? 'bg-muted font-semibold' : ''}>
                     <Link to={opt.path} className="flex items-center gap-2">
@@ -864,35 +876,35 @@ const Dashboard = () => {
             </div>
           )}
           {/* Right Panel - Live Preview */}
-          <div className="w-full sm:w-2/3 min-h-0 flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
+          <div className="w-full sm:w-2/3 min-h-0 flex flex-col bg-background min-h-0 sm:overflow-hidden sm:h-full overflow-visible h-auto scrollbar-hide">
             {previewMode === 'code' ? (
               <CodePreview strategy={currentStrategy} />
             ) : previewMode === 'chart' ? (
-              <div className="h-full flex flex-col min-h-0 overflow-hidden">
+              <div className="flex flex-col min-h-0 sm:h-full sm:overflow-hidden overflow-visible h-auto">
                 <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
                 <div id="chart-preview" className="w-full mt-4">
                   <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-2 sm:p-4 flex flex-col gap-4 sm:gap-6">
                     {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
-                    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-end w-full mb-2 sm:mb-4 gap-2 sm:gap-0">
+                    <div className="flex flex-row flex-wrap justify-between gap-2 text-xs sm:flex-row sm:justify-between sm:items-end w-full mb-2 sm:mb-4 sm:gap-0">
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
-                        <span className="text-base sm:text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Total P&L</span>
+                        <span className="text-sm sm:text-base sm:text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                        <span className="text-base sm:text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                        <span className="text-sm sm:text-base sm:text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-                        <span className="text-base sm:text-lg font-bold text-foreground">{analytics.totalTrades}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Total Trades</span>
+                        <span className="text-sm sm:text-base sm:text-lg font-bold text-foreground">{analytics.totalTrades}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
-                        <span className="text-base sm:text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Profitable Trades</span>
+                        <span className="text-sm sm:text-base sm:text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-                        <span className="text-base sm:text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Profit Factor</span>
+                        <span className="text-sm sm:text-base sm:text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
                       </div>
                     </div>
                     {/* Equity/Drawdown Curve Chart */}

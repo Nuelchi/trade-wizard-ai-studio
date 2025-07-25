@@ -74,12 +74,12 @@ const MyStrategies = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); /* handleExport(s); */ }}>
+                <div className="flex justify-between gap-2 mt-2 w-full">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={(e) => { e.stopPropagation(); /* handleExport(s); */ }}>
                     <Download className="w-4 h-4 mr-1" />
                     Export
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); /* handleDelete(s.id); */ }}>
+                  <Button size="sm" variant="destructive" className="flex-1" onClick={(e) => { e.stopPropagation(); /* handleDelete(s.id); */ }}>
                     <Trash className="w-4 h-4 mr-1" />
                     Delete
                   </Button>

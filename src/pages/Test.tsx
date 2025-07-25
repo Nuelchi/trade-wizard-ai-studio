@@ -206,10 +206,10 @@ const Test = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col sm:flex-row sm:overflow-hidden overflow-visible h-auto">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
               <div className="border-b border-border bg-muted/20">
-                <TabsList className="ml-4">
+                <TabsList className="ml-2 sm:ml-4 flex-nowrap overflow-x-auto whitespace-nowrap no-scrollbar text-xs sm:text-base max-w-full p-0 gap-1 sm:gap-2">
                   <TabsTrigger value="builder">
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Strategy Builder
@@ -221,7 +221,7 @@ const Test = () => {
                 </TabsList>
               </div>
 
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden min-h-0">
                 <TabsContent value="builder" className="h-full m-0">
                   <ResizablePanelGroup direction="horizontal" className="h-full">
                     <ResizablePanel defaultSize={50} minSize={30}>
@@ -309,15 +309,15 @@ const Test = () => {
                   </ResizablePanelGroup>
                 </TabsContent>
 
-                <TabsContent value="tester" className="h-full m-0">
-                  <div className="flex flex-col h-full w-full">
+                <TabsContent value="tester" className="h-auto m-0">
+                  <div className="flex flex-col h-auto w-full min-h-0">
                     {/* Chart container */}
                     <div className="flex-1 bg-background border-b border-border">
                       <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
                     </div>
                     
                     {/* Bottom sidebar/panel */}
-                    <div className="h-64 bg-muted/20 border-t border-border p-4">
+                    <div className="h-auto sm:h-64 bg-muted/20 border-t border-border p-4 overflow-visible min-h-0">
                       <div className="h-full flex items-center justify-center">
                         <div className="text-center">
                           <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
