@@ -30,18 +30,19 @@ const AuthDialog = ({ open, onOpenChange, onAuth, onSocialAuth, loading, default
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-xs sm:max-w-md w-full p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold">
+          <DialogTitle className="text-center text-xl sm:text-2xl font-bold">
             Join Trainflow
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2 sm:gap-3">
             <Button
               variant="outline"
               onClick={() => onSocialAuth('google')}
               className="w-full"
+              size="sm"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -55,6 +56,7 @@ const AuthDialog = ({ open, onOpenChange, onAuth, onSocialAuth, loading, default
               variant="outline"
               onClick={() => onSocialAuth('twitter')}
               className="w-full"
+              size="sm"
             >
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -72,27 +74,27 @@ const AuthDialog = ({ open, onOpenChange, onAuth, onSocialAuth, loading, default
           </div>
         </div>
         <Tabs value={tab} onValueChange={v => setTab(v as 'login' | 'signup')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 text-xs sm:text-base">
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
             <TabsTrigger value="login">Log In</TabsTrigger>
           </TabsList>
-          <TabsContent value="signup" className="space-y-4">
-            <form onSubmit={handleSubmit('signup')} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Full Name</Label>
+          <TabsContent value="signup" className="space-y-3 sm:space-y-4">
+            <form onSubmit={handleSubmit('signup')} className="space-y-3 sm:space-y-4">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="signup-name" className="text-xs sm:text-sm">Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="signup-name"
                     name="name"
                     placeholder="John Doe"
-                    className="pl-10"
+                    className="pl-10 text-xs sm:text-base"
                     required
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="signup-email" className="text-xs sm:text-sm">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -100,13 +102,13 @@ const AuthDialog = ({ open, onOpenChange, onAuth, onSocialAuth, loading, default
                     name="email"
                     type="email"
                     placeholder="john@example.com"
-                    className="pl-10"
+                    className="pl-10 text-xs sm:text-base"
                     required
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="signup-password" className="text-xs sm:text-sm">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -114,20 +116,20 @@ const AuthDialog = ({ open, onOpenChange, onAuth, onSocialAuth, loading, default
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className="pl-10 text-xs sm:text-base"
                     required
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" size="sm" disabled={loading}>
                 {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
           </TabsContent>
-          <TabsContent value="login" className="space-y-4">
-            <form onSubmit={handleSubmit('login')} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+          <TabsContent value="login" className="space-y-3 sm:space-y-4">
+            <form onSubmit={handleSubmit('login')} className="space-y-3 sm:space-y-4">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="login-email" className="text-xs sm:text-sm">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -135,13 +137,13 @@ const AuthDialog = ({ open, onOpenChange, onAuth, onSocialAuth, loading, default
                     name="email"
                     type="email"
                     placeholder="john@example.com"
-                    className="pl-10"
+                    className="pl-10 text-xs sm:text-base"
                     required
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="login-password" className="text-xs sm:text-sm">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -149,12 +151,12 @@ const AuthDialog = ({ open, onOpenChange, onAuth, onSocialAuth, loading, default
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className="pl-10 text-xs sm:text-base"
                     required
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" size="sm" disabled={loading}>
                 {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>

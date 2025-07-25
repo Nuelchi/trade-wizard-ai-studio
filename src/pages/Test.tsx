@@ -171,39 +171,39 @@ const Test = () => {
       <AuthGuard requireAuth={true}>
         <div className="h-screen flex flex-col bg-background">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/80 backdrop-blur-md gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+              <div className="flex items-center space-x-2 mb-2 sm:mb-0">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-primary-foreground" />
                 </div>
-                <h1 className="text-xl font-bold text-foreground">Strategy Tester</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Strategy Tester</h1>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Test your strategies with live charts and detailed analytics
               </div>
-      </div>
-
-            <div className="flex items-center space-x-4">
-          <Button
-            onClick={toggleBacktest}
-                className={isRunning ? "bg-red-600 hover:bg-red-700" : ""}
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button
+                onClick={toggleBacktest}
+                className={`w-full sm:w-auto ${isRunning ? "bg-red-600 hover:bg-red-700" : ""}`}
                 variant={isRunning ? "destructive" : "default"}
-          >
-            {isRunning ? (
-              <>
-                <Pause className="w-4 h-4 mr-2" />
-                Stop Test
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 mr-2" />
-                Start Backtest
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+                size="sm"
+              >
+                {isRunning ? (
+                  <>
+                    <Pause className="w-4 h-4 mr-2" />
+                    Stop Test
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Start Backtest
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
 
           {/* Main Content */}
           <div className="flex-1 flex overflow-hidden">

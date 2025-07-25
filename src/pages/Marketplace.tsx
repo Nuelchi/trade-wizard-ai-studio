@@ -31,9 +31,9 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+      <section className="py-12 sm:py-24 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8 sm:mb-16">
             <Badge variant="outline" className="mb-4 border-primary/20 text-primary">
               <Users className="w-3 h-3 mr-1" />
               Marketplace
@@ -62,7 +62,7 @@ export default function Marketplace() {
       </section>
       {/* Optionally, add a modal here for selectedStrategy */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-xs sm:max-w-2xl w-full">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">{selectedStrategy?.title}</DialogTitle>
             <DialogDescription className="text-base">

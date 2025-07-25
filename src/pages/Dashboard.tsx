@@ -608,7 +608,7 @@ const Dashboard = () => {
 
   return <AuthGuard requireAuth={true}>
     {/* Subscription Status Banner */}
-    <div className="w-full flex justify-center items-center py-2 bg-muted/40 border-b border-border">
+    <div className="w-full flex justify-center items-center py-2 bg-muted/40 border-b border-border text-xs sm:text-sm px-2 sm:px-0">
       {loadingSub ? (
         <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="animate-spin w-4 h-4" /> Checking subscription...</span>
       ) : subscription ? (
@@ -623,9 +623,9 @@ const Dashboard = () => {
     </div>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-2 sm:px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">
           {/* Left Section - Strategy Name & Dropdown */}
-          <div className="flex items-center space-x-2 min-w-0">
+          <div className="flex items-center space-x-2 min-w-0 mb-2 sm:mb-0">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <MessageSquare className="w-4 h-4 text-primary-foreground" />
             </div>
@@ -633,20 +633,19 @@ const Dashboard = () => {
             if (e.key === 'Enter') {
               setIsEditingName(false);
             }
-          }} className="text-xl font-bold text-foreground bg-transparent border-none outline-none focus:bg-muted px-2 py-1 rounded" autoFocus /> : <h1 className="text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted" onClick={() => setIsEditingName(true)} title="Click to edit strategy name">
+          }} className="text-lg sm:text-xl font-bold text-foreground bg-transparent border-none outline-none focus:bg-muted px-2 py-1 rounded" autoFocus /> : <h1 className="text-lg sm:text-xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted" onClick={() => setIsEditingName(true)} title="Click to edit strategy name">
                 {strategyName}
               </h1>}
-            
             {/* Strategy Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 px-3 h-8 border-border bg-background text-foreground font-medium shadow-none">
+                <Button variant="outline" size="sm" className="flex items-center gap-2 px-2 sm:px-3 h-8 border-border bg-background text-foreground font-medium shadow-none text-xs sm:text-sm">
                   <User className="w-4 h-4" />
                   <span className="text-xs">Strategies</span>
                   <ChevronDown className="w-3 h-3 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 max-h-96 overflow-y-auto">
+              <DropdownMenuContent align="start" className="w-48 sm:w-64 max-h-60 sm:max-h-96 overflow-y-auto">
                 {loadingStrategies ? (
                   <DropdownMenuItem disabled>
                     <div className="flex items-center gap-2 w-full">
@@ -701,9 +700,9 @@ const Dashboard = () => {
           </div>
 
           {/* Center Section - New Chat & Min/Max Icons + Navigation Dropdown */}
-          <div className="flex items-center gap-2 -ml-14">
+          <div className="flex items-center gap-2 sm:-ml-14 mb-2 sm:mb-0">
             <button
-              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-muted transition-colors"
+              className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-muted transition-colors"
               onClick={startNewChat}
               title="New Chat"
               aria-label="New Chat"
@@ -711,7 +710,7 @@ const Dashboard = () => {
               <MessageSquarePlus className="w-5 h-5 text-primary" />
             </button>
             <button
-              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-muted transition-colors"
+              className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setChatCollapsed(c => !c)}
               title={chatCollapsed ? "Expand Chat" : "Collapse Chat"}
               aria-label={chatCollapsed ? "Expand Chat" : "Collapse Chat"}
@@ -720,7 +719,7 @@ const Dashboard = () => {
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 px-4 min-w-[160px] justify-between border border-border bg-background text-foreground font-medium shadow-none">
+                <Button variant="outline" size="sm" className="flex items-center gap-2 px-2 sm:px-4 min-w-[100px] sm:min-w-[160px] justify-between border border-border bg-background text-foreground font-medium shadow-none text-xs sm:text-sm">
                   <span className="flex items-center gap-2">
                     {currentSection.icon && <currentSection.icon className="w-4 h-4" />}
                     {currentSection.label}
@@ -728,7 +727,7 @@ const Dashboard = () => {
                   <ChevronDown className="w-4 h-4 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuContent align="start" className="w-36 sm:w-48">
                 {sectionOptions.map(opt => (
                   <DropdownMenuItem asChild key={opt.path} className={opt.path === currentSection.path ? 'bg-muted font-semibold' : ''}>
                     <Link to={opt.path} className="flex items-center gap-2">
@@ -742,7 +741,7 @@ const Dashboard = () => {
           </div>
 
           {/* Right Section - Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {user && currentStrategy && (
               <Button variant="outline" size="sm" className="h-8" onClick={handleSaveStrategy}>
                 Save
@@ -752,7 +751,7 @@ const Dashboard = () => {
             <div className="flex items-center rounded-full bg-muted/60 p-1 gap-1">
               <button
                 onClick={() => setPreviewMode('code')}
-                className={`flex items-center transition-all duration-200 px-3 h-9 rounded-full font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${previewMode === 'code' ? 'bg-background shadow text-primary' : 'hover:bg-muted/80 text-muted-foreground'} `}
+                className={`flex items-center transition-all duration-200 px-2 sm:px-3 h-8 sm:h-9 rounded-full font-medium text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${previewMode === 'code' ? 'bg-background shadow text-primary' : 'hover:bg-muted/80 text-muted-foreground'} `}
                 aria-label="Code View"
                 type="button"
               >
@@ -761,7 +760,7 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => setPreviewMode('chart')}
-                className={`flex items-center transition-all duration-200 px-3 h-9 rounded-full font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${previewMode === 'chart' ? 'bg-background shadow text-primary' : 'hover:bg-muted/80 text-muted-foreground'} `}
+                className={`flex items-center transition-all duration-200 px-2 sm:px-3 h-8 sm:h-9 rounded-full font-medium text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${previewMode === 'chart' ? 'bg-background shadow text-primary' : 'hover:bg-muted/80 text-muted-foreground'} `}
                 aria-label="Chart View"
                 type="button"
               >
@@ -772,7 +771,7 @@ const Dashboard = () => {
             {/* Publish Button - minimal/outline, icon+label, highlight on hover/active */}
             <button
               onClick={handlePublishStrategy}
-              className="flex items-center gap-2 px-4 h-9 rounded-full font-medium text-sm border border-border bg-transparent text-foreground hover:bg-muted/70 active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 ml-2"
+              className="flex items-center gap-2 px-3 sm:px-4 h-8 sm:h-9 rounded-full font-medium text-xs sm:text-sm border border-border bg-transparent text-foreground hover:bg-muted/70 active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 ml-1 sm:ml-2"
               type="button"
             >
               <Upload className="w-4 h-4" />
@@ -787,7 +786,7 @@ const Dashboard = () => {
                       if (!subscription || subscription.tier === 'Free') navigate('/pricing');
                     }}
                     disabled={!!subscription && subscription.tier !== 'Free'}
-                    className={`flex items-center gap-2 px-4 h-9 rounded-full font-medium text-sm border border-border bg-transparent ${subscription && subscription.tier !== 'Free' ? 'text-muted-foreground opacity-60 cursor-not-allowed' : 'text-foreground hover:bg-muted/70 active:scale-95'} transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 ml-2`}
+                    className={`flex items-center gap-2 px-3 sm:px-4 h-8 sm:h-9 rounded-full font-medium text-xs sm:text-sm border border-border bg-transparent ${subscription && subscription.tier !== 'Free' ? 'text-muted-foreground opacity-60 cursor-not-allowed' : 'text-foreground hover:bg-muted/70 active:scale-95'} transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 ml-1 sm:ml-2`}
                     type="button"
                   >
                     {subscription && subscription.tier !== 'Free' ? (
@@ -819,7 +818,7 @@ const Dashboard = () => {
                   <Settings className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-background border border-border shadow-lg z-50">
+              <DropdownMenuContent align="end" className="w-44 sm:w-56 bg-background border border-border shadow-lg z-50">
                 <DropdownMenuItem onClick={toggleTheme}>
                   {isDarkMode ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                   <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
@@ -852,117 +851,108 @@ const Dashboard = () => {
         </div>
 
         {/* Main Content - Always show chat + preview layout */}
-        <div className="flex-1 flex overflow-hidden min-h-0">
-          <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0 scrollbar-hide">
-            {/* Left Panel - Chat Interface */}
-            {!chatCollapsed && (
-              <ResizablePanel defaultSize={30} minSize={25} maxSize={35} className="min-h-0">
-                <div className="h-full border-r border-border flex flex-col bg-background min-h-0">
-                  <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
-                    <ChatInterface
-                      onStrategyGenerated={handleStrategyGenerated}
-                      onCodeGenerated={handleCodeGenerated}
-                    />
+        <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
+          {/* Left Panel - Chat Interface */}
+          {!chatCollapsed && (
+            <div className="w-full sm:w-1/3 min-h-0 border-b sm:border-b-0 sm:border-r border-border flex flex-col bg-background min-h-0 max-h-[50vh] sm:max-h-none">
+              <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
+                <ChatInterface
+                  onStrategyGenerated={handleStrategyGenerated}
+                  onCodeGenerated={handleCodeGenerated}
+                />
+              </div>
+            </div>
+          )}
+          {/* Right Panel - Live Preview */}
+          <div className="w-full sm:w-2/3 min-h-0 flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
+            {previewMode === 'code' ? (
+              <CodePreview strategy={currentStrategy} />
+            ) : previewMode === 'chart' ? (
+              <div className="h-full flex flex-col min-h-0 overflow-hidden">
+                <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
+                <div id="chart-preview" className="w-full mt-4">
+                  <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-2 sm:p-4 flex flex-col gap-4 sm:gap-6">
+                    {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
+                    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-end w-full mb-2 sm:mb-4 gap-2 sm:gap-0">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
+                        <span className="text-base sm:text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                        <span className="text-base sm:text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+                        <span className="text-base sm:text-lg font-bold text-foreground">{analytics.totalTrades}</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
+                        <span className="text-base sm:text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+                        <span className="text-base sm:text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
+                      </div>
+                    </div>
+                    {/* Equity/Drawdown Curve Chart */}
+                    <div className="w-full h-[160px] sm:h-[220px] mt-2 sm:mt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={equityCurve} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
+                          <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                          <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                          <Tooltip />
+                          <Legend />
+                          <Area yAxisId="left" type="monotone" dataKey="equity" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} name="Equity" />
+                          <Bar yAxisId="right" dataKey="drawdown" fill="#ef4444" fillOpacity={0.3} name="Drawdown %" />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
-              </ResizablePanel>
-            )}
-            {/* No collapsed button in the chat panel anymore */}
-            <ResizableHandle withHandle />
-            {/* Right Panel - Live Preview */}
-            <ResizablePanel defaultSize={chatCollapsed ? 100 : 50} minSize={30} className="min-h-0">
-              <div className="h-full flex flex-col bg-background min-h-0 overflow-hidden scrollbar-hide">
-                  
-                  
-                  {previewMode === 'code' ? <CodePreview strategy={currentStrategy} /> :
-  <div className="h-full flex flex-col min-h-0 overflow-hidden">
-    <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
-    <div id="chart-preview" className="w-full mt-4">
-      <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
-        {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
-        <div className="flex flex-row justify-between items-end w-full mb-4">
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
-            <span className="text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+              </div>
+            ) : null}
           </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
-            <span className="text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
-            <span className="text-lg font-bold text-foreground">{analytics.totalTrades}</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
-            <span className="text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
-            <span className="text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
-          </div>
-        </div>
-        {/* Equity/Drawdown Curve Chart */}
-        <div className="w-full h-[220px] mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={equityCurve} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
-              <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
-              <Tooltip />
-              <Legend />
-              <Area yAxisId="left" type="monotone" dataKey="equity" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} name="Equity" />
-              <Bar yAxisId="right" dataKey="drawdown" fill="#ef4444" fillOpacity={0.3} name="Drawdown %" />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  </div>
-}
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
         </div>
 
         {/* Publish Strategy Dialog */}
         <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="max-w-xs sm:max-w-[425px] w-full p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>Publish Strategy</DialogTitle>
               <DialogDescription>
                 Share your strategy with the community. Set pricing and visibility options.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
+            <div className="grid gap-3 sm:gap-4 py-2 sm:py-4">
+              <div className="grid gap-1 sm:gap-2">
                 <Label htmlFor="title">Strategy Title</Label>
                 <Input id="title" value={publishData.title} onChange={e => setPublishData({
                 ...publishData,
                 title: e.target.value
               })} placeholder="e.g., Momentum Breakout Pro" />
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-1 sm:gap-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" value={publishData.description} onChange={e => setPublishData({
                 ...publishData,
                 description: e.target.value
               })} placeholder="Describe what makes your strategy unique..." />
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-1 sm:gap-2">
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
                 <Input id="tags" value={publishData.tags} onChange={e => setPublishData({
                 ...publishData,
                 tags: e.target.value
               })} placeholder="e.g., Momentum, Breakout, AI" />
               </div>
-              
               {/* Pricing Selection */}
-              <div className="grid gap-3">
+              <div className="grid gap-2 sm:gap-3">
                 <Label>Strategy Pricing</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button type="button" variant={publishData.pricingType === "free" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
+                  <Button type="button" variant={publishData.pricingType === "free" ? "default" : "outline"} className="h-auto p-2 sm:p-3 flex flex-col items-center gap-1 sm:gap-2" onClick={() => setPublishData({
                   ...publishData,
                   pricingType: "free",
                   price: ""
@@ -973,7 +963,7 @@ const Dashboard = () => {
                       <div className="text-xs text-muted-foreground">Anyone can copy</div>
                     </div>
                   </Button>
-                  <Button type="button" variant={publishData.pricingType === "paid" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
+                  <Button type="button" variant={publishData.pricingType === "paid" ? "default" : "outline"} className="h-auto p-2 sm:p-3 flex flex-col items-center gap-1 sm:gap-2" onClick={() => setPublishData({
                   ...publishData,
                   pricingType: "paid"
                 })}>
@@ -985,18 +975,16 @@ const Dashboard = () => {
                   </Button>
                 </div>
               </div>
-              
               {/* Price Input - Only show when "Sell" is selected */}
-              {publishData.pricingType === "paid" && <div className="grid gap-2">
+              {publishData.pricingType === "paid" && <div className="grid gap-1 sm:gap-2">
                   <Label htmlFor="price">Price (USD)</Label>
                   <Input id="price" type="number" value={publishData.price} onChange={e => setPublishData({
                 ...publishData,
                 price: e.target.value
               })} placeholder="0" min="0" />
                 </div>}
-              
               {/* Strategy Type Selection */}
-              <div className="grid gap-2">
+              <div className="grid gap-1 sm:gap-2">
                 <Label htmlFor="type" className="text-sm font-medium">Strategy Type</Label>
                 <select
                   id="type"
@@ -1011,9 +999,8 @@ const Dashboard = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
-
-              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                <div className="flex items-center space-x-2 mb-2">
+              <div className="text-xs sm:text-sm text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded-lg">
+                <div className="flex items-center space-x-2 mb-1 sm:mb-2">
                   <Camera className="w-4 h-4" />
                   <span className="font-medium">Automatic Thumbnail</span>
                 </div>
