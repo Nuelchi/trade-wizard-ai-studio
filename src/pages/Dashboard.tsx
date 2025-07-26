@@ -344,7 +344,6 @@ const Dashboard = () => {
     }
 
     const thumbnail = await captureChartThumbnail();
-    
     // Parse tags from comma-separated string
     const tags = publishData.tags
       .split(',')
@@ -352,11 +351,29 @@ const Dashboard = () => {
       .filter(tag => tag.length > 0);
 
     try {
-      // First, check if this strategy is already published in public_strategies
+      // 1. Check for duplicate title+type in public_strategies (case-insensitive)
+      const duplicateRes = await supabase
+        .from('public_strategies')
+        .select('id, strategy_id, user_id, title, type')
+        .ilike('title', publishData.title)
+        .eq('type', publishData.type)
+        .neq('strategy_id', currentStrategy.id); // Exclude self
+      // @ts-ignore: Supabase type inference is too deep here
+      const duplicate = duplicateRes.data;
+      if (duplicate && duplicate.length > 0) {
+        toast({
+          title: "Duplicate Strategy",
+          description: "A strategy with this name and type already exists in the showcase or marketplace. Please choose a different name or type.",
+          variant: "destructive",
+        });
+        return;
+      }
+      // 2. Check if this strategy is already published by this author
       const { data: existingPublicStrategy } = await supabase
         .from('public_strategies')
         .select('id, publish_version')
         .eq('strategy_id', currentStrategy.id)
+        .eq('user_id', user.id)
         .single();
 
       const publicStrategyData = {
@@ -379,7 +396,6 @@ const Dashboard = () => {
       let result;
       if (existingPublicStrategy) {
         // Update existing public strategy and increment version
-        console.log('Updating existing public strategy:', existingPublicStrategy.id);
         result = await supabase
           .from('public_strategies')
           .update({
@@ -389,7 +405,6 @@ const Dashboard = () => {
           .eq('id', existingPublicStrategy.id);
       } else {
         // Insert new public strategy
-        console.log('Creating new public strategy for strategy_id:', currentStrategy.id);
         result = await supabase
           .from('public_strategies')
           .insert({
@@ -399,7 +414,6 @@ const Dashboard = () => {
       }
 
       if (result.error) {
-        console.error('Publish error:', result.error);
         toast({
           title: "Failed to publish strategy",
           description: result.error.message,
@@ -412,7 +426,6 @@ const Dashboard = () => {
         title: "Strategy Published!",
         description: "Your strategy is now available in the showcase"
       });
-      
       setPublishDialogOpen(false);
       setPublishData({
         title: "",
@@ -422,23 +435,19 @@ const Dashboard = () => {
         price: "",
         type: "FX", // Reset type
       });
-
       // Refresh the current strategy to reflect the changes
       const { data: updatedStrategy } = await supabase
         .from('strategies')
         .select('*')
         .eq('id', currentStrategy.id)
         .single();
-      
       if (updatedStrategy) {
         setCurrentStrategy(updatedStrategy);
       }
-
     } catch (error) {
-      console.error('Publish error:', error);
       toast({
         title: "Failed to publish strategy",
-        description: "An unexpected error occurred.",
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     }
