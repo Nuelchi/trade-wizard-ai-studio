@@ -95,6 +95,12 @@ function extractAndValidateCodeBlocks(aiResponse: string, requestedType?: string
   return codeBlocks;
 }
 
+declare global {
+  interface Window {
+    __strategiesCache?: Record<string, any[]>;
+  }
+}
+
 const Dashboard = () => {
   const [currentStrategy, setCurrentStrategy] = useState<any>(null);
   const [generatedCode, setGeneratedCode] = useState<any>(null);
@@ -463,12 +469,20 @@ const Dashboard = () => {
   // Load strategies for dropdown
   useEffect(() => {
     let didCancel = false;
+    // Simple in-memory cache for strategies
+    const cacheKey = user ? `strategies_${user.id}` : null;
     if (!user) {
       setLoadingStrategies(true);
       setTimeout(() => { if (!didCancel) setLoadingStrategies(false); }, 2000);
       return () => { didCancel = true; };
     }
     setLoadingStrategies(true);
+    // Try to load from cache first
+    if (cacheKey && window.__strategiesCache && window.__strategiesCache[cacheKey]) {
+      setStrategies(window.__strategiesCache[cacheKey]);
+      setLoadingStrategies(false);
+      return () => { didCancel = true; };
+    }
     supabase
       .from('strategies')
       .select('*')
@@ -476,8 +490,14 @@ const Dashboard = () => {
       .order('updated_at', { ascending: false })
       .then(({ data, error }) => {
         if (!didCancel) {
-          if (!error) setStrategies(data || []);
-          else {
+          if (!error) {
+            setStrategies(data || []);
+            // Save to cache
+            if (cacheKey) {
+              if (!window.__strategiesCache) window.__strategiesCache = {};
+              window.__strategiesCache[cacheKey] = data || [];
+            }
+          } else {
             setStrategies([]);
             toast({ title: 'Failed to load strategies', description: error.message, variant: 'destructive' });
           }
