@@ -7,12 +7,25 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Copy, GitFork, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Marketplace() {
   const { strategies, loading, error } = useFetchStrategies({ publicOnly: true, sortBy: 'likes' });
   const { toast } = useToast();
   const [selectedStrategy, setSelectedStrategy] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<'likes' | 'remixes'>('likes');
+
+  // Filter and sort strategies
+  const filteredStrategies = strategies
+    .filter((s: any) => s.title.toLowerCase().includes(search.toLowerCase()))
+    .sort((a: any, b: any) => {
+      if (sortBy === 'likes') return (b.likes || 0) - (a.likes || 0);
+      if (sortBy === 'remixes') return (b.remixes || 0) - (a.remixes || 0);
+      return 0;
+    });
 
   const handleCopy = (id: number) => toast({ title: "Strategy copied!", description: "Strategy has been added to your workspace." });
   const handleRemix = (id: number) => toast({ title: "Remix", description: `Remix strategy ${id}` });
@@ -31,9 +44,9 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="py-12 sm:py-24 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-8 sm:mb-16">
+      <section className="py-24 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4 border-primary/20 text-primary">
               <Users className="w-3 h-3 mr-1" />
               Marketplace
@@ -42,8 +55,27 @@ export default function Marketplace() {
               All Published Strategies
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Browse, buy, and remix strategies from the community.
+              Browse, search, filter, buy, and remix strategies from the community.
             </p>
+          </div>
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-8 items-center justify-between">
+            <Input
+              type="text"
+              placeholder="Search by name..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="max-w-xs"
+            />
+            <Select value={sortBy} onValueChange={v => setSortBy(v as 'likes' | 'remixes')}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="likes">Most Liked</SelectItem>
+                <SelectItem value="remixes">Most Remixed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {loading ? (
             <div className="flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
@@ -51,7 +83,7 @@ export default function Marketplace() {
             <div className="text-center text-destructive py-12">{error}</div>
           ) : (
             <StrategyShowcaseGrid
-              strategies={strategies}
+              strategies={filteredStrategies}
               onCopy={handleCopy}
               onRemix={handleRemix}
               onBuy={handleBuy}
@@ -62,7 +94,7 @@ export default function Marketplace() {
       </section>
       {/* Optionally, add a modal here for selectedStrategy */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-xs sm:max-w-2xl w-full">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">{selectedStrategy?.title}</DialogTitle>
             <DialogDescription className="text-base">

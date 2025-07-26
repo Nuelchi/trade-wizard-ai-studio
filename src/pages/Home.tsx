@@ -490,36 +490,36 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative py-12 sm:py-16 overflow-hidden">
+      <section className="relative py-16 overflow-hidden"> {/* Reduced from py-24 to py-16 */}
         <div className="absolute inset-0 bg-gradient-hero"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
-          <div className="text-center mb-8 sm:mb-12">
-            <Badge variant="outline" className="mb-4 sm:mb-6 border-primary/20 text-primary bg-primary/10">
+        <div className="max-w-7xl mx-auto px-6 py-12 relative">
+          <div className="text-center mb-12"> {/* Reduced mb-16 to mb-12 */}
+            <Badge variant="outline" className="mb-6 border-primary/20 text-primary bg-primary/10">
               <Zap className="w-3 h-3 mr-1" />
               AI-Powered Strategy Builder
             </Badge>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">
+            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
               Turn trading ideas into <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">automated strategies</span> in seconds
             </h1>
-            <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-10 max-w-xl sm:max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-10 max-w-3xl mx-auto">
               Describe your trading strategy in plain English and watch our AI convert it into 
               executable Pine Script, MQL4, and MQL5 code. No programming experience required.
             </p>
           </div>
 
-          {/* Prompt Area */}
+          {/* Beautiful Prompt Area */}
           <div className="flex flex-col items-center justify-center">
-            <div className="backdrop-blur-md bg-black/70 border border-white/10 shadow-xl rounded-2xl px-4 sm:px-6 py-6 sm:py-8 w-full max-w-md sm:max-w-3xl mx-auto mb-6 sm:mb-8 relative">
+            <div className="backdrop-blur-md bg-black/70 border border-white/10 shadow-xl rounded-2xl px-6 py-8 w-full max-w-3xl mx-auto mb-8 relative">
               <Textarea
                 placeholder={rotatingPlaceholder}
                 value={strategy}
                 onChange={(e) => setStrategy(e.target.value)}
-                className="bg-transparent border-none text-base sm:text-lg text-white placeholder:text-white/50 focus:ring-2 focus:ring-primary/50 min-h-[48px] sm:min-h-[56px] mb-3 sm:mb-4 resize-none shadow-none"
+                className="bg-transparent border-none text-lg text-white placeholder:text-white/50 focus:ring-2 focus:ring-primary/50 min-h-[56px] mb-4 resize-none shadow-none"
                 style={{boxShadow: 'none'}}
               />
               <button
                 onClick={handleBuildStrategy}
-                className={`absolute right-4 sm:right-6 bottom-6 sm:bottom-8 rounded-full p-3 shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 ${!strategy.trim() ? 'bg-gray-400 cursor-not-allowed opacity-60' : 'bg-primary hover:bg-primary/80 text-white'}`}
+                className={`absolute right-6 bottom-8 rounded-full p-3 shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 ${!strategy.trim() ? 'bg-gray-400 cursor-not-allowed opacity-60' : 'bg-primary hover:bg-primary/80 text-white'}`}
                 style={{boxShadow: '0 4px 24px 0 rgba(0,0,0,0.15)'}}
                 aria-label="Submit"
                 disabled={!strategy.trim()}
@@ -530,11 +530,11 @@ const Home = () => {
           </div>
 
           {/* Example Strategy Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-md sm:max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             {exampleStrategies.map((example, index) => (
               <Card key={index} className="trading-card hover:shadow-glow transition-all cursor-pointer group text-left" onClick={() => setStrategy(example)}>
-                <CardContent className="p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                     {example}
                   </p>
                 </CardContent>
@@ -545,17 +545,17 @@ const Home = () => {
       </section>
 
       {/* Strategy Showcase */}
-      <section className="py-12 sm:py-24 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-16">
-            <Badge variant="outline" className="mb-2 sm:mb-4 border-primary/20 text-primary">
+      <section className="py-24 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="mb-4 border-primary/20 text-primary">
               <Users className="w-3 h-3 mr-1" />
               Community Showcase
             </Badge>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Discover Profitable Strategies
             </h2>
-            <p className="text-base sm:text-xl text-muted-foreground max-w-lg sm:max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Explore top-performing strategies created by our community. Copy, remix, or purchase to accelerate your trading success.
             </p>
           </div>
@@ -570,73 +570,77 @@ const Home = () => {
 
           {/* Strategy Details Modal */}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogContent className="max-w-xs sm:max-w-2xl w-full">
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle className="text-lg sm:text-2xl font-bold">{selectedStrategy?.title}</DialogTitle>
-                <DialogDescription className="text-sm sm:text-base">
+                <DialogTitle className="text-2xl font-bold">{selectedStrategy?.title}</DialogTitle>
+                <DialogDescription className="text-base">
                   {selectedStrategy?.description}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 sm:space-y-6">
+              
+              <div className="space-y-6">
                 {/* Thumbnail */}
                 {selectedStrategy?.thumbnail && (
                   <div className="relative">
                     <img 
                       src={selectedStrategy.thumbnail} 
                       alt={selectedStrategy.title}
-                      className="w-full h-32 sm:h-48 object-cover rounded-lg"
+                      className="w-full h-48 object-cover rounded-lg"
                     />
                   </div>
                 )}
+                
                 {/* Strategy Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-xs sm:text-sm text-muted-foreground">Performance</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">Performance</h4>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Returns:</span>
-                        <span className="text-xs sm:text-sm font-medium text-success">{selectedStrategy?.performance?.returns}</span>
+                        <span className="text-sm">Returns:</span>
+                        <span className="text-sm font-medium text-success">{selectedStrategy?.performance?.returns}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Win Rate:</span>
-                        <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.performance?.winRate}</span>
+                        <span className="text-sm">Win Rate:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.performance?.winRate}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Sharpe Ratio:</span>
-                        <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.performance?.sharpe}</span>
+                        <span className="text-sm">Sharpe Ratio:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.performance?.sharpe}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Max Drawdown:</span>
-                        <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.performance?.maxDrawdown}</span>
+                        <span className="text-sm">Max Drawdown:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.performance?.maxDrawdown}</span>
                       </div>
                     </div>
                   </div>
+                  
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-xs sm:text-sm text-muted-foreground">Strategy Info</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">Strategy Info</h4>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Type:</span>
-                        <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.summary?.type || 'Custom'}</span>
+                        <span className="text-sm">Type:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.summary?.type || 'Custom'}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Confidence:</span>
-                        <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.summary?.confidence || 0}%</span>
+                        <span className="text-sm">Confidence:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.summary?.confidence || 0}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Likes:</span>
-                        <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.likes || 0}</span>
+                        <span className="text-sm">Likes:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.likes || 0}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm">Remixes:</span>
-                        <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.remixes || 0}</span>
+                        <span className="text-sm">Remixes:</span>
+                        <span className="text-sm font-medium">{selectedStrategy?.remixes || 0}</span>
                       </div>
                     </div>
                   </div>
                 </div>
+                
                 {/* Tags */}
                 {selectedStrategy?.tags && selectedStrategy.tags.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Tags</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground mb-2">Tags</h4>
                     <div className="flex flex-wrap gap-1">
                       {selectedStrategy.tags.map((tag: string) => (
                         <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
@@ -644,8 +648,9 @@ const Home = () => {
                     </div>
                   </div>
                 )}
+                
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 pt-2 sm:pt-4">
+                <div className="flex space-x-2 pt-4">
                   <Button 
                     variant="outline" 
                     className="flex-1"
@@ -672,7 +677,8 @@ const Home = () => {
               </div>
             </DialogContent>
           </Dialog>
-          <div className="text-center mt-8 sm:mt-12">
+
+          <div className="text-center mt-12">
             <Button asChild variant="outline" size="lg">
               <NavLink to="/marketplace" className="flex items-center justify-center">
                 View All Strategies
@@ -684,25 +690,26 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-24">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+      <section className="py-24">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Powerful Features for Every Trader
             </h2>
-            <p className="text-base sm:text-xl text-muted-foreground max-w-lg sm:max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Everything you need to create, test, and deploy winning trading strategies.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="trading-card hover:shadow-glow transition-all text-center group">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
-                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <feature.icon className="h-6 w-6 text-primary-foreground" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">{feature.title}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                  <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -711,16 +718,16 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-24 bg-gradient-hero">
-        <div className="container mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+      <section className="py-24 bg-gradient-hero">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Ready to Transform Your Trading?
           </h2>
-          <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-lg sm:max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
             Join thousands of traders who've revolutionized their approach with AI-powered strategies.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Button size="lg" className="glow-button" onClick={() => navigate("/dashboard")}> 
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="glow-button" onClick={() => navigate("/dashboard")}>
               <Brain className="w-5 h-5 mr-2" />
               Start Building Now
             </Button>

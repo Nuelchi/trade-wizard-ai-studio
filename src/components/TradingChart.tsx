@@ -69,29 +69,17 @@ interface MemoAdvancedChartProps {
   symbol: string;
   interval: string;
 }
-const MemoAdvancedChart: React.FC<MemoAdvancedChartProps> = React.memo(({ symbol, interval }) => {
-  // Responsive height: 250px on mobile, 700px on desktop
-  const [height, setHeight] = React.useState(700);
-  React.useEffect(() => {
-    const updateHeight = () => {
-      setHeight(window.innerWidth < 640 ? 350 : 700);
-    };
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
-  }, []);
-  return (
-    <AdvancedChart
-      widgetProps={{
-        symbol,
-        theme: "dark",
-        interval,
-        height,
-        width: "100%",
-      }}
-    />
-  );
-});
+const MemoAdvancedChart: React.FC<MemoAdvancedChartProps> = React.memo(({ symbol, interval }) => (
+  <AdvancedChart
+    widgetProps={{
+      symbol,
+      theme: "dark",
+      interval,
+      height: 700,
+      width: "100%",
+    }}
+  />
+));
 
 const TradingChart = ({ onStrategySelect, onStrategyUpload }) => {
   const { user } = useAuth();
