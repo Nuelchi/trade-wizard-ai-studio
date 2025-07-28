@@ -73,11 +73,11 @@ export default function Pricing() {
         <h1 className="text-4xl md:text-5xl font-bold mb-4">Choose Your Plan</h1>
         <p className="text-lg text-muted-foreground mb-2">Unlock the full power of AI trading. Start for free, upgrade anytime.</p>
       </div>
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
         {plans.map((plan, idx) => (
           <div
             key={plan.name}
-            className={`relative flex flex-col rounded-2xl shadow-lg bg-white/90 dark:bg-muted/80 border border-border p-8 pt-10 transition-all hover:scale-[1.03] ${plan.highlight ? 'ring-2 ring-primary z-10' : ''}`}
+            className={`relative flex flex-col rounded-2xl shadow-lg bg-white/90 dark:bg-muted/80 border border-border p-4 sm:p-8 pt-8 sm:pt-10 transition-all hover:scale-[1.03] ${plan.highlight ? 'ring-2 ring-primary z-10' : ''}`}
           >
             {plan.highlight && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">

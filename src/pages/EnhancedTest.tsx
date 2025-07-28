@@ -21,6 +21,7 @@ import type { Database } from '@/integrations/supabase/types';
 // import TradeAnalysisTab from '../../../src/components/StrategyTesterFooter/TradeAnalysisTab';
 import { generateStrategyWithAI } from '@/lib/utils';
 import SimpleMarkdownRenderer, { splitCodeBlocks, CodeBlock } from '@/components/SimpleMarkdownRenderer';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // Memoized TradingView chart
 interface MemoTradingViewChartProps {
@@ -81,34 +82,47 @@ const MemoMiniChat = memo(function MemoMiniChat({
     <div className="bg-card border-t border-border mt-6">
       {/* Header with Tabs and AI Assistant Button */}
       <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-            <span className="text-sm font-medium">Strategy Tester</span>
+        <div className="w-full flex items-center gap-2">
+          {/* Mobile: Dropdown */}
+          <div className="sm:hidden w-full relative mb-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full border border-border rounded px-2 py-1 text-xs bg-muted text-foreground flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ minWidth: 0 }}>
+                  <span className="truncate">
+                    {activeFooterTab === 'overview' && 'Overview'}
+                    {activeFooterTab === 'performance' && 'Performance'}
+                    {activeFooterTab === 'trade_analysis' && 'Trade Analysis'}
+                    {activeFooterTab === 'ai' && (isAiWidgetOpen ? 'Hide AI' : 'AI Assistant')}
+                  </span>
+                  <span className="ml-2 text-muted-foreground">▼</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-full z-50 shadow-lg absolute left-0">
+                <DropdownMenuItem onClick={() => setActiveFooterTab('overview')}>Overview</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveFooterTab('performance')}>Performance</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveFooterTab('trade_analysis')}>Trade Analysis</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsAiWidgetOpen(v => !v)}>{isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <Separator orientation="vertical" className="h-4" />
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            <span>Last updated: {new Date().toLocaleTimeString()}</span>
-          </div>
-          {/* Tabs in header */}
-          <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="ml-6">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
-              <TabsTrigger value="trade_analysis">Trade Analysis</TabsTrigger>
+          {/* Desktop: Horizontal tabs and AI button */}
+          <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="hidden sm:flex w-full">
+            <TabsList className="w-full max-w-full flex-nowrap overflow-x-auto no-scrollbar text-xs sm:text-sm gap-1 sm:gap-2 p-0">
+              <TabsTrigger value="overview" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Overview</TabsTrigger>
+              <TabsTrigger value="performance" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Performance</TabsTrigger>
+              <TabsTrigger value="trade_analysis" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Trade Analysis</TabsTrigger>
             </TabsList>
           </Tabs>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
+            className="h-7 text-xs hidden sm:flex"
+          >
+            <Sparkles className="w-3 h-3 mr-1" />
+            {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
+          </Button>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
-          className="h-7 text-xs"
-        >
-          <Sparkles className="w-3 h-3 mr-1" />
-          {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
-        </Button>
       </div>
       {/* Main Content Area: Tab Content and AI Chat */}
       <div className="flex">

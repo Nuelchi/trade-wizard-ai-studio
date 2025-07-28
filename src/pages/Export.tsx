@@ -206,7 +206,7 @@ void OnTick() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       <div className="mb-4">
         <Button variant="outline" onClick={() => navigate('/dashboard')}>
           ← Back to Builder
@@ -222,10 +222,10 @@ void OnTick() {
 
       <div className="space-y-8">
         {/* Strategy and Format Selection - Side by Side */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Strategy Selection */}
           <Card className="trading-card">
-                <CardHeader>
+            <CardHeader>
               <CardTitle>Select Strategy</CardTitle>
               <CardDescription>Choose which strategy you want to export</CardDescription>
             </CardHeader>
@@ -240,7 +240,7 @@ void OnTick() {
                       <div className="flex flex-col">
                         <span className="font-medium">{strategy.name}</span>
                         <span className="text-xs text-muted-foreground">{strategy.description}</span>
-                    </div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -252,7 +252,7 @@ void OnTick() {
                   <p className="text-sm text-muted-foreground">
                     {strategies.find(s => s.id === selectedStrategy)?.description}
                   </p>
-                    </div>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -262,7 +262,7 @@ void OnTick() {
             <CardHeader>
               <CardTitle>Select Format</CardTitle>
               <CardDescription>Choose the platform format for your strategy</CardDescription>
-                </CardHeader>
+            </CardHeader>
             <CardContent className="space-y-4">
               <Select value={selectedFormat} onValueChange={setSelectedFormat}>
                 <SelectTrigger>
@@ -326,10 +326,10 @@ void OnTick() {
                   </Button>
                   <Button onClick={handleCopy} variant="outline">
                     Copy Code
-                      </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="trading-card">
               <CardHeader>
@@ -355,40 +355,39 @@ void OnTick() {
               <div className="text-center py-8 text-muted-foreground">
                 <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Choose your strategy and target platform, then click "AI Convert Strategy" to generate optimized code.</p>
-                    </div>
+              </div>
             </CardContent>
           </Card>
         )}
-        </div>
+      </div>
 
       {/* Deploy & Share Section */}
       <div className="mt-12">
         <h2 className="text-2xl font-semibold text-foreground mb-6">Deploy & Share</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
           {/* VPS Deployment */}
           <Card className="trading-card">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                     <div className="w-5 h-5 rounded-full bg-primary/20 border-2 border-primary"></div>
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg flex items-center space-x-2">
-                      <span>VPS Deployment</span>
-                            <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
-                              Coming Soon
-                            </span>
-                        </CardTitle>
-                    <CardDescription>Deploy your strategy to a Virtual Private Server for 24/7 trading</CardDescription>
-                      </div>
-                    </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <CardTitle className="text-lg flex items-center space-x-2">
+                      <span>VPS Deployment</span>
+                      <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
+                        Coming Soon
+                      </span>
+                    </CardTitle>
+                    <CardDescription>Deploy your strategy to a Virtual Private Server for 24/7 trading</CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <div className="w-2 h-2 rounded-full bg-success"></div>
                     <span>24/7 uptime</span>
@@ -404,22 +403,20 @@ void OnTick() {
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <div className="w-2 h-2 rounded-full bg-success"></div>
                     <span>Real-time monitoring</span>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-foreground">Starting at $29/month</span>
-                      <Button 
+                  <Button 
                     onClick={() => toast('We\'ll notify you when VPS deployment is available!')}
                     variant="outline"
-                      >
+                  >
                     Notify Me
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           {/* Algorithm Hub */}
           <Card className="trading-card">
             <CardHeader>
@@ -460,7 +457,6 @@ void OnTick() {
                     <span>Revenue sharing</span>
                   </div>
                 </div>
-                
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-foreground">Free to publish</span>
                   <Button 

@@ -45,14 +45,14 @@ const MyStrategies = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       <h1 className="text-3xl font-bold text-foreground mb-6">My Strategies</h1>
       {loading ? (
         <div className="text-muted-foreground flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
       ) : error ? (
         <div className="text-center text-destructive py-12">{error}</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {strategies.map((s) => (
             <Card key={s.id} className="trading-card hover:shadow-glow transition-all group overflow-hidden cursor-pointer" onClick={() => handleOpen(s)}>
               <div className="relative">
@@ -74,12 +74,12 @@ const MyStrategies = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); /* handleExport(s); */ }}>
+                <div className="flex justify-between gap-2 mt-2 w-full">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={(e) => { e.stopPropagation(); /* handleExport(s); */ }}>
                     <Download className="w-4 h-4 mr-1" />
                     Export
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); /* handleDelete(s.id); */ }}>
+                  <Button size="sm" variant="destructive" className="flex-1" onClick={(e) => { e.stopPropagation(); /* handleDelete(s.id); */ }}>
                     <Trash className="w-4 h-4 mr-1" />
                     Delete
                   </Button>

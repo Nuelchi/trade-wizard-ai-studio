@@ -171,45 +171,45 @@ const Test = () => {
       <AuthGuard requireAuth={true}>
         <div className="h-screen flex flex-col bg-background">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/80 backdrop-blur-md">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/80 backdrop-blur-md gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+              <div className="flex items-center space-x-2 mb-2 sm:mb-0">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-primary-foreground" />
                 </div>
-                <h1 className="text-xl font-bold text-foreground">Strategy Tester</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Strategy Tester</h1>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Test your strategies with live charts and detailed analytics
               </div>
-      </div>
-
-            <div className="flex items-center space-x-4">
-          <Button
-            onClick={toggleBacktest}
-                className={isRunning ? "bg-red-600 hover:bg-red-700" : ""}
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button
+                onClick={toggleBacktest}
+                className={`w-full sm:w-auto ${isRunning ? "bg-red-600 hover:bg-red-700" : ""}`}
                 variant={isRunning ? "destructive" : "default"}
-          >
-            {isRunning ? (
-              <>
-                <Pause className="w-4 h-4 mr-2" />
-                Stop Test
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 mr-2" />
-                Start Backtest
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+                size="sm"
+              >
+                {isRunning ? (
+                  <>
+                    <Pause className="w-4 h-4 mr-2" />
+                    Stop Test
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Start Backtest
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col sm:flex-row sm:overflow-hidden overflow-visible h-auto">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
               <div className="border-b border-border bg-muted/20">
-                <TabsList className="ml-4">
+                <TabsList className="ml-2 sm:ml-4 flex-nowrap overflow-x-auto whitespace-nowrap no-scrollbar text-xs sm:text-base max-w-full p-0 gap-1 sm:gap-2">
                   <TabsTrigger value="builder">
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Strategy Builder
@@ -221,7 +221,7 @@ const Test = () => {
                 </TabsList>
               </div>
 
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden min-h-0">
                 <TabsContent value="builder" className="h-full m-0">
                   <ResizablePanelGroup direction="horizontal" className="h-full">
                     <ResizablePanel defaultSize={50} minSize={30}>
@@ -230,33 +230,29 @@ const Test = () => {
                           <div className="flex items-center space-x-2">
                             <MessageSquare className="w-4 h-4 text-primary" />
                             <span className="text-sm font-medium">AI Strategy Builder</span>
-            </div>
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             Create or modify strategies
-              </div>
-            </div>
-
+                          </div>
+                        </div>
                         <ChatInterface 
                           onStrategyGenerated={handleStrategyGenerated}
                           onCodeGenerated={handleCodeGenerated}
                         />
-              </div>
+                      </div>
                     </ResizablePanel>
-
                     <ResizableHandle withHandle />
-
                     <ResizablePanel defaultSize={50} minSize={30}>
                       <div className="h-full flex flex-col bg-background">
                         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-              <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2">
                             <TrendingUp className="w-4 h-4 text-primary" />
                             <span className="text-sm font-medium">Strategy Preview</span>
-              </div>
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             Strategy details and code
-          </div>
-        </div>
-
+                          </div>
+                        </div>
                         <div className="flex-1 p-4 overflow-y-auto max-h-[500px]">
                           {selectedStrategy ? (
                             <Card>
@@ -270,7 +266,7 @@ const Test = () => {
                                     Test Strategy
                                   </Button>
                                 </CardTitle>
-              </CardHeader>
+                              </CardHeader>
                               <CardContent className="space-y-4">
                                 <div>
                                   <h4 className="font-medium mb-2">Type</h4>
@@ -288,10 +284,10 @@ const Test = () => {
                                         {ind.name}
                                       </span>
                                     ))}
-                </div>
-                </div>
-              </CardContent>
-            </Card>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
                           ) : (
                             <div className="h-full flex items-center justify-center">
                               <div className="text-center">
@@ -300,24 +296,23 @@ const Test = () => {
                                 <p className="text-sm text-muted-foreground">
                                   Use the AI builder to create a strategy
                                 </p>
-                </div>
-                </div>
+                              </div>
+                            </div>
                           )}
-          </div>
+                        </div>
                       </div>
                     </ResizablePanel>
                   </ResizablePanelGroup>
                 </TabsContent>
 
-                <TabsContent value="tester" className="h-full m-0">
-                  <div className="flex flex-col h-full w-full">
+                <TabsContent value="tester" className="h-auto m-0">
+                  <div className="flex flex-col h-auto w-full min-h-0">
                     {/* Chart container */}
                     <div className="flex-1 bg-background border-b border-border">
                       <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
                     </div>
-                    
                     {/* Bottom sidebar/panel */}
-                    <div className="h-64 bg-muted/20 border-t border-border p-4">
+                    <div className="h-auto sm:h-64 bg-muted/20 border-t border-border p-4 overflow-visible min-h-0">
                       <div className="h-full flex items-center justify-center">
                         <div className="text-center">
                           <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -325,8 +320,8 @@ const Test = () => {
                           <p className="text-sm text-muted-foreground">
                             Analytics and performance metrics will appear here
                           </p>
-                  </div>
-                    </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>

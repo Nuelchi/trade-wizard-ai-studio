@@ -44,17 +44,17 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+      <section className="py-12 sm:py-24 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8 sm:mb-16">
             <Badge variant="outline" className="mb-4 border-primary/20 text-primary">
               <Users className="w-3 h-3 mr-1" />
               Marketplace
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
               All Published Strategies
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-muted-foreground max-w-lg sm:max-w-2xl mx-auto">
               Browse, search, filter, buy, and remix strategies from the community.
             </p>
           </div>
@@ -94,65 +94,65 @@ export default function Marketplace() {
       </section>
       {/* Optionally, add a modal here for selectedStrategy */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-xs sm:max-w-2xl w-full">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">{selectedStrategy?.title}</DialogTitle>
-            <DialogDescription className="text-base">
+            <DialogTitle className="text-lg sm:text-2xl font-bold">{selectedStrategy?.title}</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
               {selectedStrategy?.description}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Thumbnail */}
             {selectedStrategy?.thumbnail && (
               <div className="relative">
                 <img 
                   src={selectedStrategy.thumbnail} 
                   alt={selectedStrategy.title}
-                  className="w-full h-48 object-cover rounded-lg"
+                  className="w-full h-32 sm:h-48 object-cover rounded-lg"
                 />
               </div>
             )}
             {/* Strategy Details */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
               <div className="space-y-2">
-                <h4 className="font-semibold text-sm text-muted-foreground">Performance</h4>
+                <h4 className="font-semibold text-xs sm:text-sm text-muted-foreground">Performance</h4>
                 <div className="space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-sm">Returns:</span>
-                    <span className="text-sm font-medium text-success">{selectedStrategy?.performance?.returns}</span>
+                    <span className="text-xs sm:text-sm">Returns:</span>
+                    <span className="text-xs sm:text-sm font-medium text-success">{selectedStrategy?.performance?.returns}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Win Rate:</span>
-                    <span className="text-sm font-medium">{selectedStrategy?.performance?.winRate}</span>
+                    <span className="text-xs sm:text-sm">Win Rate:</span>
+                    <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.performance?.winRate}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Sharpe Ratio:</span>
-                    <span className="text-sm font-medium">{selectedStrategy?.performance?.sharpe}</span>
+                    <span className="text-xs sm:text-sm">Sharpe Ratio:</span>
+                    <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.performance?.sharpe}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Max Drawdown:</span>
-                    <span className="text-sm font-medium">{selectedStrategy?.performance?.maxDrawdown}</span>
+                    <span className="text-xs sm:text-sm">Max Drawdown:</span>
+                    <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.performance?.maxDrawdown}</span>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-sm text-muted-foreground">Strategy Info</h4>
+                <h4 className="font-semibold text-xs sm:text-sm text-muted-foreground">Strategy Info</h4>
                 <div className="space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-sm">Type:</span>
-                    <span className="text-sm font-medium">{selectedStrategy?.summary?.type || 'Custom'}</span>
+                    <span className="text-xs sm:text-sm">Type:</span>
+                    <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.summary?.type || 'Custom'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Confidence:</span>
-                    <span className="text-sm font-medium">{selectedStrategy?.summary?.confidence || 0}%</span>
+                    <span className="text-xs sm:text-sm">Confidence:</span>
+                    <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.summary?.confidence || 0}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Likes:</span>
-                    <span className="text-sm font-medium">{selectedStrategy?.likes || 0}</span>
+                    <span className="text-xs sm:text-sm">Likes:</span>
+                    <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.likes || 0}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Remixes:</span>
-                    <span className="text-sm font-medium">{selectedStrategy?.remixes || 0}</span>
+                    <span className="text-xs sm:text-sm">Remixes:</span>
+                    <span className="text-xs sm:text-sm font-medium">{selectedStrategy?.remixes || 0}</span>
                   </div>
                 </div>
               </div>
@@ -160,7 +160,7 @@ export default function Marketplace() {
             {/* Tags */}
             {selectedStrategy?.tags && selectedStrategy.tags.length > 0 && (
               <div>
-                <h4 className="font-semibold text-sm text-muted-foreground mb-2">Tags</h4>
+                <h4 className="font-semibold text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">Tags</h4>
                 <div className="flex flex-wrap gap-1">
                   {selectedStrategy.tags.map((tag: string) => (
                     <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
@@ -169,7 +169,7 @@ export default function Marketplace() {
               </div>
             )}
             {/* Action Buttons */}
-            <div className="flex space-x-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 pt-2 sm:pt-4">
               <Button 
                 variant="outline" 
                 className="flex-1"
