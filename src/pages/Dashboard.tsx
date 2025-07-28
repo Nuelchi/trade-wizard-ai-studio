@@ -669,7 +669,7 @@ const Dashboard = () => {
                   <ChevronDown className="w-3 h-3 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48 sm:w-64 max-h-60 sm:max-h-96 overflow-y-auto z-50 shadow-lg">
+              <DropdownMenuContent align="start" className="w-48 sm:w-64 max-h-60 sm:max-h-96 overflow-y-auto">
                 {loadingStrategies ? (
                   <DropdownMenuItem disabled>
                     <div className="flex items-center gap-2 w-full">
@@ -895,32 +895,32 @@ const Dashboard = () => {
               <div className="flex flex-col min-h-0 sm:h-full sm:overflow-hidden overflow-visible h-auto">
                 <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
                 <div id="chart-preview" className="w-full mt-4 min-h-[300px]">
-                  <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-4 sm:gap-6">
+                  <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
                     {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
-                    <div className="flex flex-row justify-between items-end w-full mb-2 sm:mb-4">
+                    <div className="flex flex-row justify-between items-end w-full mb-4">
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Total P&L</span>
-                        <span className="text-sm sm:text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+                        <span className="text-xs text-muted-foreground mb-1">Total P&L</span>
+                        <span className="text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Max Drawdown</span>
-                        <span className="text-sm sm:text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
+                        <span className="text-xs text-muted-foreground mb-1">Max Drawdown</span>
+                        <span className="text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Total Trades</span>
-                        <span className="text-sm sm:text-lg font-bold text-foreground">{analytics.totalTrades}</span>
+                        <span className="text-xs text-muted-foreground mb-1">Total Trades</span>
+                        <span className="text-lg font-bold text-foreground">{analytics.totalTrades}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Profitable Trades</span>
-                        <span className="text-sm sm:text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
+                        <span className="text-xs text-muted-foreground mb-1">Profitable Trades</span>
+                        <span className="text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Profit Factor</span>
-                        <span className="text-sm sm:text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
+                        <span className="text-xs text-muted-foreground mb-1">Profit Factor</span>
+                        <span className="text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
                       </div>
                     </div>
                     {/* Equity/Drawdown Curve Chart */}
-                    <div className="w-full h-[320px] sm:h-[220px] mt-2 sm:mt-4">
+                    <div className="w-full h-[220px] mt-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={equityCurve} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
