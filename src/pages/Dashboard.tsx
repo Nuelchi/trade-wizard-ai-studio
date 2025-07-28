@@ -168,7 +168,21 @@ const Dashboard = () => {
         if (chartElement && user) {
           try {
             console.log('Capturing chart thumbnail (once per unique code)...');
-            const canvas = await html2canvas(chartElement, { backgroundColor: null, scale: 2, logging: false });
+            // Ensure the element is fully rendered and visible
+            const rect = chartElement.getBoundingClientRect();
+            const canvas = await html2canvas(chartElement, { 
+              backgroundColor: null, 
+              scale: 2, 
+              logging: false,
+              height: rect.height,
+              width: rect.width,
+              useCORS: true,
+              allowTaint: true,
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: document.documentElement.offsetWidth,
+              windowHeight: document.documentElement.offsetHeight
+            });
             const thumbnail = canvas.toDataURL('image/png');
             const { error } = await supabase
               .from('strategies')
@@ -186,7 +200,7 @@ const Dashboard = () => {
         } else {
           console.log('Chart element not found or user not set');
         }
-      }, 1200); // Give React time to render the chart
+      }, 1200); // Give React more time to render the chart and metrics
     }
   };
 
@@ -313,10 +327,20 @@ const Dashboard = () => {
     const chartElement = document.getElementById('chart-preview');
     if (chartElement) {
       try {
+        // Ensure the element is fully rendered and visible
+        const rect = chartElement.getBoundingClientRect();
         const canvas = await html2canvas(chartElement, {
           backgroundColor: null,
           scale: 2,
-          logging: false
+          logging: false,
+          height: rect.height,
+          width: rect.width,
+          useCORS: true,
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: document.documentElement.offsetWidth,
+          windowHeight: document.documentElement.offsetHeight
         });
         return canvas.toDataURL('image/png');
       } catch (error) {
@@ -462,12 +486,7 @@ const Dashboard = () => {
 
   // Load strategies for dropdown
   useEffect(() => {
-    let didCancel = false;
-    if (!user) {
-      setLoadingStrategies(true);
-      setTimeout(() => { if (!didCancel) setLoadingStrategies(false); }, 2000);
-      return () => { didCancel = true; };
-    }
+    if (!user) return;
     setLoadingStrategies(true);
     supabase
       .from('strategies')
@@ -475,16 +494,9 @@ const Dashboard = () => {
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .then(({ data, error }) => {
-        if (!didCancel) {
-          if (!error) setStrategies(data || []);
-          else {
-            setStrategies([]);
-            toast({ title: 'Failed to load strategies', description: error.message, variant: 'destructive' });
-          }
-          setLoadingStrategies(false);
-        }
+        if (!error) setStrategies(data || []);
+        setLoadingStrategies(false);
       });
-    return () => { didCancel = true; };
   }, [user]);
 
   // Fetch user profile
@@ -667,7 +679,7 @@ const Dashboard = () => {
                   </DropdownMenuItem>
                 ) : strategies.length === 0 ? (
                   <DropdownMenuItem disabled>
-                    <span className="text-sm text-muted-foreground">No strategies found or failed to load.</span>
+                    <span className="text-sm text-muted-foreground">No strategies found</span>
                   </DropdownMenuItem>
                 ) : (
                   <>
@@ -739,7 +751,7 @@ const Dashboard = () => {
                   <ChevronDown className="w-4 h-4 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-36 sm:w-48 z-50 shadow-lg">
+              <DropdownMenuContent align="start" className="w-36 sm:w-48">
                 {sectionOptions.map(opt => (
                   <DropdownMenuItem asChild key={opt.path} className={opt.path === currentSection.path ? 'bg-muted font-semibold' : ''}>
                     <Link to={opt.path} className="flex items-center gap-2">
@@ -882,35 +894,35 @@ const Dashboard = () => {
             ) : previewMode === 'chart' ? (
               <div className="flex flex-col min-h-0 sm:h-full sm:overflow-hidden overflow-visible h-auto">
                 <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
-                <div id="chart-preview" className="w-full mt-4">
-                  <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-2 sm:p-4 flex flex-col gap-4 sm:gap-6">
+                <div id="chart-preview" className="w-full mt-4 min-h-[300px]">
+                  <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-4 sm:gap-6">
                     {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
-                    <div className="flex flex-row flex-wrap justify-between gap-2 text-xs sm:flex-row sm:justify-between sm:items-end w-full mb-2 sm:mb-4 sm:gap-0">
+                    <div className="flex flex-row justify-between items-end w-full mb-2 sm:mb-4">
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Total P&L</span>
-                        <span className="text-sm sm:text-base sm:text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Total P&L</span>
+                        <span className="text-sm sm:text-lg font-bold text-green-500">${analytics.totalPnL.toLocaleString(undefined, {maximumFractionDigits:2})}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Max Drawdown</span>
-                        <span className="text-sm sm:text-base sm:text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Max Drawdown</span>
+                        <span className="text-sm sm:text-lg font-bold text-purple-500">{analytics.maxDrawdown}%</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Total Trades</span>
-                        <span className="text-sm sm:text-base sm:text-lg font-bold text-foreground">{analytics.totalTrades}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Total Trades</span>
+                        <span className="text-sm sm:text-lg font-bold text-foreground">{analytics.totalTrades}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Profitable Trades</span>
-                        <span className="text-sm sm:text-base sm:text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Profitable Trades</span>
+                        <span className="text-sm sm:text-lg font-bold text-green-500">{analytics.profitableTrades}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-1">Profit Factor</span>
-                        <span className="text-sm sm:text-base sm:text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Profit Factor</span>
+                        <span className="text-sm sm:text-lg font-bold text-yellow-500">{analytics.profitFactor}</span>
                       </div>
                     </div>
                     {/* Equity/Drawdown Curve Chart */}
-                    <div className="w-full h-[160px] sm:h-[220px] mt-2 sm:mt-4">
+                    <div className="w-full h-[320px] sm:h-[220px] mt-2 sm:mt-4">
                       <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={equityCurve} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                        <ComposedChart data={equityCurve} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                           <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
                           <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
@@ -931,40 +943,41 @@ const Dashboard = () => {
 
         {/* Publish Strategy Dialog */}
         <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
-          <DialogContent className="max-w-xs sm:max-w-[425px] w-full p-4 sm:p-6">
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Publish Strategy</DialogTitle>
               <DialogDescription>
                 Share your strategy with the community. Set pricing and visibility options.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-3 sm:gap-4 py-2 sm:py-4">
-              <div className="grid gap-1 sm:gap-2">
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
                 <Label htmlFor="title">Strategy Title</Label>
                 <Input id="title" value={publishData.title} onChange={e => setPublishData({
                 ...publishData,
                 title: e.target.value
               })} placeholder="e.g., Momentum Breakout Pro" />
               </div>
-              <div className="grid gap-1 sm:gap-2">
+              <div className="grid gap-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" value={publishData.description} onChange={e => setPublishData({
                 ...publishData,
                 description: e.target.value
               })} placeholder="Describe what makes your strategy unique..." />
               </div>
-              <div className="grid gap-1 sm:gap-2">
+              <div className="grid gap-2">
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
                 <Input id="tags" value={publishData.tags} onChange={e => setPublishData({
                 ...publishData,
                 tags: e.target.value
               })} placeholder="e.g., Momentum, Breakout, AI" />
               </div>
+              
               {/* Pricing Selection */}
-              <div className="grid gap-2 sm:gap-3">
+              <div className="grid gap-3">
                 <Label>Strategy Pricing</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button type="button" variant={publishData.pricingType === "free" ? "default" : "outline"} className="h-auto p-2 sm:p-3 flex flex-col items-center gap-1 sm:gap-2" onClick={() => setPublishData({
+                  <Button type="button" variant={publishData.pricingType === "free" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
                   ...publishData,
                   pricingType: "free",
                   price: ""
@@ -975,7 +988,7 @@ const Dashboard = () => {
                       <div className="text-xs text-muted-foreground">Anyone can copy</div>
                     </div>
                   </Button>
-                  <Button type="button" variant={publishData.pricingType === "paid" ? "default" : "outline"} className="h-auto p-2 sm:p-3 flex flex-col items-center gap-1 sm:gap-2" onClick={() => setPublishData({
+                  <Button type="button" variant={publishData.pricingType === "paid" ? "default" : "outline"} className="h-auto p-3 flex flex-col items-center gap-2" onClick={() => setPublishData({
                   ...publishData,
                   pricingType: "paid"
                 })}>
@@ -987,16 +1000,18 @@ const Dashboard = () => {
                   </Button>
                 </div>
               </div>
+              
               {/* Price Input - Only show when "Sell" is selected */}
-              {publishData.pricingType === "paid" && <div className="grid gap-1 sm:gap-2">
+              {publishData.pricingType === "paid" && <div className="grid gap-2">
                   <Label htmlFor="price">Price (USD)</Label>
                   <Input id="price" type="number" value={publishData.price} onChange={e => setPublishData({
                 ...publishData,
                 price: e.target.value
               })} placeholder="0" min="0" />
                 </div>}
+              
               {/* Strategy Type Selection */}
-              <div className="grid gap-1 sm:gap-2">
+              <div className="grid gap-2">
                 <Label htmlFor="type" className="text-sm font-medium">Strategy Type</Label>
                 <select
                   id="type"
@@ -1011,8 +1026,9 @@ const Dashboard = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              <div className="text-xs sm:text-sm text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded-lg">
-                <div className="flex items-center space-x-2 mb-1 sm:mb-2">
+
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
                   <Camera className="w-4 h-4" />
                   <span className="font-medium">Automatic Thumbnail</span>
                 </div>

@@ -1,13 +1,12 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Home, MessageSquare, User, LogOut, TrendingUp, TestTube, Download, MessageSquarePlus } from "lucide-react";
+import { Home, MessageSquare, User, LogOut, TrendingUp, TestTube, Download, MessageSquarePlus, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthDialog } from "@/contexts/AuthDialogContext";
 import { useChatContext } from "@/contexts/ChatContext";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
-import { Menu } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -40,7 +39,7 @@ const Navigation = () => {
     { to: '/dashboard', label: 'Builder', icon: MessageSquare },
     { to: '/test', label: 'Strategy Tester', icon: TrendingUp },
     { to: '/mystrategies', label: 'My Strategies', icon: User },
-    { to: '/marketplace', label: 'Marketplace', icon: Download }, // Added Marketplace
+    { to: '/marketplace', label: 'Marketplace', icon: Download },
   ];
 
   return (

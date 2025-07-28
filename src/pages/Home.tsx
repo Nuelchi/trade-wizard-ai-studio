@@ -488,11 +488,11 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Hero Section */}
-      <section className="relative py-12 sm:py-16 overflow-hidden">
+      <section className="relative flex-1 flex flex-col justify-center py-12 sm:py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-hero"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative flex-1 flex flex-col justify-center">
           <div className="text-center mb-8 sm:mb-12">
             <Badge variant="outline" className="mb-4 sm:mb-6 border-primary/20 text-primary bg-primary/10">
               <Zap className="w-3 h-3 mr-1" />
@@ -577,6 +577,7 @@ const Home = () => {
                   {selectedStrategy?.description}
                 </DialogDescription>
               </DialogHeader>
+              
               <div className="space-y-4 sm:space-y-6">
                 {/* Thumbnail */}
                 {selectedStrategy?.thumbnail && (
@@ -588,6 +589,7 @@ const Home = () => {
                     />
                   </div>
                 )}
+                
                 {/* Strategy Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                   <div className="space-y-2">
@@ -611,6 +613,7 @@ const Home = () => {
                       </div>
                     </div>
                   </div>
+                  
                   <div className="space-y-2">
                     <h4 className="font-semibold text-xs sm:text-sm text-muted-foreground">Strategy Info</h4>
                     <div className="space-y-1">
@@ -633,6 +636,7 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
+                
                 {/* Tags */}
                 {selectedStrategy?.tags && selectedStrategy.tags.length > 0 && (
                   <div>
@@ -644,6 +648,7 @@ const Home = () => {
                     </div>
                   </div>
                 )}
+                
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 pt-2 sm:pt-4">
                   <Button 
@@ -672,6 +677,7 @@ const Home = () => {
               </div>
             </DialogContent>
           </Dialog>
+
           <div className="text-center mt-8 sm:mt-12">
             <Button asChild variant="outline" size="lg">
               <NavLink to="/marketplace" className="flex items-center justify-center">
@@ -694,6 +700,7 @@ const Home = () => {
               Everything you need to create, test, and deploy winning trading strategies.
             </p>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="trading-card hover:shadow-glow transition-all text-center group">

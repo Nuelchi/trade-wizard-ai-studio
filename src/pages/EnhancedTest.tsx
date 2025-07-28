@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +21,7 @@ import type { Database } from '@/integrations/supabase/types';
 // import TradeAnalysisTab from '../../../src/components/StrategyTesterFooter/TradeAnalysisTab';
 import { generateStrategyWithAI } from '@/lib/utils';
 import SimpleMarkdownRenderer, { splitCodeBlocks, CodeBlock } from '@/components/SimpleMarkdownRenderer';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // Memoized TradingView chart
 interface MemoTradingViewChartProps {
@@ -82,64 +82,52 @@ const MemoMiniChat = memo(function MemoMiniChat({
     <div className="bg-card border-t border-border mt-6">
       {/* Header with Tabs and AI Assistant Button */}
       <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-            <span className="text-sm font-medium">Strategy Tester</span>
+        <div className="w-full flex items-center gap-2">
+          {/* Mobile: Dropdown */}
+          <div className="sm:hidden w-full relative mb-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full border border-border rounded px-2 py-1 text-xs bg-muted text-foreground flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ minWidth: 0 }}>
+                  <span className="truncate">
+                    {activeFooterTab === 'overview' && 'Overview'}
+                    {activeFooterTab === 'performance' && 'Performance'}
+                    {activeFooterTab === 'trade_analysis' && 'Trade Analysis'}
+                    {activeFooterTab === 'ai' && (isAiWidgetOpen ? 'Hide AI' : 'AI Assistant')}
+                  </span>
+                  <span className="ml-2 text-muted-foreground">▼</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-full z-50 shadow-lg absolute left-0">
+                <DropdownMenuItem onClick={() => setActiveFooterTab('overview')}>Overview</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveFooterTab('performance')}>Performance</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveFooterTab('trade_analysis')}>Trade Analysis</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsAiWidgetOpen(v => !v)}>{isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <Separator orientation="vertical" className="h-4" />
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            <span>Last updated: {new Date().toLocaleTimeString()}</span>
-          </div>
-          {/* Tabs in header - Dropdown for mobile, horizontal tabs for desktop */}
-          <div className="w-full flex items-center gap-2">
-            {/* Mobile: Dropdown */}
-            <div className="sm:hidden w-full relative mb-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-full border border-border rounded px-2 py-1 text-xs bg-muted text-foreground flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ minWidth: 0 }}>
-                    <span className="truncate">
-                      {activeFooterTab === 'overview' && 'Overview'}
-                      {activeFooterTab === 'performance' && 'Performance'}
-                      {activeFooterTab === 'trade_analysis' && 'Trade Analysis'}
-                      {activeFooterTab === 'ai' && (isAiWidgetOpen ? 'Hide AI' : 'AI Assistant')}
-                    </span>
-                    <span className="ml-2 text-muted-foreground">▼</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-full z-50 shadow-lg absolute left-0">
-                  <DropdownMenuItem onClick={() => setActiveFooterTab('overview')}>Overview</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveFooterTab('performance')}>Performance</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveFooterTab('trade_analysis')}>Trade Analysis</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIsAiWidgetOpen(v => !v)}>{isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            {/* Desktop: Horizontal tabs and AI button */}
-            <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="hidden sm:flex w-full">
-              <TabsList className="w-full max-w-full flex-nowrap overflow-x-auto no-scrollbar text-xs sm:text-sm gap-1 sm:gap-2 p-0">
-                <TabsTrigger value="overview" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Overview</TabsTrigger>
-                <TabsTrigger value="performance" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Performance</TabsTrigger>
-                <TabsTrigger value="trade_analysis" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Trade Analysis</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
-              className="h-7 text-xs hidden sm:flex"
-            >
-              <Sparkles className="w-3 h-3 mr-1" />
-              {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
-            </Button>
-          </div>
+          {/* Desktop: Horizontal tabs and AI button */}
+          <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="hidden sm:flex w-full">
+            <TabsList className="w-full max-w-full flex-nowrap overflow-x-auto no-scrollbar text-xs sm:text-sm gap-1 sm:gap-2 p-0">
+              <TabsTrigger value="overview" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Overview</TabsTrigger>
+              <TabsTrigger value="performance" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Performance</TabsTrigger>
+              <TabsTrigger value="trade_analysis" className="px-1.5 sm:px-3 py-1 min-w-0 max-w-[90px] sm:max-w-[110px] truncate">Trade Analysis</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsAiWidgetOpen(!isAiWidgetOpen)}
+            className="h-7 text-xs hidden sm:flex"
+          >
+            <Sparkles className="w-3 h-3 mr-1" />
+            {isAiWidgetOpen ? 'Hide AI' : 'AI Assistant'}
+          </Button>
         </div>
       </div>
       {/* Main Content Area: Tab Content and AI Chat */}
-      <div className="flex mb-0 pb-0">
+      <div className="flex">
         {/* Tab Content */}
-        <div className={`${isAiWidgetOpen ? 'w-2/3' : 'w-full'} transition-all duration-300 p-2 sm:p-4 min-h-0`}> 
+        <div className={`${isAiWidgetOpen ? 'w-2/3' : 'w-full'} transition-all duration-300 p-4`}> 
           <Tabs value={activeFooterTab} onValueChange={setActiveFooterTab} className="w-full">
             <TabsContent value="overview">
               {/* <OverviewTab metrics={metrics} /> */}
@@ -547,11 +535,11 @@ const EnhancedTest = () => {
                     </CardHeader>
                     <CardContent>
                       <Tabs value={activeCodeTab} onValueChange={setActiveCodeTab}>
-                        <TabsList className="flex-nowrap overflow-x-auto max-w-full no-scrollbar text-xs sm:text-sm gap-1 sm:gap-2 p-0">
-                          <TabsTrigger value="pineScript" className="px-2 sm:px-3 py-1 min-w-0 max-w-[110px] truncate">Pine Script</TabsTrigger>
-                          <TabsTrigger value="mql4" className="px-2 sm:px-3 py-1 min-w-0 max-w-[110px] truncate">MQL4</TabsTrigger>
-                          <TabsTrigger value="mql5" className="px-2 sm:px-3 py-1 min-w-0 max-w-[110px] truncate">MQL5</TabsTrigger>
-                          <TabsTrigger value="view" className="px-2 sm:px-3 py-1 min-w-0 max-w-[110px] truncate">View Generated</TabsTrigger>
+                        <TabsList>
+                          <TabsTrigger value="pineScript">Pine Script</TabsTrigger>
+                          <TabsTrigger value="mql4">MQL4</TabsTrigger>
+                          <TabsTrigger value="mql5">MQL5</TabsTrigger>
+                          <TabsTrigger value="view">View Generated</TabsTrigger>
                         </TabsList>
                         <TabsContent value="pineScript" className="space-y-4">
                           {pineScript && (pineScript.trim().startsWith('//@version=4') || pineScript.trim().startsWith('//@version=5')) ? (

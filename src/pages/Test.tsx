@@ -230,33 +230,29 @@ const Test = () => {
                           <div className="flex items-center space-x-2">
                             <MessageSquare className="w-4 h-4 text-primary" />
                             <span className="text-sm font-medium">AI Strategy Builder</span>
-            </div>
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             Create or modify strategies
-              </div>
-            </div>
-
+                          </div>
+                        </div>
                         <ChatInterface 
                           onStrategyGenerated={handleStrategyGenerated}
                           onCodeGenerated={handleCodeGenerated}
                         />
-              </div>
+                      </div>
                     </ResizablePanel>
-
                     <ResizableHandle withHandle />
-
                     <ResizablePanel defaultSize={50} minSize={30}>
                       <div className="h-full flex flex-col bg-background">
                         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-              <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2">
                             <TrendingUp className="w-4 h-4 text-primary" />
                             <span className="text-sm font-medium">Strategy Preview</span>
-              </div>
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             Strategy details and code
-          </div>
-        </div>
-
+                          </div>
+                        </div>
                         <div className="flex-1 p-4 overflow-y-auto max-h-[500px]">
                           {selectedStrategy ? (
                             <Card>
@@ -270,7 +266,7 @@ const Test = () => {
                                     Test Strategy
                                   </Button>
                                 </CardTitle>
-              </CardHeader>
+                              </CardHeader>
                               <CardContent className="space-y-4">
                                 <div>
                                   <h4 className="font-medium mb-2">Type</h4>
@@ -288,10 +284,10 @@ const Test = () => {
                                         {ind.name}
                                       </span>
                                     ))}
-                </div>
-                </div>
-              </CardContent>
-            </Card>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
                           ) : (
                             <div className="h-full flex items-center justify-center">
                               <div className="text-center">
@@ -300,10 +296,10 @@ const Test = () => {
                                 <p className="text-sm text-muted-foreground">
                                   Use the AI builder to create a strategy
                                 </p>
-                </div>
-                </div>
+                              </div>
+                            </div>
                           )}
-          </div>
+                        </div>
                       </div>
                     </ResizablePanel>
                   </ResizablePanelGroup>
@@ -315,7 +311,6 @@ const Test = () => {
                     <div className="flex-1 bg-background border-b border-border">
                       <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
                     </div>
-                    
                     {/* Bottom sidebar/panel */}
                     <div className="h-auto sm:h-64 bg-muted/20 border-t border-border p-4 overflow-visible min-h-0">
                       <div className="h-full flex items-center justify-center">
@@ -325,8 +320,8 @@ const Test = () => {
                           <p className="text-sm text-muted-foreground">
                             Analytics and performance metrics will appear here
                           </p>
-                  </div>
-                    </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
