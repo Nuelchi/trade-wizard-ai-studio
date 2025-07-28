@@ -70,7 +70,7 @@ interface MemoAdvancedChartProps {
   interval: string;
 }
 const MemoAdvancedChart: React.FC<MemoAdvancedChartProps> = React.memo(({ symbol, interval }) => {
-  // Responsive height: 350px on mobile, 700px on desktop
+  // Responsive height: 250px on mobile, 700px on desktop
   const [height, setHeight] = React.useState(700);
   React.useEffect(() => {
     const updateHeight = () => {
