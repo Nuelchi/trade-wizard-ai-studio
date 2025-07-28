@@ -168,21 +168,7 @@ const Dashboard = () => {
         if (chartElement && user) {
           try {
             console.log('Capturing chart thumbnail (once per unique code)...');
-            // Ensure the element is fully rendered and visible
-            const rect = chartElement.getBoundingClientRect();
-            const canvas = await html2canvas(chartElement, { 
-              backgroundColor: null, 
-              scale: 2, 
-              logging: false,
-              height: rect.height,
-              width: rect.width,
-              useCORS: true,
-              allowTaint: true,
-              scrollX: 0,
-              scrollY: 0,
-              windowWidth: document.documentElement.offsetWidth,
-              windowHeight: document.documentElement.offsetHeight
-            });
+            const canvas = await html2canvas(chartElement, { backgroundColor: null, scale: 2, logging: false });
             const thumbnail = canvas.toDataURL('image/png');
             const { error } = await supabase
               .from('strategies')
@@ -200,7 +186,7 @@ const Dashboard = () => {
         } else {
           console.log('Chart element not found or user not set');
         }
-      }, 1200); // Give React more time to render the chart and metrics
+      }, 1200); // Give React time to render the chart
     }
   };
 
@@ -327,20 +313,10 @@ const Dashboard = () => {
     const chartElement = document.getElementById('chart-preview');
     if (chartElement) {
       try {
-        // Ensure the element is fully rendered and visible
-        const rect = chartElement.getBoundingClientRect();
         const canvas = await html2canvas(chartElement, {
           backgroundColor: null,
           scale: 2,
-          logging: false,
-          height: rect.height,
-          width: rect.width,
-          useCORS: true,
-          allowTaint: true,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: document.documentElement.offsetWidth,
-          windowHeight: document.documentElement.offsetHeight
+          logging: false
         });
         return canvas.toDataURL('image/png');
       } catch (error) {
@@ -901,7 +877,7 @@ const Dashboard = () => {
                   {previewMode === 'code' ? <CodePreview strategy={currentStrategy} /> :
   <div className="h-full flex flex-col min-h-0 overflow-hidden">
     <TradingChart onStrategySelect={() => {}} onStrategyUpload={() => {}} />
-    <div id="chart-preview" className="w-full mt-4 min-h-[300px]">
+    <div id="chart-preview" className="w-full mt-4">
       <div className="w-full h-full border border-border rounded-lg bg-muted/10 p-4 flex flex-col gap-6">
         {/* Top Metrics Row - Only the requested metrics, spaced horizontally */}
         <div className="flex flex-row justify-between items-end w-full mb-4">
