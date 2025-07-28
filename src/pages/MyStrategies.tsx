@@ -17,6 +17,14 @@ type StrategyUpdate = Database['public']['Tables']['strategies']['Update'];
 const MyStrategies = () => {
   const { user } = useAuth();
   const { strategies, loading, error } = useFetchStrategies({ publicOnly: false, userId: user?.id });
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  useEffect(() => {
+    setLoadingTimeout(false);
+    if (loading) {
+      const timeout = setTimeout(() => setLoadingTimeout(true), 7000);
+      return () => clearTimeout(timeout);
+    }
+  }, [loading]);
   const navigate = useNavigate();
   const { setMessages } = useChatContext();
 
@@ -48,7 +56,11 @@ const MyStrategies = () => {
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       <h1 className="text-3xl font-bold text-foreground mb-6">My Strategies</h1>
       {loading ? (
-        <div className="text-muted-foreground flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+        loadingTimeout ? (
+          <div className="text-center text-destructive py-12">Loading strategies timed out. Please try again.</div>
+        ) : (
+          <div className="text-muted-foreground flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+        )
       ) : error ? (
         <div className="text-center text-destructive py-12">{error}</div>
       ) : (

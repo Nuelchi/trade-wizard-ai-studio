@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StrategyShowcaseGrid from "@/components/StrategyShowcaseGrid";
 import { useFetchStrategies } from "@/hooks/useFetchStrategies";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Copy, GitFork, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,15 @@ export default function Marketplace() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<'likes' | 'remixes'>('likes');
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  useEffect(() => {
+    setLoadingTimeout(false);
+    if (loading) {
+      const timeout = setTimeout(() => setLoadingTimeout(true), 7000);
+      return () => clearTimeout(timeout);
+    }
+  }, [loading]);
 
   // Filter and sort strategies
   const filteredStrategies = strategies
@@ -78,7 +87,11 @@ export default function Marketplace() {
             </Select>
           </div>
           {loading ? (
-            <div className="flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+            loadingTimeout ? (
+              <div className="text-center text-destructive py-12">Loading strategies timed out. Please try again.</div>
+            ) : (
+              <div className="flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+            )
           ) : error ? (
             <div className="text-center text-destructive py-12">{error}</div>
           ) : (
