@@ -21,14 +21,16 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://trade-wizard-ai-studio.vercel.app',
+        'X-Title': 'Trade Wizard AI Studio',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'tngtech/deepseek-r1t-chimera:free',
         messages: [
           { 
             role: 'system', 

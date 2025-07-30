@@ -68,19 +68,21 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing required fields: userPrompt, aiSummary, code" }), { status: 400, headers: { ...corsHeaders(), "Content-Type": "application/json" } });
     }
 
-    // Call Groq API for name generation (temporary for testing)
+    // Call OpenRouter DeepSeek R1T Chimera (free) API for name generation
     let aiName = 'AI Strategy';
     try {
-      console.log('Calling Groq for name generation...');
+      console.log('Calling OpenRouter DeepSeek for name generation...');
       const systemPrompt = `You are a creative trading strategy naming engine.\n\nYour job is to generate a unique, catchy, and descriptive name for a trading strategy, given the user's description, a summary, and the code.\n\nRules:\n- Only output the name, nothing else.\n- Do not include explanations, greetings, or extra text.\n- Use title case.\n- Avoid generic names like \"AI Strategy\".\n- Make the name specific to the main indicator, asset, or logic.\n- Do not use more than 4 words in the name.\n\nExamples:\n- RSI Momentum Breakout v1\n- Crypto Scalping Beast Pro\n- Mean Reversion Master\n- Golden Cross Hunter\n- Volatility Squeeze Pro\n- EMA Pullback Sniper\n- Trend Rider X\n- Adaptive Swing Pro\n`;
-      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://trade-wizard-ai-studio.vercel.app',
+          'X-Title': 'Trade Wizard AI Studio',
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          model: 'tngtech/deepseek-r1t-chimera:free',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: `User Prompt:\n${userPrompt}\n\nAI Summary:\n${aiSummary}\n\nGenerated Code (first 20 lines):\n${code.split('\n').slice(0, 20).join('\n')}\n\nName:` }
@@ -89,15 +91,15 @@ serve(async (req) => {
           max_tokens: 12,
         })
       });
-      const groqData = await groqRes.json();
-      console.log('Groq response for naming:', JSON.stringify(groqData));
-      aiName = groqData.choices && groqData.choices[0] && groqData.choices[0].message && groqData.choices[0].message.content.trim();
+      const openRouterData = await openRouterRes.json();
+      console.log('OpenRouter response for naming:', JSON.stringify(openRouterData));
+      aiName = openRouterData.choices && openRouterData.choices[0] && openRouterData.choices[0].message && openRouterData.choices[0].message.content.trim();
       if (!aiName) aiName = 'AI Strategy';
-      // For debugging: return the raw Groq output as well
+      // For debugging: return the raw OpenRouter output as well
       console.log('Returning name:', aiName);
-      return new Response(JSON.stringify({ name: aiName, groqRaw: groqData }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ name: aiName, openRouterRaw: openRouterData }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
     } catch (err) {
-      console.log('Error during Groq call:', err);
+      console.log('Error during OpenRouter call:', err);
       return new Response(JSON.stringify({ error: 'AI name generation failed', details: err.message }), { status: 500, headers: { ...corsHeaders(), "Content-Type": "application/json" } });
     }
 

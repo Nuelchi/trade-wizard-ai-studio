@@ -158,25 +158,27 @@ serve(async (req) => {
     }
     console.log('finalMessages type:', Array.isArray(finalMessages), finalMessages);
 
-    // Use Groq endpoint and model for testing
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // Use OpenRouter DeepSeek R1T Chimera (free) endpoint
+    const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${openAIApiKey}`,
+        'HTTP-Referer': 'https://trade-wizard-ai-studio.vercel.app',
+        'X-Title': 'Trade Wizard AI Studio',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: 'tngtech/deepseek-r1t-chimera:free',
         messages: finalMessages,
         temperature: 0.4,
         max_tokens: 1024,
       })
     });
-    if (!groqRes.ok) {
-      const errorText = await groqRes.text();
-      return new Response(JSON.stringify({ error: 'Groq API error', details: errorText }), { status: 500, headers: corsHeaders });
+    if (!openRouterRes.ok) {
+      const errorText = await openRouterRes.text();
+      return new Response(JSON.stringify({ error: 'OpenRouter API error', details: errorText }), { status: 500, headers: corsHeaders });
     }
-    const aiResponse: any = await groqRes.json();
+    const aiResponse: any = await openRouterRes.json();
     const message = aiResponse.choices && aiResponse.choices[0] && aiResponse.choices[0].message ? aiResponse.choices[0].message : {};
     const content = message.content || '';
     
