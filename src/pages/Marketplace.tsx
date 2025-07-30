@@ -17,15 +17,7 @@ export default function Marketplace() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<'likes' | 'remixes'>('likes');
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  useEffect(() => {
-    setLoadingTimeout(false);
-    if (loading) {
-      const timeout = setTimeout(() => setLoadingTimeout(true), 7000);
-      return () => clearTimeout(timeout);
-    }
-  }, [loading]);
 
   // Filter and sort strategies
   const filteredStrategies = strategies
@@ -87,11 +79,7 @@ export default function Marketplace() {
             </Select>
           </div>
           {loading ? (
-            loadingTimeout ? (
-              <div className="text-center text-destructive py-12">Loading strategies timed out. Please try again.</div>
-            ) : (
-              <div className="flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-            )
+            <div className="flex justify-center items-center py-24"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
           ) : error ? (
             <div className="text-center text-destructive py-12">{error}</div>
           ) : (

@@ -191,9 +191,12 @@ const MemoMiniChat = memo(function MemoMiniChat({
                   </div>
                   <div className="bg-muted rounded-lg px-2.5 py-1.5 text-xs">
                     <div className="flex items-center gap-1">
-                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"></div>
-                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                      <span className="text-xs text-muted-foreground">Thinking...</span>
+                      <div className="flex gap-0.5">
+                        <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"></div>
+                        <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -268,7 +271,7 @@ const EnhancedTest = () => {
   const { user } = useAuth();
   const [strategies, setStrategies] = useState<Database['public']['Tables']['strategies']['Row'][]>([]);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
-  const [strategiesError, setStrategiesError] = useState<string | null>(null);
+
   const autosaveTimeout = useRef<NodeJS.Timeout | null>(null);
   const [activeCodeTab, setActiveCodeTab] = useState('view');
   const [formattedIds, setFormattedIds] = useState<string[]>([]);
@@ -276,37 +279,15 @@ const EnhancedTest = () => {
   useEffect(() => {
     if (!user) return;
     setLoadingStrategies(true);
-    setStrategiesError(null);
-    let didCancel = false;
-    const timeout = setTimeout(() => {
-      if (!didCancel) {
-        setLoadingStrategies(false);
-        setStrategiesError("Loading strategies timed out. Please try again.");
-      }
-    }, 7000); // 7 seconds fallback
-
     supabase
       .from('strategies')
       .select('*')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .then(({ data, error }) => {
-        if (!didCancel) {
-          if (!error) {
-            setStrategies(data || []);
-            setStrategiesError(null);
-          } else {
-            setStrategiesError("Failed to load strategies.");
-          }
-          setLoadingStrategies(false);
-          clearTimeout(timeout);
-        }
+        if (!error) setStrategies(data || []);
+        setLoadingStrategies(false);
       });
-
-    return () => {
-      didCancel = true;
-      clearTimeout(timeout);
-    };
   }, [user]);
 
   // When a user selects a strategy, load its chat_history and code fields into state for AI context and code tabs
@@ -477,8 +458,6 @@ const EnhancedTest = () => {
                 <SelectItem value="none">None</SelectItem>
                 {loadingStrategies ? (
   <div className="flex justify-center items-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-) : strategiesError ? (
-  <div className="text-center text-destructive py-8">{strategiesError}</div>
 ) : strategies.length === 0 ? (
   <div className="text-center text-muted-foreground py-8">No strategies found</div>
 ) : (

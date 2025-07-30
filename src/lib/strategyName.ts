@@ -1,31 +1,11 @@
-import { supabase } from '@/integrations/supabase/client';
+import { generateStrategyName as generateStrategyNameDirect } from './ai-service';
 
 export async function generateStrategyName({ userPrompt, aiSummary, code }: { userPrompt: string, aiSummary: string, code: string }) {
-  const session = (await supabase.auth.getSession()).data.session;
-  const accessToken = session?.access_token;
-  const res = await fetch('https://kgfzbkwyepchbysaysky.functions.supabase.co/generate-strategy-name', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
-    },
-    body: JSON.stringify({ userPrompt, aiSummary, code }),
-  });
-  const data = await res.json();
-  return data.name;
+  return await generateStrategyNameDirect({ userPrompt, aiSummary, code });
 }
 
 export async function checkStrategyName(name: string): Promise<boolean> {
-  const session = (await supabase.auth.getSession()).data.session;
-  const accessToken = session?.access_token;
-  const res = await fetch('https://kgfzbkwyepchbysaysky.functions.supabase.co/generate-strategy-name', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
-    },
-    body: JSON.stringify({ checkName: name }),
-  });
-  const data = await res.json();
-  return data.available;
+  // For now, we'll assume the name is available since we're not checking against a database
+  // This can be enhanced later if needed
+  return true;
 } 

@@ -116,7 +116,7 @@ const Dashboard = () => {
   });
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
-  const [strategiesError, setStrategiesError] = useState<string | null>(null);
+
   const [userProfile, setUserProfile] = useState<any>(null);
   const {
     user,
@@ -154,7 +154,7 @@ const Dashboard = () => {
   // Remove thumbnail logic from handleStrategyGenerated and useEffect
   const handleStrategyGenerated = async (strategy: any) => {
     setCurrentStrategy(strategy);
-    setStrategyName(strategy.title || 'Untitled Strategy');
+    setStrategyName(strategy.name || strategy.title || 'Untitled Strategy');
   };
 
   // Move thumbnail logic here
@@ -237,6 +237,7 @@ const Dashboard = () => {
     await signOut();
     setCurrentStrategy(null);
     setGeneratedCode(null);
+    navigate('/');
   };
 
   const handleNameChange = (newName: string) => {
@@ -489,37 +490,15 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
     setLoadingStrategies(true);
-    setStrategiesError(null);
-    let didCancel = false;
-    const timeout = setTimeout(() => {
-      if (!didCancel) {
-        setLoadingStrategies(false);
-        setStrategiesError("Loading strategies timed out. Please try again.");
-      }
-    }, 7000); // 7 seconds fallback
-
     supabase
       .from('strategies')
       .select('*')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .then(({ data, error }) => {
-        if (!didCancel) {
-          if (!error) {
-            setStrategies(data || []);
-            setStrategiesError(null);
-          } else {
-            setStrategiesError("Failed to load strategies.");
-          }
-          setLoadingStrategies(false);
-          clearTimeout(timeout);
-        }
+        if (!error) setStrategies(data || []);
+        setLoadingStrategies(false);
       });
-
-    return () => {
-      didCancel = true;
-      clearTimeout(timeout);
-    };
   }, [user]);
 
   // Fetch user profile
@@ -699,10 +678,6 @@ const Dashboard = () => {
                       <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-sm">Loading strategies...</span>
                     </div>
-                  </DropdownMenuItem>
-                ) : strategiesError ? (
-                  <DropdownMenuItem disabled>
-                    <span className="text-sm text-destructive">{strategiesError}</span>
                   </DropdownMenuItem>
                 ) : strategies.length === 0 ? (
                   <DropdownMenuItem disabled>

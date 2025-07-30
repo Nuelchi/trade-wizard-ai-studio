@@ -13,7 +13,7 @@ import type { Database, TablesInsert } from '@/integrations/supabase/types';
 import { generateStrategyWithAI } from '@/lib/utils';
 import React from 'react';
 import SimpleMarkdownRenderer from './SimpleMarkdownRenderer';
-import { generateStrategyName } from '@/lib/strategyName';
+import { generateStrategyName } from '@/lib/ai-service';
 
 interface Message {
   id: string;
@@ -660,10 +660,13 @@ You can also test this strategy in the built-in Strategy Tester to see how it pe
               </div>
             </div>
             <div className="bg-muted/50 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse"></div>
-                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground font-medium">Thinking...</span>
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse"></div>
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                </div>
               </div>
             </div>
           </div>
