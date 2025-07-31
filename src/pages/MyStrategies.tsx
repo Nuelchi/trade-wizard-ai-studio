@@ -25,6 +25,50 @@ const MyStrategies = () => {
     navigate('/dashboard', { state: { strategy } });
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('strategies')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user?.id);
+
+      if (error) {
+        toast.error('Failed to delete strategy');
+        console.error('Delete error:', error);
+      } else {
+        toast.success('Strategy deleted successfully');
+        // Refresh the strategies list
+        window.location.reload();
+      }
+    } catch (error) {
+      toast.error('Failed to delete strategy');
+      console.error('Delete error:', error);
+    }
+  };
+
+  const handleExport = (strategy: any) => {
+    try {
+      // Store strategy data for export page
+      localStorage.setItem('exportStrategy', strategy.title || 'Untitled Strategy');
+      localStorage.setItem('exportPineScript', strategy.code?.pineScript || '');
+      localStorage.setItem('exportMQL4', strategy.code?.mql4 || '');
+      localStorage.setItem('exportMQL5', strategy.code?.mql5 || '');
+      localStorage.setItem('exportSummary', JSON.stringify({
+        description: strategy.description || '',
+        type: strategy.type || 'Custom',
+        confidence: strategy.confidence || 90,
+        indicators: strategy.indicators || [],
+        conditions: strategy.conditions || { entry: [], exit: [] },
+        riskManagement: strategy.risk_management || {}
+      }));
+      navigate('/export');
+    } catch (error) {
+      toast.error('Failed to prepare export');
+      console.error('Export error:', error);
+    }
+  };
+
   if (!loading && strategies.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-center gap-6">
@@ -75,11 +119,11 @@ const MyStrategies = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between gap-2 mt-2 w-full">
-                  <Button size="sm" variant="outline" className="flex-1" onClick={(e) => { e.stopPropagation(); /* handleExport(s); */ }}>
+                  <Button size="sm" variant="outline" className="flex-1" onClick={(e) => { e.stopPropagation(); handleExport(s); }}>
                     <Download className="w-4 h-4 mr-1" />
                     Export
                   </Button>
-                  <Button size="sm" variant="destructive" className="flex-1" onClick={(e) => { e.stopPropagation(); /* handleDelete(s.id); */ }}>
+                  <Button size="sm" variant="destructive" className="flex-1" onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }}>
                     <Trash className="w-4 h-4 mr-1" />
                     Delete
                   </Button>

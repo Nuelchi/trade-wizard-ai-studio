@@ -1,9 +1,9 @@
 // AI Service - Direct OpenRouter Integration
 // This replaces the Supabase Edge Functions for faster, more reliable AI responses
 
-const OPENROUTER_API_KEY = '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';
-// DeepSeek R1T Chimera (free) - your preferred model
-const OPENROUTER_MODEL = 'tngtech/deepseek-r1t-chimera:free';
+const OPENROUTER_API_KEY = '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';
+// DeepSeek R1T2 Chimera (FREE) - completely free model
+const OPENROUTER_MODEL = 'tngtech/deepseek-r1t2-chimera:free';
 
 // Ultra-minimal system prompt for maximum DeepSeek speed
 const SYSTEM_PROMPT = `You are TrainFlow an AI trading strategy assistant. You help users build, test, and modify trading strategies and indicators for TradingView (Pine Script), MetaTrader 4 (MQL4), python, and MetaTrader 5 (MQL5). You are friendly, clear, and always provide actionable, well-explained responses.
@@ -296,7 +296,7 @@ Examples:
         'X-Title': 'Trade Wizard AI Studio',
       },
       body: JSON.stringify({
-        model: OPENROUTER_MODEL,
+        model: 'openai/gpt-3.5-turbo', // Use GPT-3.5 for reliable name generation
         messages: [
           { role: 'system', content: systemPrompt },
           { 
@@ -305,7 +305,7 @@ Examples:
           }
         ],
         temperature: 0.7, // Slightly lower for faster responses
-        max_tokens: 20, // Adequate tokens for name generation
+        max_tokens: 50, // Increased tokens for name generation
         stream: false, // Ensure no streaming
       })
     });
