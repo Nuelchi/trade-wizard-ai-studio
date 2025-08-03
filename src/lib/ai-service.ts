@@ -1,7 +1,7 @@
 // AI Service - Direct OpenRouter Integration
 // This replaces the Supabase Edge Functions for faster, more reliable AI responses
 
-const OPENROUTER_API_KEY = '';
+const OPENROUTER_API_KEY = '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';
 // GPT-3.5-turbo - reliable and fast model
 const OPENROUTER_MODEL = 'openai/gpt-3.5-turbo';
 

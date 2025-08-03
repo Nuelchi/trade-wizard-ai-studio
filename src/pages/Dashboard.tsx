@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useChatContext } from '@/contexts/ChatContext';
 import TradingChart from '@/components/TradingChart';
+import AdvancedTradingTester from '@/components/AdvancedTradingTester';
 import { Badge } from '@/components/ui/badge';
 // Remove: import sha256 from 'crypto-js/sha256';
 // Add a simple hash function (djb2)
@@ -101,7 +102,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'chat' | 'code'>('chat');
   const [strategyName, setStrategyName] = useState('Untitled Strategy');
   const [isEditingName, setIsEditingName] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'code' | 'chart'>('chart');
+  const [previewMode, setPreviewMode] = useState<'code' | 'chart' | 'advanced'>('chart');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedPair, setSelectedPair] = useState('EUR/USD');
   const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
@@ -633,20 +634,6 @@ const Dashboard = () => {
   ];
 
   return <AuthGuard requireAuth={true}>
-    {/* Subscription Status Banner */}
-    <div className="w-full flex justify-center items-center py-2 bg-muted/40 border-b border-border text-xs sm:text-sm px-2 sm:px-0">
-      {loadingSub ? (
-        <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="animate-spin w-4 h-4" /> Checking subscription...</span>
-      ) : subscription ? (
-        <span className="flex items-center gap-2 text-sm">
-          <Badge variant="outline">{subscription.tier}</Badge>
-          Status: <span className="font-semibold">{subscription.status}</span>
-          {subscription.status !== 'active' && <span className="text-destructive ml-2">(Not Active)</span>}
-        </span>
-      ) : (
-        <span className="text-sm text-destructive">No active subscription found.</span>
-      )}
-    </div>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-2 sm:px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md flex-shrink-0 gap-2">
@@ -773,7 +760,7 @@ const Dashboard = () => {
                 Save
               </Button>
             )}
-            {/* Code/Chart Toggle - pill group, only active shows label, inactive is just icon */}
+            {/* Code/Chart/Advanced Toggle - pill group, only active shows label, inactive is just icon */}
             <div className="flex items-center rounded-full bg-muted/60 p-1 gap-1">
               <button
                 onClick={() => setPreviewMode('code')}
@@ -792,6 +779,15 @@ const Dashboard = () => {
               >
                 <BarChart3 className="w-4 h-4" />
                 {previewMode === 'chart' && <span className="ml-2">Chart</span>}
+              </button>
+              <button
+                onClick={() => setPreviewMode('advanced')}
+                className={`flex items-center transition-all duration-200 px-2 sm:px-3 h-8 sm:h-9 rounded-full font-medium text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${previewMode === 'advanced' ? 'bg-background shadow text-primary' : 'hover:bg-muted/80 text-muted-foreground'} `}
+                aria-label="Advanced Trading Tester"
+                type="button"
+              >
+                <TrendingUp className="w-4 h-4" />
+                {previewMode === 'advanced' && <span className="ml-2">Advanced</span>}
               </button>
             </div>
             {/* Publish Button - minimal/outline, icon+label, highlight on hover/active */}
@@ -939,6 +935,8 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+            ) : previewMode === 'advanced' ? (
+              <AdvancedTradingTester strategy={currentStrategy} />
             ) : null}
           </div>
         </div>
