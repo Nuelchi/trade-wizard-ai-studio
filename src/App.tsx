@@ -16,6 +16,7 @@ import Pricing from './pages/Pricing';
 import Community from './pages/Community';
 import Learn from './pages/Learn';
 import Account from './pages/Account';
+
 import { AuthDialogProvider, useAuthDialog } from "@/contexts/AuthDialogContext";
 import AuthDialog from "./components/AuthDialog";
 import { useState, useCallback } from "react";

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Trading Strategy Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        select, button {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #ffffff;
+        }
+        button {
+            background: #007bff;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .positive { color: #4CAF50; }
+        .negative { color: #f44336; }
+        .trade-table {
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: auto;
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .trade-table table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            color: white;
+        }
+        .trade-table th,
+        .trade-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+            white-space: nowrap;
+        }
+        .trade-table th {
+            background: #444;
+            font-weight: bold;
+        }
+        .trade-toggle-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.3s;
+        }
+        .trade-toggle-btn:hover {
+            background: #0056b3;
+        }
+        .trade-toggle-btn span {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .controls { gap: 10px; padding: 0 5px; }
+            select, button { padding: 6px 8px; font-size: 12px; }
+            #chart { height: 400px !important; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat-item { padding: 10px; min-height: 55px; }
+            .stat-value { font-size: 1.1em; margin-bottom: 5px; }
+            h1 { font-size: 1.5em; padding: 0 5px !important; }
+        }
+        @media (min-width: 769px) and (max-width: 1200px) {
+            #chart { height: 600px !important; }
+            .stats-grid { gap: 18px; }
+            .stat-item { padding: 12px; min-height: 65px; }
+            .stat-value { font-size: 1.2em; margin-bottom: 6px; }
+        }
+        @media (max-width: 480px) {
+            .controls { flex-direction: column; align-items: stretch; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-item { padding: 8px; min-height: 50px; }
+            .stat-value { font-size: 0.9em; margin-bottom: 4px; }
+            #chart { height: 350px !important; }
+        }
+        @media (min-width: 1201px) {
+            .stats-grid { gap: 25px; }
+            .stat-item { padding: 15px; min-height: 75px; }
+            .stat-value { font-size: 1.3em; margin-bottom: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Trading Strategy Tester</h1>
+    
+    <div class="controls">
+        <label for="pairSelect">Trading Pair:</label>
+        <select id="pairSelect">
+            <option value="btcusdt">BTC/USDT</option>
+            <option value="ethusdt">ETH/USDT</option>
+            <option value="bnbusdt">BNB/USDT</option>
+            <option value="xrpusdt">XRP/USDT</option>
+            <option value="adausdt">ADA/USDT</option>
+            <option value="ltcusdt">LTC/USDT</option>
+            <option value="solusdt">SOL/USDT</option>
+            <option value="dogeusdt">DOGE/USDT</option>
+            <option value="maticusdt">MATIC/USDT</option>
+            <option value="dotusdt">DOT/USDT</option>
+        </select>
+        
+                        <label for="strategySelect">Strategy:</label>
+                <select id="strategySelect">
+                    <option value="ma_crossover">Moving Average Crossover</option>
+                    <option value="rsi_strategy">RSI Strategy</option>
+                    <option value="macd_strategy">MACD Strategy</option>
+                    <option value="custom_strategy">Custom Strategy</option>
+                    <option value="high_frequency">High Frequency Strategy</option>
+                </select>
+                
+                <label for="timeframeSelect">Timeframe:</label>
+                <select id="timeframeSelect">
+                    <option value="1m">1 Minute</option>
+                    <option value="5m">5 Minutes</option>
+                    <option value="15m">15 Minutes</option>
+                    <option value="30m">30 Minutes</option>
+                    <option value="1h">1 Hour</option>
+                    <option value="4h">4 Hours</option>
+                    <option value="1d">1 Day</option>
+                </select>
+        
+        <button id="runStrategyBtn" style="margin-left: 20px; padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Run Strategy</button>
+        
+        <label for="accountSize" style="margin-left: 20px;">Account Size ($):</label>
+        <input type="number" id="accountSize" value="10000" min="100" step="100" style="margin-left: 5px; padding: 3px 8px; border: 1px solid #ccc; border-radius: 3px; width: 120px;">
+        <button id="clearBtn">Clear Chart</button>
+    </div>
+
+    <div id="chart" style="width: 100%; height: 700px; max-width: 100%; overflow: hidden;"></div>
+    
+    <div id="tester" style="padding: 1rem; background: #2a2a2a; border-radius: 4px; margin-top: 20px;">
+        <h3>Strategy Results</h3>
+        <div id="resultsContent">
+            <p>Run a strategy to see results here.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script>
+        let chart;
+        let candleSeries;
+        const chartContainer = document.getElementById('chart');
+        
+        setTimeout(() => {
+            chart = LightweightCharts.createChart(chartContainer, {
+                layout: { backgroundColor: '#000000', textColor: '#000' },
+                grid: { vertLines: { color: '#eee' }, horLines: { color: '#eee' } },
+                timeScale: { timeVisible: true, secondsVisible: false },
+                width: window.innerWidth <= 1200 ? Math.min(window.innerWidth - 40, 1200) : chartContainer.offsetWidth,
+                height: window.innerWidth <= 768 ? 400 : 700,
+            });
+            
+            candleSeries = chart.addCandlestickSeries();
+            
+            let currentCandles = [];
+            let socket;
+
+            function setupWebSocket(pair) {
+                if (socket) socket.close();
+                const timeframe = document.getElementById('timeframeSelect').value;
+                socket = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@kline_${timeframe}`);
+                socket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    const k = message.k;
+                    const liveCandle = {
+                        time: k.t / 1000,
+                        open: parseFloat(k.o),
+                        high: parseFloat(k.h),
+                        low: parseFloat(k.l),
+                        close: parseFloat(k.c),
+                    };
+                    candleSeries.update(liveCandle);
+                };
+            }
+
+            async function fetchData(pair) {
+                let allCandles = [];
+                let endTime = Date.now();
+                const limit = 1000;
+                const maxCandles = 5000;
+                const loops = Math.ceil(maxCandles / limit);
+                const timeframe = document.getElementById('timeframeSelect').value;
+
+                console.log(`Fetching up to ${maxCandles} candles for ${pair} on ${timeframe} timeframe...`);
+
+                for (let i = 0; i < loops; i++) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${pair.toUpperCase()}&interval=${timeframe}&limit=${limit}&endTime=${endTime}`;
+                    const res = await fetch(url);
+                    const raw = await res.json();
+
+                    if (!raw.length) break;
+
+                    const candles = raw.map(d => ({
+                        time: d[0] / 1000,
+                        open: parseFloat(d[1]),
+                        high: parseFloat(d[2]),
+                        low: parseFloat(d[3]),
+                        close: parseFloat(d[4]),
+                    }));
+
+                    allCandles = [...candles, ...allCandles];
+                    endTime = raw[0][0] - 1;
+
+                    if (candles.length < limit) break;
+                }
+
+                console.log(`Total candles fetched: ${allCandles.length}`);
+                candleSeries.setData(allCandles);
+                currentCandles = allCandles;
+
+                const ema = (data, len) => {
+                    const k = 2 / (len + 1);
+                    let emaArray = [];
+                    let prevEma = data[0].close;
+                    for (let i = 0; i < data.length; i++) {
+                        const close = data[i].close;
+                        const nextEma = i === 0 ? close : close * k + prevEma * (1 - k);
+                        emaArray.push({ time: data[i].time, value: nextEma });
+                        prevEma = nextEma;
+                    }
+                    return emaArray;
+                };
+
+                const ema20 = chart.addLineSeries({ color: 'blue', lineWidth: 1 });
+                const ema200 = chart.addLineSeries({ color: 'orange', lineWidth: 1 });
+
+                ema20.setData(ema(allCandles, 20));
+                ema200.setData(ema(allCandles, 200));
+
+                updateChartWithStrategy();
+            }
+
+            function getStrategyRules(strategyType) {
+                const strategies = {
+                    ma_crossover: {
+                        name: "Moving Average Crossover",
+                        shortPeriod: 5,
+                        longPeriod: 20,
+                        type: "crossover",
+                        conditions: {
+                            buy: (shortMA, longMA, data, index) => shortMA > longMA,
+                            sell: (shortMA, longMA, data, index) => shortMA < longMA
+                        }
+                    },
+                    rsi_strategy: {
+                        name: "RSI Strategy",
+                        rsiPeriod: 14,
+                        type: "rsi",
+                        conditions: {
+                            buy: (rsi, data, index) => rsi < 35,
+                            sell: (rsi, data, index) => rsi > 65
+                        }
+                    },
+                    macd_strategy: {
+                        name: "MACD Strategy",
+                        fastPeriod: 8,
+                        slowPeriod: 21,
+                        signalPeriod: 5,
+                        type: "macd",
+                        conditions: {
+                            buy: (macd, signal, histogram, data, index) => macd > signal,
+                            sell: (macd, signal, histogram, data, index) => macd < signal
+                        }
+                    },
+                    custom_strategy: {
+                        name: "Custom Strategy (RSI + Volume)",
+                        rsiPeriod: 14,
+                        type: "custom",
+                        conditions: {
+                            buy: (rsi, data, index) => {
+                                if (rsi < 40 && index >= 10) {
+                                    const sma10 = calculateSMA(data, 10);
+                                    return data[index].close > sma10[index];
+                                }
+                                return false;
+                            },
+                            sell: (rsi, data, index) => {
+                                if (rsi > 60 || (index >= 10)) {
+                                    const sma10 = calculateSMA(data, 10);
+                                    return data[index].close < sma10[index];
+                                }
+                                return false;
+                            }
+                        }
+                    },
+                    high_frequency: {
+                        name: "High Frequency Strategy",
+                        shortPeriod: 3,
+                        longPeriod: 8,
+                        rsiPeriod: 7,
+                        type: "high_freq",
+                        conditions: {
+                            buy: (shortMA, longMA, rsi, data, index) => {
+                                return (shortMA > longMA) || (rsi < 25);
+                            },
+                            sell: (shortMA, longMA, rsi, data, index) => {
+                                return (shortMA < longMA) || (rsi > 75);
+                            }
+                        }
+                    }
+                };
+                
+                return strategies[strategyType] || strategies.ma_crossover;
+            }
+
+            function runStrategy(data, rules) {
+                const trades = [];
+                const buyMarkers = [];
+                const sellMarkers = [];
+                let inPosition = false;
+                let entryPrice = 0;
+
+                console.log("Running strategy with data length:", data.length);
+
+                const indicators = calculateIndicators(data, rules);
+                const startIndex = Math.max(rules.shortPeriod || 0, rules.longPeriod || 0, rules.rsiPeriod || 0);
+                
+                for (let i = startIndex; i < data.length; i++) {
+                    const currentData = data[i];
+                    const indicatorValues = getIndicatorValues(indicators, i, rules);
+
+                    if (!inPosition && rules.conditions.buy(...indicatorValues, data, i)) {
+                        console.log(`BUY SIGNAL at index ${i}, price ${currentData.close}`);
+                        trades.push({ 
+                            time: currentData.time, 
+                            action: 'BUY', 
+                            price: currentData.close,
+                            index: i 
+                        });
+                        
+                        buyMarkers.push({
+                            time: currentData.time,
+                            position: 'belowBar',
+                            color: 'green',
+                            shape: 'arrowUp',
+                            text: 'Buy',
+                            size: 1
+                        });
+                        
+                        inPosition = true;
+                        entryPrice = currentData.close;
+                    }
+                    else if (inPosition && rules.conditions.sell(...indicatorValues, data, i)) {
+                        console.log(`SELL SIGNAL at index ${i}, price ${currentData.close}`);
+                        trades.push({ 
+                            time: currentData.time, 
+                            action: 'SELL', 
+                            price: currentData.close,
+                            index: i,
+                            profit: currentData.close - entryPrice,
+                            profitPercent: ((currentData.close - entryPrice) / entryPrice) * 100
+                        });
+                        
+                        sellMarkers.push({
+                            time: currentData.time,
+                            position: 'aboveBar',
+                            color: 'red',
+                            shape: 'arrowDown',
+                            text: 'Sell',
+                            size: 1
+                        });
+                        
+                        inPosition = false;
+                    }
+                }
+
+                console.log("Total trades found:", trades.length);
+                const stats = calculateStrategyStats(trades);
+
+                return {
+                    trades,
+                    buyMarkers,
+                    sellMarkers,
+                    stats,
+                    strategyName: rules.name
+                };
+            }
+
+            function calculateIndicators(data, rules) {
+                const indicators = {};
+
+                if (rules.type === "crossover" || rules.type === "moving_average") {
+                    indicators.shortMA = calculateSMA(data, rules.shortPeriod);
+                    indicators.longMA = calculateSMA(data, rules.longPeriod);
+                }
+                
+                if (rules.type === "rsi") {
+                    indicators.rsi = calculateRSI(data, rules.rsiPeriod || 14);
+                }
+                
+                if (rules.type === "macd") {
+                    const macdResult = calculateMACD(data, rules.fastPeriod || 12, rules.slowPeriod || 26, rules.signalPeriod || 9);
+                    indicators.macd = macdResult.macd;
+                    indicators.signal = macdResult.signal;
+                    indicators.histogram = macdResult.histogram;
+                }
+
+                if (rules.type === "custom") {
+                    indicators.rsi = calculateRSI(data, rules.rsiPeriod || 14);
+                    indicators.sma20 = calculateSMA(data, 20);
+                }
+
+                if (rules.type === "high_freq") {
+                    indicators.shortMA = calculateSMA(data, rules.shortPeriod);
+                    indicators.longMA = calculateSMA(data, rules.longPeriod);
+                    indicators.rsi = calculateRSI(data, rules.rsiPeriod);
+                }
+
+                return indicators;
+            }
+
+            function getIndicatorValues(indicators, index, rules) {
+                const values = [];
+                
+                if (rules.type === "crossover" || rules.type === "moving_average") {
+                    values.push(indicators.shortMA[index], indicators.longMA[index]);
+                }
+                
+                if (rules.type === "rsi") {
+                    values.push(indicators.rsi[index]);
+                }
+                
+                if (rules.type === "macd") {
+                    values.push(indicators.macd[index], indicators.signal[index], indicators.histogram[index]);
+                }
+
+                if (rules.type === "custom") {
+                    values.push(indicators.rsi[index]);
+                }
+
+                if (rules.type === "high_freq") {
+                    values.push(indicators.shortMA[index], indicators.longMA[index], indicators.rsi[index]);
+                }
+
+                return values;
+            }
+
+            function calculateSMA(data, period) {
+                const sma = [];
+                for (let i = 0; i < data.length; i++) {
+                    if (i < period - 1) {
+                        sma.push(null);
+                    } else {
+                        const sum = data.slice(i - period + 1, i + 1).reduce((acc, candle) => acc + candle.close, 0);
+                        sma.push(sum / period);
+                    }
+                }
+                return sma;
+            }
+
+            function calculateRSI(data, period = 14) {
+                const rsi = [];
+                const gains = [];
+                const losses = [];
+
+                for (let i = 1; i < data.length; i++) {
+                    const change = data[i].close - data[i - 1].close;
+                    gains.push(change > 0 ? change : 0);
+                    losses.push(change < 0 ? Math.abs(change) : 0);
+                }
+
+                for (let i = 0; i < data.length; i++) {
+                    if (i < period) {
+                        rsi.push(null);
+                    } else {
+                        const avgGain = gains.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+                        const avgLoss = losses.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+                        const rs = avgGain / avgLoss;
+                        rsi.push(100 - (100 / (1 + rs)));
+                    }
+                }
+
+                return rsi;
+            }
+
+            function calculateMACD(data, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
+                const ema = (data, period) => {
+                    const k = 2 / (period + 1);
+                    const emaArray = [];
+                    let prevEma = data[0].close;
+                    
+                    for (let i = 0; i < data.length; i++) {
+                        const close = data[i].close;
+                        const nextEma = i === 0 ? close : close * k + prevEma * (1 - k);
+                        emaArray.push(nextEma);
+                        prevEma = nextEma;
+                    }
+                    return emaArray;
+                };
+
+                const fastEMA = ema(data, fastPeriod);
+                const slowEMA = ema(data, slowPeriod);
+                
+                const macdLine = fastEMA.map((fast, i) => fast - slowEMA[i]);
+                const signalLine = ema(macdLine.map((val, i) => ({ close: val })), signalPeriod);
+                const histogram = macdLine.map((macd, i) => macd - signalLine[i]);
+
+                return { macd: macdLine, signal: signalLine, histogram };
+            }
+
+            function calculateStrategyStats(trades) {
+                const stats = {
+                    totalTrades: trades.length,
+                    buyTrades: trades.filter(t => t.action === 'BUY').length,
+                    sellTrades: trades.filter(t => t.action === 'SELL').length,
+                    wins: 0,
+                    losses: 0,
+                    totalProfit: 0,
+                    totalProfitPercent: 0,
+                    maxDrawdown: 0,
+                    winRate: 0,
+                    avgWin: 0,
+                    avgLoss: 0
+                };
+
+                let currentDrawdown = 0;
+                let peak = 0;
+                let runningBalance = 10000;
+
+                for (let i = 1; i < trades.length; i += 2) {
+                    if (i < trades.length) {
+                        const buy = trades[i - 1];
+                        const sell = trades[i];
+                        
+                        if (buy.action === 'BUY' && sell.action === 'SELL') {
+                            const profitPercent = ((sell.price - buy.price) / buy.price) * 100;
+                            const positionSize = runningBalance * 0.1;
+                            const profit = (profitPercent / 100) * positionSize;
+                            
+                            runningBalance += profit;
+                            
+                            stats.totalProfit += profit;
+                            stats.totalProfitPercent += profitPercent;
+                            
+                            if (profit > 0) {
+                                stats.wins++;
+                                stats.avgWin += profit;
+                            } else {
+                                stats.losses++;
+                                stats.avgLoss += Math.abs(profit);
+                            }
+
+                            if (runningBalance > peak) {
+                                peak = runningBalance;
+                            }
+                            currentDrawdown = peak - runningBalance;
+                            if (currentDrawdown > stats.maxDrawdown) {
+                                stats.maxDrawdown = currentDrawdown;
+                            }
+                        }
+                    }
+                }
+
+                stats.winRate = stats.wins + stats.losses > 0 ? (stats.wins / (stats.wins + stats.losses)) * 100 : 0;
+                stats.avgWin = stats.wins > 0 ? stats.avgWin / stats.wins : 0;
+                stats.avgLoss = stats.losses > 0 ? stats.avgLoss / stats.losses : 0;
+
+                return stats;
+            }
+
+            function displayStrategyResults(results) {
+                const stats = results.stats;
+                const resultsContent = document.getElementById('resultsContent');
+                const accountSize = parseFloat(document.getElementById('accountSize').value) || 10000;
+                
+                let tradeListHTML = '';
+                if (results.trades.length > 0) {
+                    tradeListHTML = `
+                        <div class="trade-table">
+                            <button class="trade-toggle-btn" onclick="toggleTradeHistory()">
+                                <span id="toggle-text">▼</span> Show Trade History (${results.trades.length} trades)
+                            </button>
+                            <div id="trade-history-content" style="display: none;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Action</th>
+                                            <th>Price</th>
+                                            <th>Position Size</th>
+                                            <th>Profit</th>
+                                            <th>P&L %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    
+                    results.trades.forEach((trade, index) => {
+                        const tradeTime = new Date(trade.time * 1000).toLocaleString();
+                        const profit = trade.profit || 0;
+                        const profitPercent = trade.profitPercent || 0;
+                        const positionSize = accountSize * 0.1;
+                        const actualProfit = (profit / trade.price) * positionSize;
+                        
+                        const profitColor = profit >= 0 ? '#4CAF50' : '#f44336';
+                        const actionColor = trade.action === 'BUY' ? '#4CAF50' : '#f44336';
+                        
+                        tradeListHTML += `
+                            <tr>
+                                <td>${tradeTime}</td>
+                                <td style="color: ${actionColor}; font-weight: bold;">${trade.action}</td>
+                                <td>$${trade.price.toFixed(2)}</td>
+                                <td>$${positionSize.toFixed(2)}</td>
+                                <td style="color: ${profitColor};">${actualProfit > 0 ? '+' : ''}$${actualProfit.toFixed(2)}</td>
+                                <td style="color: ${profitColor};">${profitPercent > 0 ? '+' : ''}${profitPercent.toFixed(2)}%</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tradeListHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                }
+                
+                const totalProfitWithSizing = stats.totalProfitPercent * accountSize * 0.01;
+                
+                resultsContent.innerHTML = `
+                    <h4>${results.strategyName}</h4>
+                    <div style="margin-bottom: 10px; padding: 8px; background: #333; border-radius: 4px; color: #fff;">
+                        <strong>Account Size:</strong> $${accountSize.toLocaleString()} | 
+                        <strong>Position Size:</strong> $${(accountSize * 0.1).toFixed(2)} (10% per trade)
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">${stats.totalTrades}</div>
+                            <div>Total Trades</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value ${stats.winRate > 50 ? 'positive' : 'negative'}">${stats.winRate.toFixed(2)}%</div>
+                            <div>Win Rate</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value ${totalProfitWithSizing > 0 ? 'positive' : 'negative'}">${totalProfitWithSizing > 0 ? '+' : ''}$${totalProfitWithSizing.toFixed(2)}</div>
+                            <div>Net Profit</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value ${stats.totalProfitPercent > 0 ? 'positive' : 'negative'}">${stats.totalProfitPercent > 0 ? '+' : ''}${stats.totalProfitPercent.toFixed(2)}%</div>
+                            <div>Total Return</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value negative">$${stats.maxDrawdown.toFixed(2)}</div>
+                            <div>Max Drawdown</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${stats.wins} / ${stats.losses}</div>
+                            <div>Wins / Losses</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value positive">$${stats.avgWin.toFixed(2)}</div>
+                            <div>Avg Win</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value negative">$${stats.avgLoss.toFixed(2)}</div>
+                            <div>Avg Loss</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 20px;">
+                        <div>
+                            <strong>Buy Signals:</strong> <span style="color: #4CAF50;">${results.buyMarkers.length}</span>
+                        </div>
+                        <div>
+                            <strong>Sell Signals:</strong> <span style="color: #f44336;">${results.sellMarkers.length}</span>
+                        </div>
+                    </div>
+                    ${tradeListHTML}
+                `;
+            }
+
+            function updateChartWithStrategy() {
+                if (currentCandles.length === 0) {
+                    console.log("No data available for strategy testing");
+                    return;
+                }
+
+                console.log("Starting strategy update...");
+                candleSeries.setMarkers([]);
+
+                const selectedStrategy = document.getElementById('strategySelect').value;
+                const strategyRules = getStrategyRules(selectedStrategy);
+                
+                const results = runStrategy(currentCandles, strategyRules);
+                
+                displayStrategyResults(results);
+                
+                const allMarkers = [...results.buyMarkers, ...results.sellMarkers];
+                candleSeries.setMarkers(allMarkers);
+                
+                console.log(`Strategy "${results.strategyName}" completed with ${results.trades.length} trades`);
+            }
+
+            function toggleTradeHistory() {
+                const tradeHistoryContent = document.getElementById('trade-history-content');
+                const toggleText = document.getElementById('toggle-text');
+                const currentDisplay = tradeHistoryContent.style.display;
+
+                if (currentDisplay === 'none') {
+                    tradeHistoryContent.style.display = 'block';
+                    toggleText.textContent = '▲';
+                } else {
+                    tradeHistoryContent.style.display = 'none';
+                    toggleText.textContent = '▼';
+                }
+            }
+
+            window.addEventListener('resize', () => {
+                if (chart) {
+                    chart.applyOptions({
+                        width: window.innerWidth <= 1200 ? Math.min(window.innerWidth - 40, 1200) : chartContainer.offsetWidth,
+                        height: window.innerWidth <= 768 ? 400 : 700,
+                    });
+                }
+            });
+
+            const defaultPair = 'btcusdt';
+            fetchData(defaultPair);
+            setupWebSocket(defaultPair);
+
+            document.getElementById('pairSelect').addEventListener('change', (e) => {
+                const selectedPair = e.target.value;
+                fetchData(selectedPair);
+                setupWebSocket(selectedPair);
+            });
+
+            document.getElementById('timeframeSelect').addEventListener('change', (e) => {
+                const selectedPair = document.getElementById('pairSelect').value;
+                fetchData(selectedPair);
+                setupWebSocket(selectedPair);
+            });
+
+            document.getElementById('strategySelect').addEventListener('change', () => {
+                updateChartWithStrategy();
+            });
+
+            document.getElementById('runStrategyBtn').addEventListener('click', () => {
+                updateChartWithStrategy();
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                candleSeries.setMarkers([]);
+                document.getElementById('resultsContent').innerHTML = '<p>Chart cleared.</p>';
+            });
+        }, 100);
+    </script>
+</body>
+</html> 
