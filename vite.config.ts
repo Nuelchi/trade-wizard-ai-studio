@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    hmr: false, // Disable HMR to stop auto-refreshing
   },
   plugins: [
     react(),

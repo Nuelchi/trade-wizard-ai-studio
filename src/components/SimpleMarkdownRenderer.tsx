@@ -81,7 +81,7 @@ const parseMarkdown = (content: string) => {
       processedTokens.push(token);
     } else {
       // Process inline formatting in text
-      let text = token.content;
+      const text = token.content;
       let lastIndex = 0;
       const textTokens: Array<{ type: string; content: string }> = [];
       

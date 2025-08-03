@@ -265,7 +265,7 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
   const handleSend = async () => {
     if (!input.trim() && !imageFile) return;
 
-    let userMessage: Message = {
+    const userMessage: Message = {
       id: Date.now().toString(),
       content: input,
       sender: 'user',
@@ -302,7 +302,7 @@ const ChatInterface = ({ onStrategyGenerated, onCodeGenerated }: ChatInterfacePr
         markdownContent = (aiResult as any).content;
       }
       const extractedBlocks = extractCodeBlocks(markdownContent);
-      let codeBlocks = {
+      const codeBlocks = {
         mql5: aiResult.mql5 || extractedBlocks.mql5 || '',
         pineScript: aiResult.pineScript || extractedBlocks.pineScript || '',
         mql4: aiResult.mql4 || extractedBlocks.mql4 || '',
