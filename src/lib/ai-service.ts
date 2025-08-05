@@ -1,9 +1,35 @@
-// AI Service - Direct OpenRouter Integration
-// This replaces the Supabase Edge Functions for faster, more reliable AI responses
+// AI Service - Dynamic OpenRouter Integration
+// Uses Supabase secrets for secure API key management
 
-const OPENROUTER_API_KEY = '';
-// GPT-3.5-turbo - reliable and fast model
-const OPENROUTER_MODEL = 'openai/gpt-3.5-turbo';
+let OPENROUTER_API_KEY: string | null = null;
+let OPENROUTER_MODEL = 'openai/gpt-4o';
+
+// Function to get API key from Supabase
+async function getApiKey(): Promise<string> {
+  if (OPENROUTER_API_KEY) {
+    return OPENROUTER_API_KEY;
+  }
+
+  try {
+    const response = await fetch('https://kgfzbkwyepchbysaysky.supabase.co/functions/v1/get-api-key', {
+      headers: {
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnZnpia3d5ZXBjaGJ5c2F5c2t5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0Nzk5NDAsImV4cCI6MjA2ODA1NTk0MH0.WsMnjZsBPdM5okL4KZXZidX8eiTiGmN-Qc--Y359H6M'
+      }
+    });
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
+    OPENROUTER_API_KEY = data.apiKey;
+    OPENROUTER_MODEL = data.model || 'openai/gpt-4o';
+    return OPENROUTER_API_KEY;
+  } catch (error) {
+    console.error('Failed to get API key:', error);
+    throw new Error('Unable to retrieve API key from server');
+  }
+}
 
 // Ultra-minimal system prompt for maximum DeepSeek speed
 const SYSTEM_PROMPT = `You are TrainFlow an AI trading strategy assistant. You help users build, test, and modify trading strategies and indicators for TradingView (Pine Script), MetaTrader 4 (MQL4), python, and MetaTrader 5 (MQL5). You are friendly, clear, and always provide actionable, well-explained responses.
@@ -474,12 +500,15 @@ export async function generateStrategyWithAI(
       finalMessages.push({ role: 'user', content: prompt });
     }
 
-    // Call DeepSeek R1T Chimera with optimized settings for speed
+    // Get API key dynamically
+    const apiKey = await getApiKey();
+    
+    // Call OpenRouter API with optimized settings for speed
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'HTTP-Referer': 'https://trade-wizard-ai-studio.vercel.app',
         'X-Title': 'Trade Wizard AI Studio',
       },
@@ -567,11 +596,13 @@ Examples:
 - Trend Rider X Pro
 - Adaptive Swing Master`;
 
+    const apiKey = await getApiKey();
+    
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'HTTP-Referer': 'https://trade-wizard-ai-studio.vercel.app',
         'X-Title': 'Trade Wizard AI Studio',
       },
@@ -623,11 +654,13 @@ export async function chatWithAI(
   context?: string
 ): Promise<string> {
   try {
+    const apiKey = await getApiKey();
+    
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'HTTP-Referer': 'https://trade-wizard-ai-studio.vercel.app',
         'X-Title': 'Trade Wizard AI Studio',
       },
