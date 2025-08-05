@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import AuthDialog from './AuthDialog';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -18,47 +19,11 @@ interface AuthGuardProps {
 }
 
 const AuthGuard = ({ children, requireAuth = false }: AuthGuardProps) => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Check authentication status
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setInitialLoading(false);
-        
-        if (event === 'SIGNED_IN') {
-          setShowAuthDialog(false);
-          toast({
-            title: 'Welcome!',
-            description: "You're successfully logged in.",
-          });
-          navigate('/dashboard');
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setInitialLoading(false);
-      
-      if (requireAuth && !session) {
-        setShowAuthDialog(true);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [requireAuth, toast, navigate]);
+  const { user, session, loading: authLoading } = useAuth();
 
   const handleAuth = async (type: 'login' | 'signup', formData: FormData) => {
     setLoading(true);
@@ -89,6 +54,14 @@ const AuthGuard = ({ children, requireAuth = false }: AuthGuardProps) => {
         });
         
         if (error) throw error;
+        
+        // Close dialog and navigate on successful login
+        setShowAuthDialog(false);
+        toast({
+          title: 'Welcome!',
+          description: "You're successfully logged in.",
+        });
+        navigate('/dashboard');
       }
     } catch (error: any) {
       toast({
@@ -124,7 +97,7 @@ const AuthGuard = ({ children, requireAuth = false }: AuthGuardProps) => {
     setShowAuthDialog(true);
   };
 
-  if (initialLoading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
