@@ -896,6 +896,36 @@
                 }
             });
 
+            // Global function to capture strategy results for external use (Dashboard integration)
+            window.captureStrategyResultsThumbnail = async function() {
+                const resultsDiv = document.getElementById('tester');
+                if (!resultsDiv || resultsDiv.innerHTML.includes('Run a strategy to see results here')) {
+                    console.log('Strategy results not ready for capture');
+                    return null;
+                }
+
+                try {
+                    console.log('Capturing strategy results for thumbnail...');
+                    const canvas = await html2canvas(resultsDiv, {
+                        backgroundColor: '#2a2a2a',
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        width: resultsDiv.offsetWidth,
+                        height: resultsDiv.offsetHeight,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: resultsDiv.offsetWidth,
+                        windowHeight: resultsDiv.offsetHeight
+                    });
+                    return canvas.toDataURL('image/png');
+                } catch (error) {
+                    console.error('Error capturing strategy results thumbnail:', error);
+                    return null;
+                }
+            };
+
             // Add event listener for trade toggle button (backup method)
             document.addEventListener('click', (e) => {
                 if (e.target && e.target.id === 'trade-toggle-btn') {
