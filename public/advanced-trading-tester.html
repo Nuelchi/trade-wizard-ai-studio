@@ -203,6 +203,7 @@
         <label for="accountSize" style="margin-left: 20px;">Account Size ($):</label>
         <input type="number" id="accountSize" value="10000" min="100" step="100" style="margin-left: 5px; padding: 3px 8px; border: 1px solid #ccc; border-radius: 3px; width: 120px;">
         <button id="clearBtn">Clear Chart</button>
+        <button id="captureResultsBtn" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px;">📸 Capture Results</button>
     </div>
 
     <div id="chart" style="width: 100%; height: 700px; max-width: 100%; overflow: hidden;"></div>
@@ -215,6 +216,7 @@
     </div>
 
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         let chart;
         let candleSeries;
@@ -832,6 +834,66 @@
             document.getElementById('clearBtn').addEventListener('click', () => {
                 candleSeries.setMarkers([]);
                 document.getElementById('resultsContent').innerHTML = '<p>Chart cleared.</p>';
+            });
+
+            // Capture Results functionality
+            document.getElementById('captureResultsBtn').addEventListener('click', async () => {
+                try {
+                    const captureBtn = document.getElementById('captureResultsBtn');
+                    const originalText = captureBtn.textContent;
+                    captureBtn.textContent = '📸 Capturing...';
+                    captureBtn.disabled = true;
+
+                    // Get the strategy results div
+                    const resultsDiv = document.getElementById('tester');
+                    
+                    if (!resultsDiv || resultsDiv.innerHTML.includes('Run a strategy to see results here')) {
+                        alert('Please run a strategy first to capture results.');
+                        captureBtn.textContent = originalText;
+                        captureBtn.disabled = false;
+                        return;
+                    }
+
+                    // Configure html2canvas options for better quality (based on existing implementation)
+                    const canvas = await html2canvas(resultsDiv, {
+                        backgroundColor: '#2a2a2a',
+                        scale: 2, // Higher resolution
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        width: resultsDiv.offsetWidth,
+                        height: resultsDiv.offsetHeight,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: resultsDiv.offsetWidth,
+                        windowHeight: resultsDiv.offsetHeight
+                    });
+
+                    // Convert canvas to blob and download
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `strategy-results-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        // Show success message
+                        captureBtn.textContent = '✅ Captured!';
+                        setTimeout(() => {
+                            captureBtn.textContent = originalText;
+                            captureBtn.disabled = false;
+                        }, 2000);
+                    }, 'image/png', 0.95);
+
+                } catch (error) {
+                    console.error('Capture failed:', error);
+                    alert('Failed to capture results. Please try again.');
+                    captureBtn.textContent = originalText;
+                    captureBtn.disabled = false;
+                }
             });
 
             // Add event listener for trade toggle button (backup method)

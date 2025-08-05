@@ -161,19 +161,20 @@ const Dashboard = () => {
   // Move thumbnail logic here
   const handleCodeGenerated = async (codeBlocks: any, requestedType?: string) => {
     setGeneratedCode(codeBlocks); // Update code state as usual
-    // Always try to capture thumbnail if chart tab is open and chart is present, but only once per unique code
+    // Always try to capture thumbnail if advanced tester is open and results are present, but only once per unique code
     const codeString = codeBlocks?.pineScript || codeBlocks?.mql4 || codeBlocks?.mql5 || codeBlocks?.python || '';
     const codeHash = simpleHash(codeString);
-    if (previewMode === 'chart' && currentStrategy && currentStrategy.id && codeString && codeHash !== lastCapturedCodeHash.current) {
+    if (currentStrategy && currentStrategy.id && codeString && codeHash !== lastCapturedCodeHash.current) {
       setTimeout(async () => {
-        const chartElement = document.getElementById('chart-preview');
-        if (chartElement && user) {
+        // Try to capture from advanced trading tester results
+        const resultsElement = document.getElementById('tester');
+        if (resultsElement && user && !resultsElement.innerHTML.includes('Run a strategy to see results here')) {
           try {
-            console.log('Capturing chart thumbnail (once per unique code)...');
+            console.log('Capturing strategy results thumbnail (once per unique code)...');
             // Ensure the element is fully rendered and visible
-            const rect = chartElement.getBoundingClientRect();
-            const canvas = await html2canvas(chartElement, { 
-              backgroundColor: null, 
+            const rect = resultsElement.getBoundingClientRect();
+            const canvas = await html2canvas(resultsElement, { 
+              backgroundColor: '#2a2a2a', 
               scale: 2, 
               logging: false,
               height: rect.height,
@@ -182,8 +183,8 @@ const Dashboard = () => {
               allowTaint: true,
               scrollX: 0,
               scrollY: 0,
-              windowWidth: document.documentElement.offsetWidth,
-              windowHeight: document.documentElement.offsetHeight
+              windowWidth: resultsElement.offsetWidth,
+              windowHeight: resultsElement.offsetHeight
             });
             const thumbnail = canvas.toDataURL('image/png');
             const { error } = await supabase
@@ -193,16 +194,16 @@ const Dashboard = () => {
             if (error) {
               console.error('Supabase update error:', error);
             } else {
-              console.log('Thumbnail updated successfully');
+              console.log('Strategy results thumbnail updated successfully');
               lastCapturedCodeHash.current = codeHash;
             }
           } catch (error) {
-            console.error('Error capturing chart thumbnail:', error);
+            console.error('Error capturing strategy results thumbnail:', error);
           }
         } else {
-          console.log('Chart element not found or user not set');
+          console.log('Strategy results element not found, not ready, or user not set');
         }
-      }, 1200); // Give React more time to render the chart and metrics
+      }, 2000); // Give more time for strategy results to render
     }
   };
 
@@ -327,6 +328,32 @@ const Dashboard = () => {
   };
 
   const captureChartThumbnail = async () => {
+    // Try to capture strategy results first, fallback to chart if not available
+    const resultsElement = document.getElementById('tester');
+    if (resultsElement && !resultsElement.innerHTML.includes('Run a strategy to see results here')) {
+      try {
+        // Ensure the element is fully rendered and visible
+        const rect = resultsElement.getBoundingClientRect();
+        const canvas = await html2canvas(resultsElement, {
+          backgroundColor: '#2a2a2a',
+          scale: 2,
+          logging: false,
+          height: rect.height,
+          width: rect.width,
+          useCORS: true,
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: resultsElement.offsetWidth,
+          windowHeight: resultsElement.offsetHeight
+        });
+        return canvas.toDataURL('image/png');
+      } catch (error) {
+        console.error('Error capturing strategy results:', error);
+      }
+    }
+    
+    // Fallback to chart preview if strategy results not available
     const chartElement = document.getElementById('chart-preview');
     if (chartElement) {
       try {
