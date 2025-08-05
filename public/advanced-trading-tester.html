@@ -96,6 +96,7 @@
             width: 100%;
             text-align: left;
             transition: background-color 0.3s;
+            margin-top: 15px;
         }
         .trade-toggle-btn:hover {
             background: #0056b3;
@@ -103,6 +104,31 @@
         .trade-toggle-btn span {
             margin-right: 8px;
             font-weight: bold;
+        }
+        #trade-history-content {
+            margin-top: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        #trade-history-content table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+        #trade-history-content th {
+            background: #444;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #555;
+        }
+        #trade-history-content td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #444;
+        }
+        #trade-history-content tr:hover {
+            background: #3a3a3a;
         }
         @media (max-width: 768px) {
             body { padding: 5px; }
@@ -612,15 +638,20 @@
             }
 
             function displayStrategyResults(results) {
+                console.log('Displaying strategy results:', results);
                 const stats = results.stats;
                 const resultsContent = document.getElementById('resultsContent');
                 const accountSize = parseFloat(document.getElementById('accountSize').value) || 10000;
+                
+                console.log('Trades found:', results.trades.length);
+                console.log('Buy markers:', results.buyMarkers.length);
+                console.log('Sell markers:', results.sellMarkers.length);
                 
                 let tradeListHTML = '';
                 if (results.trades.length > 0) {
                     tradeListHTML = `
                         <div class="trade-table">
-                            <button class="trade-toggle-btn" onclick="toggleTradeHistory()">
+                            <button class="trade-toggle-btn" id="trade-toggle-btn" onclick="toggleTradeHistory()">
                                 <span id="toggle-text">▼</span> Show Trade History (${results.trades.length} trades)
                             </button>
                             <div id="trade-history-content" style="display: none;">
@@ -744,9 +775,16 @@
                 console.log(`Strategy "${results.strategyName}" completed with ${results.trades.length} trades`);
             }
 
-            function toggleTradeHistory() {
+            // Global function for toggling trade history
+            window.toggleTradeHistory = function() {
                 const tradeHistoryContent = document.getElementById('trade-history-content');
                 const toggleText = document.getElementById('toggle-text');
+                
+                if (!tradeHistoryContent || !toggleText) {
+                    console.log('Trade history elements not found');
+                    return;
+                }
+                
                 const currentDisplay = tradeHistoryContent.style.display;
 
                 if (currentDisplay === 'none') {
@@ -756,7 +794,7 @@
                     tradeHistoryContent.style.display = 'none';
                     toggleText.textContent = '▼';
                 }
-            }
+            };
 
             window.addEventListener('resize', () => {
                 if (chart) {
@@ -794,6 +832,14 @@
             document.getElementById('clearBtn').addEventListener('click', () => {
                 candleSeries.setMarkers([]);
                 document.getElementById('resultsContent').innerHTML = '<p>Chart cleared.</p>';
+            });
+
+            // Add event listener for trade toggle button (backup method)
+            document.addEventListener('click', (e) => {
+                if (e.target && e.target.id === 'trade-toggle-btn') {
+                    console.log('Trade toggle button clicked via event listener');
+                    window.toggleTradeHistory();
+                }
             });
         }, 100);
     </script>
