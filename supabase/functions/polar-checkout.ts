@@ -1,7 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-// @ts-nocheck
-
-const serve = globalThis.serve || function() {};
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
@@ -33,7 +31,7 @@ serve(async (req)=>{
     const polarRes = await fetch("https://api.polar.sh/v1/checkouts", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${globalThis.Deno?.env?.get("POLAR_API_KEY")}`,
+        "Authorization": `Bearer ${Deno.env.get("POLAR_API_KEY")}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({

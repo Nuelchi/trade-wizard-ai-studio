@@ -166,32 +166,17 @@ const Dashboard = () => {
     const codeHash = simpleHash(codeString);
     if (currentStrategy && currentStrategy.id && codeString && codeHash !== lastCapturedCodeHash.current) {
       setTimeout(async () => {
-        // Try to capture from advanced trading tester iframe first
-        const iframe = document.querySelector('iframe[src="/advanced-trading-tester.html"]') as HTMLIFrameElement;
-        let resultsElement = null;
-        
-        if (iframe && iframe.contentDocument) {
-          resultsElement = iframe.contentDocument.getElementById('tester');
-          console.log('Found iframe tester element:', !!resultsElement);
-        } else {
-          // Fallback to main page element
-          resultsElement = document.getElementById('tester');
-          console.log('Using main page tester element:', !!resultsElement);
-        }
-        
+        // Try to capture from advanced trading tester results
+        const resultsElement = document.getElementById('tester');
         if (resultsElement && user && !resultsElement.innerHTML.includes('Run a strategy to see results here')) {
           try {
             console.log('Capturing strategy results thumbnail (once per unique code)...');
-            console.log('Element innerHTML preview:', resultsElement.innerHTML.substring(0, 200));
-            
             // Ensure the element is fully rendered and visible
             const rect = resultsElement.getBoundingClientRect();
-            console.log('Element dimensions:', rect);
-            
             const canvas = await html2canvas(resultsElement, { 
               backgroundColor: '#2a2a2a', 
               scale: 2, 
-              logging: true,
+              logging: false,
               height: rect.height,
               width: rect.width,
               useCORS: true,
@@ -201,11 +186,7 @@ const Dashboard = () => {
               windowWidth: resultsElement.offsetWidth,
               windowHeight: resultsElement.offsetHeight
             });
-            
-            console.log('Canvas created with dimensions:', canvas.width, 'x', canvas.height);
             const thumbnail = canvas.toDataURL('image/png');
-            console.log('Thumbnail data URL length:', thumbnail.length);
-            
             const { error } = await supabase
               .from('strategies')
               .update({ thumbnail, updated_at: new Date().toISOString() })
@@ -221,12 +202,6 @@ const Dashboard = () => {
           }
         } else {
           console.log('Strategy results element not found, not ready, or user not set');
-          console.log('- resultsElement exists:', !!resultsElement);
-          console.log('- user exists:', !!user);
-          if (resultsElement) {
-            console.log('- innerHTML check:', !resultsElement.innerHTML.includes('Run a strategy to see results here'));
-            console.log('- innerHTML preview:', resultsElement.innerHTML.substring(0, 200));
-          }
         }
       }, 2000); // Give more time for strategy results to render
     }

@@ -1,11 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-// @ts-nocheck
-
-const serve = globalThis.serve || function() {};
-const createClient = globalThis.createClient || function() {};
-const SUPABASE_URL = globalThis.Deno?.env?.get("SUPABASE_URL");
-const SUPABASE_SERVICE_ROLE_KEY = globalThis.Deno?.env?.get("SUPABASE_SERVICE_ROLE_KEY");
-const WEBHOOK_SECRET = globalThis.Deno?.env?.get("POLAR_WEBHOOK_SECRET");
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const WEBHOOK_SECRET = Deno.env.get("POLAR_WEBHOOK_SECRET");
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 serve(async (req)=>{
   if (req.method !== "POST") {
